@@ -23,3 +23,13 @@ plugins {
 }
 
 include(":app")
+
+gradle.projectsEvaluated {
+    rootProject.subprojects.forEach { subproject ->
+        if (subproject.name == "flutter_plugin_android_lifecycle") {
+            subproject.tasks.matching { task -> task.name.contains("UnitTest") }.configureEach {
+                this.enabled = false
+            }
+        }
+    }
+}

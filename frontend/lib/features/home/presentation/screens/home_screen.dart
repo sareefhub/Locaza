@@ -1,0 +1,114 @@
+import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:responsive_builder/responsive_builder.dart';
+
+import '../../../../core/widgets/navigation.dart';
+import '../../../../core/widgets/product_card.dart';
+import '../../../../core/widgets/category_list.dart';
+import 'package:frontend/data/dummy_products.dart';
+import 'package:frontend/data/dummy_categories.dart';
+
+class HomeScreen extends StatelessWidget {
+  const HomeScreen({super.key});
+
+  int _getCrossAxisCount(double width) {
+    if (width >= 1600) return 6; // Desktop ใหญ่
+    if (width >= 1300) return 5;
+    if (width >= 1000) return 4;
+    if (width >= 600) return 3;  // Tablet
+    return 2; // Mobile
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFFE0F3F7),
+      body: SafeArea(
+        child: ResponsiveBuilder(
+          builder: (context, sizingInfo) {
+            final screenWidth = sizingInfo.screenSize.width;
+            final crossAxisCount = _getCrossAxisCount(screenWidth);
+            final bestSaleProducts = dummyProducts.take(8).toList();
+
+            return CustomScrollView(
+              slivers: [
+                // Header
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    child: Row(
+                      children: [
+                        Image.asset('assets/logo.png', height: 24),
+                        const SizedBox(width: 6),
+                        if (!sizingInfo.isMobile)
+                          Expanded(
+                            child: Text(
+                              'Local Community Marketplace',
+                              style: Theme.of(context).textTheme.titleLarge,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                ),
+
+                // Search bar
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: TextField(
+                      style: GoogleFonts.sarabun(fontSize: 14),
+                      decoration: InputDecoration(
+                        hintText: 'ค้นหา',
+                        prefixIcon: const Icon(Icons.search),
+                        filled: true,
+                        fillColor: Colors.white,
+                        contentPadding: const EdgeInsets.symmetric(vertical: 0),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(25),
+                          borderSide: BorderSide.none,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+
+                const SliverToBoxAdapter(child: SizedBox(height: 16)),
+
+                // Categories
+                SliverToBoxAdapter(
+                  child: CategoryList(categories: dummyCategories),
+                ),
+
+                const SliverToBoxAdapter(child: SizedBox(height: 16)),
+
+                // Products Grid
+                SliverPadding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  sliver: SliverGrid(
+                    delegate: SliverChildBuilderDelegate(
+                      (context, index) {
+                        return ProductCard(product: bestSaleProducts[index]);
+                      },
+                      childCount: bestSaleProducts.length,
+                    ),
+                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: crossAxisCount,
+                      crossAxisSpacing: 12,
+                      mainAxisSpacing: 12,
+                      childAspectRatio: sizingInfo.isMobile ? 0.63 : 0.75,
+                    ),
+                  ),
+                ),
+
+                const SliverToBoxAdapter(child: SizedBox(height: 80)),
+              ],
+            );
+          },
+        ),
+      ),
+      bottomNavigationBar: const BottomNavBar(currentIndex: 0),
+    );
+  }
+}
