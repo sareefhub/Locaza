@@ -1,5 +1,3 @@
-// search_bar_all.dart
-
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -7,14 +5,12 @@ class SearchBarAll extends StatelessWidget {
   final TextEditingController searchController;
   final ValueChanged<String> onSearchChanged;
   final VoidCallback onFilterPressed;
-  final VoidCallback onSortPressed;
 
   const SearchBarAll({
     super.key,
     required this.searchController,
     required this.onSearchChanged,
     required this.onFilterPressed,
-    required this.onSortPressed,
   });
 
   @override
@@ -38,9 +34,7 @@ class SearchBarAll extends StatelessWidget {
           // Search field
           Expanded(
             child: TextField(
-              style: GoogleFonts.sarabun(
-                fontSize: 14,
-              ),
+              style: GoogleFonts.sarabun(fontSize: 14),
               controller: searchController,
               onChanged: onSearchChanged,
               decoration: InputDecoration(
@@ -70,21 +64,6 @@ class SearchBarAll extends StatelessWidget {
                 borderRadius: BorderRadius.circular(10),
               ),
               child: const Icon(Icons.filter_alt_outlined),
-            ),
-          ),
-          const SizedBox(width: 4),
-
-          // Sort button
-          GestureDetector(
-            onTap: onSortPressed,
-            child: Container(
-              height: 40,
-              width: 40,
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: const Icon(Icons.sort),
             ),
           ),
         ],

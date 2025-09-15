@@ -25,27 +25,59 @@ class _SearchScreenState extends State<SearchScreen> {
   void _onFilterPressed() async {
     final filters = await Navigator.push<Map<String, dynamic>>(
       context,
-      MaterialPageRoute(builder: (_) => const FilterScreen()),
+      MaterialPageRoute(
+        builder: (_) => FilterScreen(
+          initialFilters: _filters, // ส่งค่า filters ปัจจุบัน
+        ),
+      ),
     );
 
     if (filters != null) {
       setState(() {
-        _filters = filters;
+        _filters =
+            filters; // อัพเดทค่า filter แต่ไม่ล้างจนกว่าจะออกจากหน้า search
       });
     }
   }
 
-  void _onSortPressed() {
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(const SnackBar(content: Text("เรียงลำดับ (Mock UI)")));
+  double _parsePrice(String priceString) {
+    // ลบ '฿' และ ',' แล้วแปลงเป็น double
+    final clean = priceString.replaceAll('฿', '').replaceAll(',', '');
+    return double.tryParse(clean) ?? 0;
   }
 
   @override
   Widget build(BuildContext context) {
     final filtered = dummyProducts.where((product) {
       final name = product['name']?.toString().toLowerCase() ?? '';
-      return name.contains(_searchQuery.toLowerCase());
+      final category = product['category']?.toString() ?? '';
+      final location = product['location']?.toString() ?? '';
+      final price = _parsePrice(product['price']?.toString() ?? '0');
+
+      // ตรวจสอบ search query
+      if (!name.contains(_searchQuery.toLowerCase())) return false;
+
+      // ตรวจสอบ category filter
+      if (_filters['category'] != null &&
+          _filters['category'].toString().isNotEmpty &&
+          category != _filters['category'])
+        return false;
+
+      // ตรวจสอบ location filter
+      if (_filters['location'] != null &&
+          _filters['location'].toString().isNotEmpty &&
+          location != _filters['location'])
+        return false;
+
+      // ตรวจสอบ price range filter
+      final minPrice =
+          double.tryParse(_filters['minPrice'] ?? '') ??
+          double.negativeInfinity;
+      final maxPrice =
+          double.tryParse(_filters['maxPrice'] ?? '') ?? double.infinity;
+      if (price < minPrice || price > maxPrice) return false;
+
+      return true;
     }).toList();
 
     return Scaffold(
@@ -59,7 +91,6 @@ class _SearchScreenState extends State<SearchScreen> {
           searchController: _searchController,
           onSearchChanged: _onSearchChanged,
           onFilterPressed: _onFilterPressed,
-          onSortPressed: _onSortPressed,
         ),
       ),
       body: SafeArea(

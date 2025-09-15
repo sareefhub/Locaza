@@ -18,6 +18,7 @@ import '../features/chat/presentation/screens/chat_detail_screen.dart';
 import '../features/notification/presentation/screens/notification_screen.dart';
 import '../features/product/presentation/screens/product_details_screen.dart';
 import '../features/product/presentation/screens/search_screen.dart';
+import '../features/product/presentation/screens/filter_screen.dart';
 
 import '../utils/user_session.dart';
 import 'routes.dart';
@@ -83,6 +84,11 @@ final GoRouter appRouter = GoRouter(
         final product = state.extra as Map<String, dynamic>;
         return ProductDetailsPage(product: product);
       },
+    ),
+    GoRoute(
+      path: AppRoutes.filter,
+      builder: (_, state) =>
+          FilterScreen(initialFilters: state.extra as Map<String, dynamic>?),
     ),
   ],
 );

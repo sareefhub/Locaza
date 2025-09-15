@@ -18,4 +18,5 @@ class AppRoutes {
   static const String notification = '/notification';
   static const String postEdit = '/postedit/:id';
   static const String productDetails = '/product_details';
+  static const String filter = '/filter';
 }
