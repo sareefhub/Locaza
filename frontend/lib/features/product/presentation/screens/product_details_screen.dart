@@ -319,7 +319,7 @@ class _ProductDetailsPageState extends ConsumerState<ProductDetailsPage> {
                           ),
                           const SizedBox(height: 8),
                           SizedBox(
-                            height: 270,
+                            height: 280,
                             child: ListView.separated(
                               scrollDirection: Axis.horizontal,
                               itemCount: similarProducts.length,

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/data/dummy_products.dart';
 import '../../../../core/widgets/product_card.dart';
 import 'filter_screen.dart';
 import '../../../../core/widgets/search_bar_all.dart';
@@ -15,33 +16,6 @@ class _SearchScreenState extends State<SearchScreen> {
   String _searchQuery = '';
   Map<String, dynamic> _filters = {};
 
-  final List<Map<String, dynamic>> mockProducts = [
-    {
-      "id": "1",
-      "name": "มะม่วงออร์แกนิก",
-      "category": "อาหารสด",
-      "location": "เชียงใหม่",
-      "price": "฿120",
-      "image": "assets/products-image/mango.jpg",
-    },
-    {
-      "id": "2",
-      "name": "ตะกร้าสานไม้ไผ่",
-      "category": "งานหัตถกรรม",
-      "location": "ลำปาง",
-      "price": "฿250",
-      "image": "assets/products-image/basket.jpg",
-    },
-    {
-      "id": "3",
-      "name": "หมึกกล้วย",
-      "category": "อาหารสด",
-      "location": "สงขลา",
-      "price": "฿280",
-      "image": "assets/products-image/squid.jpeg",
-    },
-  ];
-
   void _onSearchChanged(String value) {
     setState(() {
       _searchQuery = value;
@@ -51,9 +25,7 @@ class _SearchScreenState extends State<SearchScreen> {
   void _onFilterPressed() async {
     final filters = await Navigator.push<Map<String, dynamic>>(
       context,
-      MaterialPageRoute(
-        builder: (_) => const FilterScreen(),
-      ),
+      MaterialPageRoute(builder: (_) => const FilterScreen()),
     );
 
     if (filters != null) {
@@ -64,14 +36,14 @@ class _SearchScreenState extends State<SearchScreen> {
   }
 
   void _onSortPressed() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text("เรียงลำดับ (Mock UI)")),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text("เรียงลำดับ (Mock UI)")));
   }
 
   @override
   Widget build(BuildContext context) {
-    final filtered = mockProducts.where((product) {
+    final filtered = dummyProducts.where((product) {
       final name = product['name']?.toString().toLowerCase() ?? '';
       return name.contains(_searchQuery.toLowerCase());
     }).toList();
@@ -103,7 +75,7 @@ class _SearchScreenState extends State<SearchScreen> {
                         crossAxisCount: 2,
                         crossAxisSpacing: 8,
                         mainAxisSpacing: 8,
-                        childAspectRatio: 0.60,
+                        childAspectRatio: 0.65,
                         children: List.generate(filtered.length, (index) {
                           return ProductCard(product: filtered[index]);
                         }),

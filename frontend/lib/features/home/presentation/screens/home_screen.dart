@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:responsive_builder/responsive_builder.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../../core/widgets/navigation.dart';
 import '../../../../core/widgets/product_card.dart';
 import '../../../../core/widgets/category_list.dart';
 import 'package:frontend/data/dummy_products.dart';
 import 'package:frontend/data/dummy_categories.dart';
+import 'package:frontend/routing/routes.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -15,7 +17,7 @@ class HomeScreen extends StatelessWidget {
     if (width >= 1600) return 6; // Desktop ใหญ่
     if (width >= 1300) return 5;
     if (width >= 1000) return 4;
-    if (width >= 600) return 3;  // Tablet
+    if (width >= 600) return 3; // Tablet
     return 2; // Mobile
   }
 
@@ -35,7 +37,10 @@ class HomeScreen extends StatelessWidget {
                 // Header
                 SliverToBoxAdapter(
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 12,
+                    ),
                     child: Row(
                       children: [
                         Image.asset('assets/logo.png', height: 24),
@@ -57,23 +62,35 @@ class HomeScreen extends StatelessWidget {
                 SliverToBoxAdapter(
                   child: Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: TextField(
-                      style: GoogleFonts.sarabun(fontSize: 14),
-                      decoration: InputDecoration(
-                        hintText: 'ค้นหา',
-                        prefixIcon: const Icon(Icons.search),
-                        filled: true,
-                        fillColor: Colors.white,
-                        contentPadding: const EdgeInsets.symmetric(vertical: 0),
-                        border: OutlineInputBorder(
+                    child: InkWell(
+                      onTap: () => context.push(AppRoutes.search),
+                      borderRadius: BorderRadius.circular(25),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 10,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
                           borderRadius: BorderRadius.circular(25),
-                          borderSide: BorderSide.none,
+                        ),
+                        child: Row(
+                          children: const [
+                            Icon(Icons.search, color: Colors.grey),
+                            SizedBox(width: 8),
+                            Text(
+                              'ค้นหา',
+                              style: TextStyle(
+                                color: Colors.grey,
+                                fontSize: 14,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ),
                   ),
                 ),
-
                 const SliverToBoxAdapter(child: SizedBox(height: 16)),
 
                 // Categories
@@ -87,12 +104,9 @@ class HomeScreen extends StatelessWidget {
                 SliverPadding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   sliver: SliverGrid(
-                    delegate: SliverChildBuilderDelegate(
-                      (context, index) {
-                        return ProductCard(product: bestSaleProducts[index]);
-                      },
-                      childCount: bestSaleProducts.length,
-                    ),
+                    delegate: SliverChildBuilderDelegate((context, index) {
+                      return ProductCard(product: bestSaleProducts[index]);
+                    }, childCount: bestSaleProducts.length),
                     gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                       crossAxisCount: crossAxisCount,
                       crossAxisSpacing: 12,

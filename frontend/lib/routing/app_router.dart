@@ -17,6 +17,7 @@ import '../features/chat/presentation/screens/chat_screen.dart';
 import '../features/chat/presentation/screens/chat_detail_screen.dart';
 import '../features/notification/presentation/screens/notification_screen.dart';
 import '../features/product/presentation/screens/product_details_screen.dart';
+import '../features/product/presentation/screens/search_screen.dart';
 
 import '../utils/user_session.dart';
 import 'routes.dart';
@@ -30,6 +31,7 @@ final GoRouter appRouter = GoRouter(
       builder: (_, __) => const OnboardingScreen(),
     ),
     GoRoute(path: AppRoutes.home, builder: (_, __) => const HomeScreen()),
+    GoRoute(path: AppRoutes.search, builder: (_, __) => const SearchScreen()),
     GoRoute(path: AppRoutes.login, builder: (_, __) => const LoginScreen()),
     GoRoute(
       path: AppRoutes.loginPhone,
@@ -76,7 +78,7 @@ final GoRouter appRouter = GoRouter(
           EditPostFormScreen(postId: state.pathParameters['id']!),
     ),
     GoRoute(
-      path: '/product_details',
+      path: AppRoutes.productDetails,
       builder: (_, state) {
         final product = state.extra as Map<String, dynamic>;
         return ProductDetailsPage(product: product);
