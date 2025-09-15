@@ -33,6 +33,7 @@ migrate_working_dir/
 .pub/
 /build/
 linux/flutter/
+linux/flutter/generated_plugin_registrant.*
 macos/Flutter/
 
 # Symbolication related

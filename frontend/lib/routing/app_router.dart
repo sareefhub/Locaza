@@ -16,6 +16,7 @@ import '../features/product/presentation/screens/edit_post_form_screen.dart';
 import '../features/chat/presentation/screens/chat_screen.dart';
 import '../features/chat/presentation/screens/chat_detail_screen.dart';
 import '../features/notification/presentation/screens/notification_screen.dart';
+import '../features/product/presentation/screens/product_details_screen.dart';
 
 import '../utils/user_session.dart';
 import 'routes.dart';
@@ -24,17 +25,35 @@ final GoRouter appRouter = GoRouter(
   initialLocation: AppRoutes.home,
   routes: [
     GoRoute(path: AppRoutes.splash, builder: (_, __) => const SplashScreen()),
-    GoRoute(path: AppRoutes.onboarding, builder: (_, __) => const OnboardingScreen()),
+    GoRoute(
+      path: AppRoutes.onboarding,
+      builder: (_, __) => const OnboardingScreen(),
+    ),
     GoRoute(path: AppRoutes.home, builder: (_, __) => const HomeScreen()),
     GoRoute(path: AppRoutes.login, builder: (_, __) => const LoginScreen()),
-    GoRoute(path: AppRoutes.loginPhone, builder: (_, __) => const LoginPhoneScreen()),
+    GoRoute(
+      path: AppRoutes.loginPhone,
+      builder: (_, __) => const LoginPhoneScreen(),
+    ),
     GoRoute(path: AppRoutes.signup, builder: (_, __) => const SignUpScreen()),
     GoRoute(path: AppRoutes.profile, builder: (_, __) => const ProfileScreen()),
     GoRoute(path: AppRoutes.post, builder: (_, __) => const PostScreen()),
-    GoRoute(path: AppRoutes.editProfile, builder: (_, __) => const EditProfileScreen()),
-    GoRoute(path: AppRoutes.postForm, builder: (_, __) => const PostFormScreen()),
-    GoRoute(path: AppRoutes.favorite, builder: (_, __) => const FavoriteScreen()),
-    GoRoute(path: AppRoutes.choosePhoto, builder: (_, __) => const ChoosePhotoScreen()),
+    GoRoute(
+      path: AppRoutes.editProfile,
+      builder: (_, __) => const EditProfileScreen(),
+    ),
+    GoRoute(
+      path: AppRoutes.postForm,
+      builder: (_, __) => const PostFormScreen(),
+    ),
+    GoRoute(
+      path: AppRoutes.favorite,
+      builder: (_, __) => const FavoriteScreen(),
+    ),
+    GoRoute(
+      path: AppRoutes.choosePhoto,
+      builder: (_, __) => const ChoosePhotoScreen(),
+    ),
     GoRoute(
       path: AppRoutes.chat,
       builder: (_, __) => ChatScreen(currentUserId: UserSession.userId ?? ''),
@@ -47,10 +66,21 @@ final GoRouter appRouter = GoRouter(
         otherUserId: state.pathParameters['otherUserId']!,
       ),
     ),
-    GoRoute(path: AppRoutes.notification, builder: (_, __) => const NotificationScreen()),
+    GoRoute(
+      path: AppRoutes.notification,
+      builder: (_, __) => const NotificationScreen(),
+    ),
     GoRoute(
       path: AppRoutes.postEdit,
-      builder: (_, state) => EditPostFormScreen(postId: state.pathParameters['id']!),
+      builder: (_, state) =>
+          EditPostFormScreen(postId: state.pathParameters['id']!),
+    ),
+    GoRoute(
+      path: '/product_details',
+      builder: (_, state) {
+        final product = state.extra as Map<String, dynamic>;
+        return ProductDetailsPage(product: product);
+      },
     ),
   ],
 );

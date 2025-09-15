@@ -1,24 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:go_router/go_router.dart';
 
 class ProductCard extends StatelessWidget {
   final Map<String, dynamic> product;
+  final bool isFavorite;
 
-  const ProductCard({super.key, required this.product});
+  const ProductCard({
+    super.key,
+    required this.product,
+    this.isFavorite = false,
+  });
 
   @override
   Widget build(BuildContext context) {
     final image = product['image']?.toString() ?? '';
-    const cardWidth = 160.0;
-    const imageHeight = 140.0;
-
-    int rating = 0;
-    final ratingRaw = product['rating'];
-    if (ratingRaw is int) {
-      rating = ratingRaw;
-    } else if (ratingRaw is double) {
-      rating = ratingRaw.floor();
-    }
+    const cardWidth = 180.0;
+    const imageHeight = 150.0;
+    const favoriteIconSize = 24.0;
 
     Widget buildImage() {
       if (image.isEmpty) {
@@ -51,72 +50,95 @@ class ProductCard extends StatelessWidget {
       );
     }
 
-    return Container(
-      width: cardWidth,
-      padding: const EdgeInsets.all(8),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 4,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(8),
-            child: buildImage(),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            product['category']?.toString() ?? '',
-            style: GoogleFonts.sarabun(fontSize: 12, color: Colors.grey),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-          const SizedBox(height: 4),
-          Text(
-            product['name']?.toString() ?? '',
-            style: GoogleFonts.sarabun(
-              fontWeight: FontWeight.bold,
-              fontSize: 14,
-              color: Colors.black,
+    return InkWell(
+      onTap: () {
+        GoRouter.of(context).push('/product_details', extra: product);
+      },
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        width: cardWidth,
+        padding: const EdgeInsets.all(8),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 4,
+              offset: const Offset(0, 2),
             ),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-          const SizedBox(height: 4),
-          Text(
-            product['location']?.toString() ?? '',
-            style: GoogleFonts.sarabun(fontSize: 12, color: Colors.grey),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-          const SizedBox(height: 4),
-          Row(
-            children: List.generate(5, (i) {
-              return Icon(
-                i < rating ? Icons.star : Icons.star_border,
-                size: 14,
-                color: Colors.orange,
-              );
-            }),
-          ),
-          const Spacer(),
-          Text(
-            '${product['price'] ?? ''} บาท',
-            style: GoogleFonts.sarabun(
-              fontWeight: FontWeight.bold,
-              color: Colors.green,
-              fontSize: 16,
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Stack(
+              children: [
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: buildImage(),
+                ),
+                Positioned(
+                  top: 8,
+                  right: 8,
+                  child: Container(
+                    width: favoriteIconSize + 8,
+                    height: favoriteIconSize + 8,
+                    decoration: BoxDecoration(
+                      color: Colors.grey.withOpacity(0.3),
+                      shape: BoxShape.circle,
+                    ),
+                    child: IconButton(
+                      padding: const EdgeInsets.all(4),
+                      iconSize: favoriteIconSize,
+                      icon: Icon(
+                        isFavorite ? Icons.favorite : Icons.favorite_border,
+                        color: isFavorite ? Colors.red : Colors.white,
+                      ),
+                      onPressed: () {
+                        // เพิ่มฟังก์ชันกดหัวใจ
+                      },
+                    ),
+                  ),
+                ),
+              ],
             ),
-          ),
-        ],
+            const SizedBox(height: 6),
+            Text(
+              product['name']?.toString() ?? '',
+              style: GoogleFonts.sarabun(
+                fontWeight: FontWeight.normal,
+                fontSize: 14,
+                color: Colors.black,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+            const SizedBox(height: 4),
+            Text(
+              product['category']?.toString() ?? '',
+              style: GoogleFonts.sarabun(fontSize: 12, color: Colors.grey),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+            const SizedBox(height: 2),
+            Text(
+              product['location']?.toString() ?? '',
+              style: GoogleFonts.sarabun(fontSize: 12, color: Colors.grey),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+            const Spacer(),
+            Text(
+              '${product['price'] ?? ''}',
+              style: GoogleFonts.sarabun(
+                fontWeight: FontWeight.bold,
+                color: const Color(0xFF315EB2),
+                fontSize: 16,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
