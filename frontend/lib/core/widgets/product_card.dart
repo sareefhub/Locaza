@@ -15,9 +15,9 @@ class ProductCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final image = product['image']?.toString() ?? '';
-    const cardWidth = 180.0;
+    const cardWidth = 160.0;
     const imageHeight = 150.0;
-    const favoriteIconSize = 24.0;
+    const favoriteIconSize = 22.0;
 
     Widget buildImage() {
       if (image.isEmpty) {
@@ -57,7 +57,7 @@ class ProductCard extends StatelessWidget {
       borderRadius: BorderRadius.circular(12),
       child: Container(
         width: cardWidth,
-        padding: const EdgeInsets.all(8),
+        padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(12),
@@ -128,7 +128,7 @@ class ProductCard extends StatelessWidget {
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),
-            const Spacer(),
+            const SizedBox(height: 14),
             Text(
               '${product['price'] ?? ''}',
               style: GoogleFonts.sarabun(

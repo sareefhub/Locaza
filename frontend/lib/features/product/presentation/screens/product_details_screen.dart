@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:frontend/core/widgets/product_card.dart';
+import 'package:frontend/data/dummy_products.dart';
 
 class ProductDetailsPage extends ConsumerStatefulWidget {
   final Map<String, dynamic> product;
@@ -13,84 +16,50 @@ class ProductDetailsPage extends ConsumerStatefulWidget {
 
 class _ProductDetailsPageState extends ConsumerState<ProductDetailsPage> {
   late Map<String, dynamic> product;
-  List<Map<String, dynamic>> similarProducts = [];
+  bool showFullDescription = false;
 
   @override
   void initState() {
     super.initState();
     product = widget.product;
-
-    similarProducts = [
-      {
-        "id": "2",
-        "name": "ทุเรียนหมอนทอง",
-        "category": "ผลไม้",
-        "price": "฿500",
-        "image": "assets/images/placeholder.png",
-        "sellerName": "ร้านผลไม้ B",
-        "sellerImage": "assets/images/placeholder_seller.png",
-      },
-      {
-        "id": "3",
-        "name": "มังคุด",
-        "category": "ผลไม้",
-        "price": "฿150",
-        "image": "assets/images/placeholder.png",
-        "sellerName": "ร้านผลไม้ C",
-        "sellerImage": "assets/images/placeholder_seller.png",
-      }
-    ];
   }
 
   @override
   Widget build(BuildContext context) {
     final String productDescription =
-        (product['description'] != null && product['description'].toString().isNotEmpty)
-            ? product['description'].toString()
-            : 'ไม่มีรายละเอียดสินค้า';
+        (product['description'] != null &&
+            product['description'].toString().isNotEmpty)
+        ? product['description'].toString()
+        : 'ไม่มีรายละเอียดสินค้า';
 
-    final bool isFavorite = false;
-    const double favoriteIconSize = 25;
+    final bool hasLongDescription =
+        productDescription.split('\n').length > 2 ||
+        productDescription.length > 100;
+
+    final similarProducts = dummyProducts
+        .where(
+          (p) =>
+              p['category'] == product['category'] &&
+              p['name'] != product['name'],
+        )
+        .toList();
 
     return Scaffold(
       backgroundColor: const Color(0xFFE0F3F7),
-      bottomNavigationBar: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Row(
-          children: [
-            Expanded(
-              child: ElevatedButton.icon(
-                onPressed: () {
-                  GoRouter.of(context).push('/login');
-                },
-                icon: const Icon(Icons.chat_bubble_outline),
-                label: const Text("Chat"),
-              ),
-            ),
-            const SizedBox(width: 8),
-            Expanded(
-              child: ElevatedButton.icon(
-                onPressed: () {
-                  GoRouter.of(context).push('/login');
-                },
-                icon: const Icon(Icons.call_outlined),
-                label: const Text("Call"),
-              ),
-            ),
-          ],
-        ),
-      ),
       body: SafeArea(
         child: SingleChildScrollView(
           child: Column(
             children: [
               Stack(
                 children: [
-                  Image.asset(
-                    product['image'],
-                    height: 290,
-                    width: double.infinity,
-                    fit: BoxFit.cover,
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(0),
+                    child: Image.asset(
+                      product['image'] ?? 'assets/images/placeholder.png',
+                      height: 310,
+                      width: double.infinity,
+                      fit: BoxFit.cover,
+                    ),
                   ),
                   Positioned(
                     top: 16,
@@ -106,55 +75,178 @@ class _ProductDetailsPageState extends ConsumerState<ProductDetailsPage> {
                   ),
                   Positioned(
                     top: 16,
-                    right: 8,
+                    right: 16,
                     child: Container(
-                      width: favoriteIconSize + 8,
-                      height: favoriteIconSize + 8,
+                      width: 40,
+                      height: 40,
                       decoration: BoxDecoration(
-                        color: Colors.grey.withValues(alpha: 0.3),
+                        color: Colors.grey.withOpacity(0.3),
                         shape: BoxShape.circle,
                       ),
                       child: IconButton(
-                        padding: const EdgeInsets.all(4),
-                        iconSize: favoriteIconSize,
+                        padding: const EdgeInsets.all(8),
                         icon: Icon(
-                          isFavorite ? Icons.favorite : Icons.favorite_border,
-                          color: isFavorite ? Colors.red : Colors.white,
+                          false ? Icons.favorite : Icons.favorite_border,
+                          color: Colors.white,
+                          size: 24,
                         ),
                         onPressed: () {
-                          GoRouter.of(context).push('/login');
+                          // TODO: เพิ่มฟังก์ชัน favorite
                         },
                       ),
                     ),
                   ),
                 ],
               ),
+
               Padding(
                 padding: const EdgeInsets.all(16),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(product['price'],
-                        style: const TextStyle(
-                            fontSize: 22,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.green)),
-                    Text(product['name'], style: const TextStyle(fontSize: 18)),
-                    const SizedBox(height: 8),
+                    Text(
+                      product['price'] ?? '',
+                      style: GoogleFonts.sarabun(
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                        color: const Color(0xFF315EB2),
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      product['name'] ?? '',
+                      style: GoogleFonts.sarabun(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    // Category
                     Container(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 8, vertical: 4),
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
                       decoration: BoxDecoration(
-                        color: const Color.fromARGB(200, 209, 233, 242),
+                        color: const Color(0xFFC9E1E6),
                         borderRadius: BorderRadius.circular(8),
                       ),
-                      child: Text(product['category']),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.category, size: 14, color: Colors.grey),
+                          const SizedBox(width: 4),
+                          Text(
+                            'หมวดหมู่',
+                            style: GoogleFonts.sarabun(
+                              fontSize: 12,
+                              color: Colors.grey,
+                            ),
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            product['category'] ?? '',
+                            style: GoogleFonts.sarabun(
+                              fontSize: 12,
+                              color: Colors.black,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
+                    const SizedBox(height: 4),
+                    // Location
+                    if (product['location'] != null)
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFC9E1E6),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.location_on,
+                              size: 14,
+                              color: Colors.grey,
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              'ตำแหน่ง',
+                              style: GoogleFonts.sarabun(
+                                fontSize: 12,
+                                color: Colors.grey,
+                              ),
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              product['location'],
+                              style: GoogleFonts.sarabun(
+                                fontSize: 12,
+                                color: Colors.black,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                     const SizedBox(height: 16),
-                    Text(productDescription),
-                    TextButton(
-                      onPressed: () {},
-                      child: const Text("Read more"),
+                    // Divider
+                    Divider(color: Colors.grey.shade400, thickness: 1),
+                    const SizedBox(height: 8),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'รายละเอียดสินค้า',
+                          style: GoogleFonts.sarabun(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          productDescription,
+                          maxLines: showFullDescription ? null : 2,
+                          overflow: showFullDescription
+                              ? TextOverflow.visible
+                              : TextOverflow.ellipsis,
+                          style: GoogleFonts.sarabun(fontSize: 14),
+                        ),
+                        if (hasLongDescription)
+                          TextButton(
+                            onPressed: () {
+                              setState(() {
+                                showFullDescription = !showFullDescription;
+                              });
+                            },
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  showFullDescription
+                                      ? Icons.keyboard_arrow_up
+                                      : Icons.keyboard_arrow_down,
+                                  size: 16,
+                                  color: const Color(0xFF315EB2),
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  showFullDescription
+                                      ? "ดูน้อยลง"
+                                      : "อ่านเพิ่มเติม",
+                                  style: GoogleFonts.sarabun(
+                                    fontSize: 14,
+                                    color: const Color(0xFF315EB2),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                      ],
                     ),
                     const SizedBox(height: 18),
                     Container(
@@ -167,39 +259,49 @@ class _ProductDetailsPageState extends ConsumerState<ProductDetailsPage> {
                         children: [
                           CircleAvatar(
                             radius: 24,
-                            backgroundImage: AssetImage(product['sellerImage']),
+                            backgroundImage: AssetImage(
+                              product['sellerImage'] ?? '',
+                            ),
                           ),
                           const SizedBox(width: 12),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                product['sellerName'] ?? 'ไม่ทราบชื่อผู้ขาย',
-                                style: const TextStyle(
-                                    fontWeight: FontWeight.bold, fontSize: 16),
-                              ),
-                              const SizedBox(height: 12),
-                              Row(
-                                children: [
-                                  OutlinedButton.icon(
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  product['sellerName'] ?? 'ไม่ทราบชื่อผู้ขาย',
+                                  style: GoogleFonts.sarabun(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                const SizedBox(height: 12),
+                                SizedBox(
+                                  width: double.infinity,
+                                  child: OutlinedButton.icon(
                                     onPressed: () {
                                       GoRouter.of(context).push('/login');
                                     },
-                                    icon: const Icon(Icons.chat),
-                                    label: const Text("Chat"),
+                                    icon: const Icon(
+                                      Icons.chat,
+                                      color: Color(0xFF315EB2),
+                                    ),
+                                    label: Text(
+                                      "แชต",
+                                      style: GoogleFonts.sarabun(
+                                        color: const Color(0xFF315EB2),
+                                      ),
+                                    ),
+                                    style: OutlinedButton.styleFrom(
+                                      side: const BorderSide(
+                                        color: Color(0xFF315EB2),
+                                      ),
+                                    ),
                                   ),
-                                  const SizedBox(width: 8),
-                                  OutlinedButton.icon(
-                                    onPressed: () {
-                                      GoRouter.of(context).push('/login');
-                                    },
-                                    icon: const Icon(Icons.call),
-                                    label: const Text("Call"),
-                                  ),
-                                ],
-                              )
-                            ],
-                          )
+                                ),
+                              ],
+                            ),
+                          ),
                         ],
                       ),
                     ),
@@ -208,50 +310,26 @@ class _ProductDetailsPageState extends ConsumerState<ProductDetailsPage> {
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text(
-                            'สินค้าใกล้เคียง',
-                            style: TextStyle(
-                                fontSize: 18, fontWeight: FontWeight.bold),
+                          Text(
+                            'สินค้าที่คล้ายกัน',
+                            style: GoogleFonts.sarabun(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                           const SizedBox(height: 8),
-                          GridView.builder(
-                            shrinkWrap: true,
-                            physics: const NeverScrollableScrollPhysics(),
-                            gridDelegate:
-                                const SliverGridDelegateWithFixedCrossAxisCount(
-                              crossAxisCount: 2,
-                              crossAxisSpacing: 8,
-                              mainAxisSpacing: 8,
-                              childAspectRatio: 0.55,
+                          SizedBox(
+                            height: 270,
+                            child: ListView.separated(
+                              scrollDirection: Axis.horizontal,
+                              itemCount: similarProducts.length,
+                              separatorBuilder: (_, __) =>
+                                  const SizedBox(width: 8),
+                              itemBuilder: (context, index) {
+                                final sp = similarProducts[index];
+                                return ProductCard(product: sp);
+                              },
                             ),
-                            itemCount: similarProducts.length,
-                            itemBuilder: (context, index) {
-                              final sp = similarProducts[index];
-                              return Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Container(
-                                    height: 120,
-                                    decoration: BoxDecoration(
-                                      borderRadius: BorderRadius.circular(8),
-                                      color: Colors.grey[200],
-                                    ),
-                                    child: Center(
-                                      child: Text("รูปภาพ",
-                                          style: TextStyle(
-                                              color: Colors.grey[600])),
-                                    ),
-                                  ),
-                                  const SizedBox(height: 6),
-                                  Text(sp['name'],
-                                      style: const TextStyle(
-                                          fontWeight: FontWeight.bold)),
-                                  Text(sp['price'],
-                                      style:
-                                          const TextStyle(color: Colors.green)),
-                                ],
-                              );
-                            },
                           ),
                         ],
                       ),
