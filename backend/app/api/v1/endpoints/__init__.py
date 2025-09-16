@@ -9,6 +9,7 @@ from app.api.v1.endpoints import (
     search_history,
     chats,
     transactions,
+    notifications,
 )
 
 api_router = APIRouter()
@@ -23,3 +24,4 @@ api_router.include_router(search_history.router)
 api_router.include_router(chats.router)
 api_router.include_router(transactions.sale_router)
 api_router.include_router(transactions.review_router)
+api_router.include_router(notifications.router)
