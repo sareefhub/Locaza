@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:frontend/data/dummy_products.dart';
+import 'package:frontend/data/dummy_categories.dart';
+import 'package:frontend/data/dummy_users.dart';
 import '../../../../core/widgets/product_card.dart';
 import 'filter_screen.dart';
 import '../../../../core/widgets/search_bar_all.dart';
@@ -25,57 +28,53 @@ class _SearchScreenState extends State<SearchScreen> {
   void _onFilterPressed() async {
     final filters = await Navigator.push<Map<String, dynamic>>(
       context,
-      MaterialPageRoute(
-        builder: (_) => FilterScreen(
-          initialFilters: _filters, // ส่งค่า filters ปัจจุบัน
-        ),
-      ),
+      MaterialPageRoute(builder: (_) => FilterScreen(initialFilters: _filters)),
     );
 
     if (filters != null) {
       setState(() {
-        _filters =
-            filters; // อัพเดทค่า filter แต่ไม่ล้างจนกว่าจะออกจากหน้า search
+        _filters = filters;
       });
     }
-  }
-
-  double _parsePrice(String priceString) {
-    // ลบ '฿' และ ',' แล้วแปลงเป็น double
-    final clean = priceString.replaceAll('฿', '').replaceAll(',', '');
-    return double.tryParse(clean) ?? 0;
   }
 
   @override
   Widget build(BuildContext context) {
     final filtered = dummyProducts.where((product) {
-      final name = product['name']?.toString().toLowerCase() ?? '';
-      final category = product['category']?.toString() ?? '';
+      final title = product['title']?.toString().toLowerCase() ?? '';
+      final categoryId = product['category_id'];
       final location = product['location']?.toString() ?? '';
-      final price = _parsePrice(product['price']?.toString() ?? '0');
+      final price = product['price'] as double? ?? 0;
 
       // ตรวจสอบ search query
-      if (!name.contains(_searchQuery.toLowerCase())) return false;
+      if (!title.contains(_searchQuery.toLowerCase())) return false;
 
       // ตรวจสอบ category filter
       if (_filters['category'] != null &&
-          _filters['category'].toString().isNotEmpty &&
-          category != _filters['category'])
-        return false;
+          _filters['category'].toString().isNotEmpty) {
+        final category = dummyCategories.firstWhere(
+          (c) => c['label'] == _filters['category'],
+          orElse: () => {},
+        );
+        if (category['id'] != categoryId) return false;
+      }
 
       // ตรวจสอบ location filter
       if (_filters['location'] != null &&
-          _filters['location'].toString().isNotEmpty &&
-          location != _filters['location'])
-        return false;
+          _filters['location'].toString().isNotEmpty) {
+        if (location != _filters['location']) return false;
+      }
 
       // ตรวจสอบ price range filter
-      final minPrice =
-          double.tryParse(_filters['minPrice'] ?? '') ??
-          double.negativeInfinity;
-      final maxPrice =
-          double.tryParse(_filters['maxPrice'] ?? '') ?? double.infinity;
-      if (price < minPrice || price > maxPrice) return false;
+      double? minPrice = double.tryParse(
+        _filters['minPrice']?.toString().trim() ?? '',
+      );
+      double? maxPrice = double.tryParse(
+        _filters['maxPrice']?.toString().trim() ?? '',
+      );
+
+      if (minPrice != null && price < minPrice) return false;
+      if (maxPrice != null && price > maxPrice) return false;
 
       return true;
     }).toList();
@@ -99,7 +98,15 @@ class _SearchScreenState extends State<SearchScreen> {
             const SizedBox(height: 16),
             Expanded(
               child: filtered.isEmpty
-                  ? const Center(child: Text("ไม่พบสินค้าที่ค้นหา"))
+                  ? Center(
+                      child: Text(
+                        "ไม่พบสินค้าที่ค้นหา",
+                        style: GoogleFonts.sarabun(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w400,
+                        ),
+                      ),
+                    )
                   : Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 16),
                       child: GridView.count(
@@ -107,9 +114,18 @@ class _SearchScreenState extends State<SearchScreen> {
                         crossAxisSpacing: 8,
                         mainAxisSpacing: 8,
                         childAspectRatio: 0.65,
-                        children: List.generate(filtered.length, (index) {
-                          return ProductCard(product: filtered[index]);
-                        }),
+                        children: filtered.map((product) {
+                          // เพิ่มข้อมูล seller ให้ ProductCard ใช้
+                          final seller = dummyUsers.firstWhere(
+                            (u) => u['id'] == product['seller_id'],
+                            orElse: () => {},
+                          );
+                          product['sellerName'] =
+                              seller['name'] ?? 'ไม่ทราบชื่อผู้ขาย';
+                          product['sellerImage'] = seller['avatar_url'] ?? '';
+
+                          return ProductCard(product: product);
+                        }).toList(),
                       ),
                     ),
             ),

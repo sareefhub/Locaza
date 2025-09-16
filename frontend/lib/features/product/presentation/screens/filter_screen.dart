@@ -18,11 +18,8 @@ class _FilterScreenState extends State<FilterScreen> {
   final TextEditingController minPriceController = TextEditingController();
   final TextEditingController maxPriceController = TextEditingController();
 
-  final List<String> categories = dummyCategories
-      .map((c) => c['label'] as String)
-      .toList();
-
-  final List<String> location = [
+  late final List<String> categories;
+  final List<String> locations = [
     "กรุงเทพมหานคร",
     "เชียงใหม่",
     "สงขลา",
@@ -33,12 +30,16 @@ class _FilterScreenState extends State<FilterScreen> {
   void initState() {
     super.initState();
 
+    // ดึง category label จาก schema
+    categories = dummyCategories.map((c) => c['label'] as String).toList();
+
+    // กำหนดค่าเริ่มต้นจาก initialFilters
     if (widget.initialFilters != null) {
       final cat = widget.initialFilters!['category']?.toString() ?? '';
       selectedCategory = categories.contains(cat) ? cat : null;
 
       final loc = widget.initialFilters!['location']?.toString() ?? '';
-      selectedLocation = (loc.isNotEmpty) ? loc : null;
+      selectedLocation = locations.contains(loc) ? loc : null;
 
       minPriceController.text = widget.initialFilters!['minPrice'] ?? '';
       maxPriceController.text = widget.initialFilters!['maxPrice'] ?? '';
@@ -79,9 +80,7 @@ class _FilterScreenState extends State<FilterScreen> {
             width: 24,
             height: 24,
           ),
-          onPressed: () {
-            Navigator.pop(context);
-          },
+          onPressed: () => Navigator.pop(context),
         ),
         title: Text(
           "กรองสินค้า",
@@ -102,7 +101,7 @@ class _FilterScreenState extends State<FilterScreen> {
             const SizedBox(height: 16),
             CustomDropdown(
               value: selectedLocation,
-              items: location,
+              items: locations,
               label: "จังหวัด",
               onChanged: (val) => setState(() => selectedLocation = val),
             ),

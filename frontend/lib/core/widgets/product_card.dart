@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:go_router/go_router.dart';
+import 'package:frontend/data/dummy_categories.dart';
 
 class ProductCard extends StatelessWidget {
   final Map<String, dynamic> product;
@@ -14,7 +15,16 @@ class ProductCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final image = product['image']?.toString() ?? '';
+    // ดึงรูปภาพจาก image_urls
+    final imageUrls = product['image_urls'] as List<dynamic>? ?? [];
+    final image = imageUrls.isNotEmpty ? imageUrls[0].toString() : '';
+
+    // ดึงหมวดหมู่จาก dummyCategories
+    final category = dummyCategories.firstWhere(
+      (c) => c['id'] == product['category_id'],
+      orElse: () => {'label': ''},
+    )['label'];
+
     const cardWidth = 160.0;
     const imageHeight = 150.0;
     const favoriteIconSize = 22.0;
@@ -105,7 +115,7 @@ class ProductCard extends StatelessWidget {
             ),
             const SizedBox(height: 6),
             Text(
-              product['name']?.toString() ?? '',
+              product['title']?.toString() ?? '',
               style: GoogleFonts.sarabun(
                 fontWeight: FontWeight.normal,
                 fontSize: 14,
@@ -116,7 +126,7 @@ class ProductCard extends StatelessWidget {
             ),
             const SizedBox(height: 4),
             Text(
-              product['category']?.toString() ?? '',
+              category?.toString() ?? '',
               style: GoogleFonts.sarabun(fontSize: 12, color: Colors.grey),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
@@ -130,7 +140,7 @@ class ProductCard extends StatelessWidget {
             ),
             const SizedBox(height: 14),
             Text(
-              '${product['price'] ?? ''}',
+              '฿${product['price'] ?? ''}',
               style: GoogleFonts.sarabun(
                 fontWeight: FontWeight.bold,
                 color: const Color(0xFF315EB2),

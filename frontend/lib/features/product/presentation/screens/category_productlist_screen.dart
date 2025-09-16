@@ -3,6 +3,8 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/widgets/product_card.dart';
 import '../../../../data/dummy_products.dart';
+import '../../../../data/dummy_categories.dart';
+import '../../../../data/dummy_users.dart';
 import '../../../../core/widgets/search_bar_category.dart';
 import 'package:frontend/routing/routes.dart';
 
@@ -21,7 +23,6 @@ class _CategoryProductListScreenState extends State<CategoryProductListScreen> {
   String _searchQuery = '';
 
   // เก็บค่า filter ปัจจุบัน
-  String? _selectedCategory;
   String? _selectedLocation;
   String _minPrice = '';
   String _maxPrice = '';
@@ -34,7 +35,7 @@ class _CategoryProductListScreenState extends State<CategoryProductListScreen> {
 
   void _onFilterPressed() async {
     final initialFilter = {
-      "category": widget.categoryName, // category ปัจจุบัน
+      "category": widget.categoryName,
       "location": _selectedLocation ?? "",
       "minPrice": _minPrice,
       "maxPrice": _maxPrice,
@@ -47,10 +48,6 @@ class _CategoryProductListScreenState extends State<CategoryProductListScreen> {
 
     if (result != null) {
       setState(() {
-        // category จะถูกบังคับให้เท่ากับหน้าปัจจุบันเสมอ
-        _selectedCategory = widget.categoryName;
-
-        // ส่วนอื่น ๆ รับค่าจาก FilterScreen ตามปกติ
         _selectedLocation = result["location"]?.toString().isEmpty ?? true
             ? null
             : result["location"];
@@ -62,33 +59,32 @@ class _CategoryProductListScreenState extends State<CategoryProductListScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // หา category id จากชื่อ category
+    final category = dummyCategories.firstWhere(
+      (c) => c['label'] == widget.categoryName,
+      orElse: () => {},
+    );
+    final categoryId = category['id'];
+
     final filteredProducts = dummyProducts.where((product) {
-      final productName = product['name']?.toString().toLowerCase() ?? '';
-      final productCategory = product['category']?.toString() ?? '';
+      final productTitle = product['title']?.toString().toLowerCase() ?? '';
+      final productCategoryId = product['category_id'];
       final productLocation = product['location']?.toString() ?? '';
 
-      // แปลงราคาเป็น int
-      final priceString =
-          product['price']?.toString().replaceAll(RegExp(r'[^\d]'), '') ?? '0';
-      final productPrice = int.tryParse(priceString) ?? 0;
+      final productPrice = (product['price'] as num?)?.toInt() ?? 0;
 
       final minPriceInt =
           int.tryParse(_minPrice.replaceAll(RegExp(r'[^\d]'), '')) ?? 0;
       final maxPriceInt =
           int.tryParse(_maxPrice.replaceAll(RegExp(r'[^\d]'), '')) ?? 9999999;
 
-      final matchesCategory = _selectedCategory != null
-          ? productCategory == _selectedCategory
-          : productCategory == widget.categoryName;
-
+      final matchesCategory = productCategoryId == categoryId;
       final matchesLocation = _selectedLocation != null
           ? productLocation == _selectedLocation
           : true;
-
       final matchesMinPrice = productPrice >= minPriceInt;
       final matchesMaxPrice = productPrice <= maxPriceInt;
-
-      final matchesSearch = productName.contains(_searchQuery.toLowerCase());
+      final matchesSearch = productTitle.contains(_searchQuery.toLowerCase());
 
       return matchesCategory &&
           matchesLocation &&
@@ -133,18 +129,23 @@ class _CategoryProductListScreenState extends State<CategoryProductListScreen> {
                 ),
               ],
             ),
-
             SearchFilterBar(
               searchController: _searchController,
               onSearchChanged: _onSearchChanged,
               onFilterPressed: _onFilterPressed,
             ),
-
             const SizedBox(height: 16),
-
             Expanded(
               child: filteredProducts.isEmpty
-                  ? const Center(child: Text("ไม่มีสินค้าสำหรับหมวดหมู่นี้"))
+                  ? Center(
+                      child: Text(
+                        "ไม่มีสินค้าสำหรับหมวดหมู่นี้",
+                        style: GoogleFonts.sarabun(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w400,
+                        ),
+                      ),
+                    )
                   : Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 16),
                       child: GridView.count(
@@ -152,12 +153,18 @@ class _CategoryProductListScreenState extends State<CategoryProductListScreen> {
                         crossAxisSpacing: 8,
                         mainAxisSpacing: 8,
                         childAspectRatio: 0.65,
-                        children: List.generate(filteredProducts.length, (
-                          index,
-                        ) {
-                          final product = filteredProducts[index];
+                        children: filteredProducts.map((product) {
+                          // ดึง seller info จาก dummyUsers
+                          final seller = dummyUsers.firstWhere(
+                            (u) => u['id'] == product['seller_id'],
+                            orElse: () => {},
+                          );
+                          product['sellerName'] =
+                              seller['name'] ?? 'ไม่ทราบชื่อผู้ขาย';
+                          product['sellerImage'] = seller['avatar_url'] ?? '';
+
                           return ProductCard(product: product);
-                        }),
+                        }).toList(),
                       ),
                     ),
             ),

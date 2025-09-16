@@ -8,6 +8,7 @@ import '../../../../core/widgets/product_card.dart';
 import '../../../../core/widgets/category_list.dart';
 import 'package:frontend/data/dummy_products.dart';
 import 'package:frontend/data/dummy_categories.dart';
+import 'package:frontend/data/dummy_users.dart';
 import 'package:frontend/routing/routes.dart';
 
 class HomeScreen extends StatelessWidget {
@@ -21,6 +22,20 @@ class HomeScreen extends StatelessWidget {
     return 2; // Mobile
   }
 
+  // ฟิลเตอร์สินค้า: แสดงเฉพาะสินค้าที่ยังว่างและผู้ขายถูกต้อง
+  List<Map<String, dynamic>> _getBestSaleProducts() {
+    return dummyProducts
+        .where((product) {
+          final seller = dummyUsers.firstWhere(
+            (u) => u['id'] == product['seller_id'],
+            orElse: () => {},
+          );
+          return product['status'] == 'available' && seller.isNotEmpty;
+        })
+        .take(8)
+        .toList();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -30,7 +45,7 @@ class HomeScreen extends StatelessWidget {
           builder: (context, sizingInfo) {
             final screenWidth = sizingInfo.screenSize.width;
             final crossAxisCount = _getCrossAxisCount(screenWidth);
-            final bestSaleProducts = dummyProducts.take(8).toList();
+            final bestSaleProducts = _getBestSaleProducts();
 
             return CustomScrollView(
               slivers: [
@@ -49,7 +64,10 @@ class HomeScreen extends StatelessWidget {
                           Expanded(
                             child: Text(
                               'Local Community Marketplace',
-                              style: Theme.of(context).textTheme.titleLarge,
+                              style: GoogleFonts.notoSansThai(
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                              ),
                               overflow: TextOverflow.ellipsis,
                             ),
                           ),
@@ -97,7 +115,6 @@ class HomeScreen extends StatelessWidget {
                 SliverToBoxAdapter(
                   child: CategoryList(categories: dummyCategories),
                 ),
-
                 const SliverToBoxAdapter(child: SizedBox(height: 16)),
 
                 // Products Grid
@@ -111,7 +128,7 @@ class HomeScreen extends StatelessWidget {
                       crossAxisCount: crossAxisCount,
                       crossAxisSpacing: 12,
                       mainAxisSpacing: 12,
-                      childAspectRatio: sizingInfo.isMobile ? 0.63 : 0.75,
+                      childAspectRatio: sizingInfo.isMobile ? 0.67 : 0.75,
                     ),
                   ),
                 ),

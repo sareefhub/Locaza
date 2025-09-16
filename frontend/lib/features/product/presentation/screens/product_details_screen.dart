@@ -4,6 +4,8 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:frontend/core/widgets/product_card.dart';
 import 'package:frontend/data/dummy_products.dart';
+import 'package:frontend/data/dummy_categories.dart';
+import 'package:frontend/data/dummy_users.dart';
 
 class ProductDetailsPage extends ConsumerStatefulWidget {
   final Map<String, dynamic> product;
@@ -17,6 +19,7 @@ class ProductDetailsPage extends ConsumerStatefulWidget {
 class _ProductDetailsPageState extends ConsumerState<ProductDetailsPage> {
   late Map<String, dynamic> product;
   bool showFullDescription = false;
+  bool isFavorite = false; // เพิ่มตัวแปร favorite
 
   @override
   void initState() {
@@ -26,6 +29,19 @@ class _ProductDetailsPageState extends ConsumerState<ProductDetailsPage> {
 
   @override
   Widget build(BuildContext context) {
+    final imageUrls = product['image_urls'] as List<dynamic>? ?? [];
+    final image = imageUrls.isNotEmpty ? imageUrls[0].toString() : '';
+
+    final category = dummyCategories.firstWhere(
+      (c) => c['id'] == product['category_id'],
+      orElse: () => {'label': ''},
+    )['label'];
+
+    final seller = dummyUsers.firstWhere(
+      (u) => u['id'] == product['seller_id'],
+      orElse: () => {'name': 'ไม่ทราบชื่อผู้ขาย', 'avatar_url': ''},
+    );
+
     final String productDescription =
         (product['description'] != null &&
             product['description'].toString().isNotEmpty)
@@ -39,8 +55,8 @@ class _ProductDetailsPageState extends ConsumerState<ProductDetailsPage> {
     final similarProducts = dummyProducts
         .where(
           (p) =>
-              p['category'] == product['category'] &&
-              p['name'] != product['name'],
+              p['category_id'] == product['category_id'] &&
+              p['id'] != product['id'],
         )
         .toList();
 
@@ -53,13 +69,19 @@ class _ProductDetailsPageState extends ConsumerState<ProductDetailsPage> {
               Stack(
                 children: [
                   ClipRRect(
-                    borderRadius: BorderRadius.circular(0),
-                    child: Image.asset(
-                      product['image'] ?? 'assets/images/placeholder.png',
-                      height: 310,
-                      width: double.infinity,
-                      fit: BoxFit.cover,
-                    ),
+                    child: image.isNotEmpty
+                        ? Image.asset(
+                            image,
+                            height: 310,
+                            width: double.infinity,
+                            fit: BoxFit.cover,
+                          )
+                        : Image.asset(
+                            'assets/images/placeholder.png',
+                            height: 310,
+                            width: double.infinity,
+                            fit: BoxFit.cover,
+                          ),
                   ),
                   Positioned(
                     top: 16,
@@ -86,26 +108,27 @@ class _ProductDetailsPageState extends ConsumerState<ProductDetailsPage> {
                       child: IconButton(
                         padding: const EdgeInsets.all(8),
                         icon: Icon(
-                          false ? Icons.favorite : Icons.favorite_border,
+                          isFavorite ? Icons.favorite : Icons.favorite_border,
                           color: Colors.white,
                           size: 24,
                         ),
                         onPressed: () {
-                          // TODO: เพิ่มฟังก์ชัน favorite
+                          setState(() {
+                            isFavorite = !isFavorite;
+                          });
                         },
                       ),
                     ),
                   ),
                 ],
               ),
-
               Padding(
                 padding: const EdgeInsets.all(16),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      product['price'] ?? '',
+                      '฿${product['price'] ?? ''}',
                       style: GoogleFonts.sarabun(
                         fontSize: 22,
                         fontWeight: FontWeight.bold,
@@ -114,7 +137,7 @@ class _ProductDetailsPageState extends ConsumerState<ProductDetailsPage> {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      product['name'] ?? '',
+                      product['title'] ?? '',
                       style: GoogleFonts.sarabun(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
@@ -134,18 +157,14 @@ class _ProductDetailsPageState extends ConsumerState<ProductDetailsPage> {
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(Icons.category, size: 14, color: Colors.grey),
-                          const SizedBox(width: 4),
-                          Text(
-                            'หมวดหมู่',
-                            style: GoogleFonts.sarabun(
-                              fontSize: 12,
-                              color: Colors.grey,
-                            ),
+                          const Icon(
+                            Icons.category,
+                            size: 14,
+                            color: Colors.grey,
                           ),
                           const SizedBox(width: 4),
                           Text(
-                            product['category'] ?? '',
+                            category ?? '',
                             style: GoogleFonts.sarabun(
                               fontSize: 12,
                               color: Colors.black,
@@ -169,18 +188,10 @@ class _ProductDetailsPageState extends ConsumerState<ProductDetailsPage> {
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(
+                            const Icon(
                               Icons.location_on,
                               size: 14,
                               color: Colors.grey,
-                            ),
-                            const SizedBox(width: 4),
-                            Text(
-                              'ตำแหน่ง',
-                              style: GoogleFonts.sarabun(
-                                fontSize: 12,
-                                color: Colors.grey,
-                              ),
                             ),
                             const SizedBox(width: 4),
                             Text(
@@ -194,8 +205,7 @@ class _ProductDetailsPageState extends ConsumerState<ProductDetailsPage> {
                         ),
                       ),
                     const SizedBox(height: 16),
-                    // Divider
-                    Divider(color: Colors.grey.shade400, thickness: 1),
+                    const Divider(color: Colors.grey, thickness: 1),
                     const SizedBox(height: 8),
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -249,6 +259,7 @@ class _ProductDetailsPageState extends ConsumerState<ProductDetailsPage> {
                       ],
                     ),
                     const SizedBox(height: 18),
+                    // Seller info
                     Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
@@ -259,9 +270,9 @@ class _ProductDetailsPageState extends ConsumerState<ProductDetailsPage> {
                         children: [
                           CircleAvatar(
                             radius: 24,
-                            backgroundImage: AssetImage(
-                              product['sellerImage'] ?? '',
-                            ),
+                            backgroundImage: seller['avatar_url'] != null
+                                ? AssetImage(seller['avatar_url'])
+                                : null,
                           ),
                           const SizedBox(width: 12),
                           Expanded(
@@ -269,7 +280,7 @@ class _ProductDetailsPageState extends ConsumerState<ProductDetailsPage> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  product['sellerName'] ?? 'ไม่ทราบชื่อผู้ขาย',
+                                  seller['name'] ?? 'ไม่ทราบชื่อผู้ขาย',
                                   style: GoogleFonts.sarabun(
                                     fontSize: 16,
                                     fontWeight: FontWeight.bold,
