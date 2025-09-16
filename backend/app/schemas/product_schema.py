@@ -1,7 +1,6 @@
 from pydantic import BaseModel
-from datetime import datetime
 from typing import Optional
-
+from datetime import datetime
 
 class ProductBase(BaseModel):
     seller_id: int
@@ -14,10 +13,8 @@ class ProductBase(BaseModel):
     status: Optional[str] = "available"
     image_urls: Optional[str] = None
 
-
 class ProductCreate(ProductBase):
     pass
-
 
 class ProductUpdate(BaseModel):
     title: Optional[str] = None
@@ -28,7 +25,6 @@ class ProductUpdate(BaseModel):
     location: Optional[str] = None
     status: Optional[str] = None
     image_urls: Optional[str] = None
-
 
 class ProductResponse(ProductBase):
     id: int

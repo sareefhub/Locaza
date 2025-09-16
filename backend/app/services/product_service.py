@@ -1,7 +1,6 @@
 from sqlalchemy.orm import Session
-from app.repositories.product_repository import ProductRepository
 from app.schemas.product_schema import ProductCreate, ProductUpdate
-
+from app.repositories.product_repository import ProductRepository
 
 class ProductService:
     @staticmethod
@@ -13,7 +12,7 @@ class ProductService:
         return ProductRepository.get(db, product_id)
 
     @staticmethod
-    def list_products(db: Session, skip: int = 0, limit: int = 10):
+    def get_products(db: Session, skip: int = 0, limit: int = 10):
         return ProductRepository.get_all(db, skip, limit)
 
     @staticmethod

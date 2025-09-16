@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from app.db.session import get_db
-from app.schemas.product_schema import ProductCreate, ProductResponse
+from app.schemas.product_schema import ProductCreate, ProductUpdate, ProductResponse
 from app.services.product_service import ProductService
 
 router = APIRouter(prefix="/products", tags=["Products"])
@@ -19,7 +19,7 @@ def get_product(product_id: int, db: Session = Depends(get_db)):
     return ProductService.get_product(db, product_id)
 
 @router.put("/{product_id}", response_model=ProductResponse)
-def update_product(product_id: int, product: ProductCreate, db: Session = Depends(get_db)):
+def update_product(product_id: int, product: ProductUpdate, db: Session = Depends(get_db)):
     return ProductService.update_product(db, product_id, product)
 
 @router.delete("/{product_id}")
