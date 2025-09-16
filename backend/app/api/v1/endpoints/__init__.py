@@ -8,6 +8,7 @@ from app.api.v1.endpoints import (
     wishlist_items,
     search_history,
     chats,
+    transactions,
 )
 
 api_router = APIRouter()
@@ -20,3 +21,5 @@ api_router.include_router(wishlist.router)
 api_router.include_router(wishlist_items.router)
 api_router.include_router(search_history.router)
 api_router.include_router(chats.router)
+api_router.include_router(transactions.sale_router)
+api_router.include_router(transactions.review_router)
