@@ -27,19 +27,25 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
 
   List<Map<String, dynamic>> mockMessages = [
     {
+      "id": "m1",
       "text": "สวัสดีครับ สนใจสินค้านี้อยู่ไหม?",
       "senderId": "2",
-      "timestamp": DateTime.now().subtract(const Duration(minutes: 30)),
+      "receiverId": "1",
+      "createdAt": DateTime.now().subtract(const Duration(minutes: 30)),
     },
     {
+      "id": "m2",
       "text": "ใช่ครับ อยากสอบถามรายละเอียดเพิ่ม",
       "senderId": "1",
-      "timestamp": DateTime.now().subtract(const Duration(minutes: 25)),
+      "receiverId": "2",
+      "createdAt": DateTime.now().subtract(const Duration(minutes: 25)),
     },
     {
+      "id": "m3",
       "text": "ได้เลยครับ ของแท้ 100% ส่งฟรี",
       "senderId": "2",
-      "timestamp": DateTime.now().subtract(const Duration(minutes: 20)),
+      "receiverId": "1",
+      "createdAt": DateTime.now().subtract(const Duration(minutes: 20)),
     },
   ];
 
@@ -57,9 +63,11 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
 
     setState(() {
       mockMessages.add({
+        "id": "m${mockMessages.length + 1}",
         "text": message,
         "senderId": widget.currentUserId,
-        "timestamp": DateTime.now(),
+        "receiverId": widget.otherUserId,
+        "createdAt": DateTime.now(),
       });
     });
 
@@ -83,13 +91,19 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
         backgroundColor: const Color(0xFFC9E1E6),
         elevation: 0,
         leading: IconButton(
-          icon: Image.asset('assets/icons/angle-small-left.png', width: 24, height: 24),
+          icon: Image.asset(
+            'assets/icons/angle-small-left.png',
+            width: 24,
+            height: 24,
+          ),
           onPressed: () => context.pop(),
         ),
         title: Row(
           children: [
             CircleAvatar(
-              backgroundImage: widget.avatarUrl != null ? NetworkImage(widget.avatarUrl!) : null,
+              backgroundImage: widget.avatarUrl != null
+                  ? NetworkImage(widget.avatarUrl!)
+                  : null,
               child: widget.avatarUrl == null ? const Icon(Icons.person) : null,
             ),
             const SizedBox(width: 12),
@@ -115,15 +129,20 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
               itemCount: mockMessages.length,
               itemBuilder: (context, index) {
                 final msg = mockMessages[index];
-                final text = msg['text'];
-                final senderId = msg['senderId'];
-                final dateTime = msg['timestamp'] as DateTime;
+                final text = msg['text'] as String;
+                final senderId = msg['senderId'] as String;
+                final dateTime = msg['createdAt'] as DateTime;
                 final isMe = senderId == widget.currentUserId;
 
                 Widget messageBubble() {
                   return Container(
-                    constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.65),
-                    padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 14),
+                    constraints: BoxConstraints(
+                      maxWidth: MediaQuery.of(context).size.width * 0.65,
+                    ),
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 10,
+                      horizontal: 14,
+                    ),
                     decoration: BoxDecoration(
                       color: isMe ? const Color(0xFFC9E1E6) : Colors.white,
                       borderRadius: BorderRadius.only(
@@ -135,7 +154,10 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
                     ),
                     child: Text(
                       text,
-                      style: GoogleFonts.sarabun(fontSize: 16, color: const Color(0xFF062252)),
+                      style: GoogleFonts.sarabun(
+                        fontSize: 16,
+                        color: const Color(0xFF062252),
+                      ),
                     ),
                   );
                 }
@@ -143,29 +165,42 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
                 return Column(
                   children: [
                     if (index == 0 ||
-                        (mockMessages[index - 1]['timestamp'] as DateTime).day != dateTime.day)
+                        (mockMessages[index - 1]['createdAt'] as DateTime)
+                                .day !=
+                            dateTime.day)
                       Center(
                         child: Container(
                           margin: const EdgeInsets.symmetric(vertical: 8),
-                          padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 12),
+                          padding: const EdgeInsets.symmetric(
+                            vertical: 4,
+                            horizontal: 12,
+                          ),
                           decoration: BoxDecoration(
                             color: const Color(0xFFC9E1E6),
                             borderRadius: BorderRadius.circular(20),
                           ),
                           child: Text(
                             formatDateHeader(dateTime),
-                            style: GoogleFonts.sarabun(fontSize: 12, color: const Color(0xFF062252)),
+                            style: GoogleFonts.sarabun(
+                              fontSize: 12,
+                              color: const Color(0xFF062252),
+                            ),
                           ),
                         ),
                       ),
                     Align(
-                      alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
+                      alignment: isMe
+                          ? Alignment.centerRight
+                          : Alignment.centerLeft,
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         crossAxisAlignment: CrossAxisAlignment.end,
                         children: [
                           if (!isMe) ...[
-                            CircleAvatar(radius: 14, backgroundColor: Colors.grey[400]),
+                            CircleAvatar(
+                              radius: 14,
+                              backgroundColor: Colors.grey[400],
+                            ),
                             const SizedBox(width: 8),
                           ],
                           Column(
@@ -173,17 +208,26 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
                             children: [
                               messageBubble(),
                               Padding(
-                                padding: const EdgeInsets.only(top: 4, right: 4),
+                                padding: const EdgeInsets.only(
+                                  top: 4,
+                                  right: 4,
+                                ),
                                 child: Text(
                                   formatTime(dateTime),
-                                  style: GoogleFonts.sarabun(fontSize: 12, color: const Color(0xB3062252)),
+                                  style: GoogleFonts.sarabun(
+                                    fontSize: 12,
+                                    color: const Color(0xB3062252),
+                                  ),
                                 ),
                               ),
                             ],
                           ),
                           if (isMe) ...[
                             const SizedBox(width: 8),
-                            CircleAvatar(radius: 14, backgroundColor: Colors.grey[400]),
+                            CircleAvatar(
+                              radius: 14,
+                              backgroundColor: Colors.grey[400],
+                            ),
                           ],
                         ],
                       ),
@@ -209,7 +253,10 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
                         decoration: const InputDecoration(
                           hintText: 'พิมพ์ข้อความ.....',
                           border: InputBorder.none,
-                          contentPadding: EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                          contentPadding: EdgeInsets.symmetric(
+                            vertical: 12,
+                            horizontal: 16,
+                          ),
                         ),
                       ),
                     ),
@@ -217,7 +264,11 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
                   const SizedBox(width: 8),
                   CircleAvatar(
                     child: IconButton(
-                      icon: Image.asset('assets/icons/send.png', width: 24, height: 24),
+                      icon: Image.asset(
+                        'assets/icons/send.png',
+                        width: 24,
+                        height: 24,
+                      ),
                       onPressed: _sendMessage,
                     ),
                   ),
