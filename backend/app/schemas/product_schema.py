@@ -8,7 +8,6 @@ class ProductBase(BaseModel):
     description: Optional[str] = None
     price: float
     category_id: int
-    condition: Optional[str] = None
     location: Optional[str] = None
     status: Optional[str] = "available"
     image_urls: Optional[str] = None
@@ -21,7 +20,6 @@ class ProductUpdate(BaseModel):
     description: Optional[str] = None
     price: Optional[float] = None
     category_id: Optional[int] = None
-    condition: Optional[str] = None
     location: Optional[str] = None
     status: Optional[str] = None
     image_urls: Optional[str] = None

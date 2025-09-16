@@ -2,7 +2,6 @@ from sqlalchemy.orm import Session
 from app.models.models import Product
 from app.schemas.product_schema import ProductCreate, ProductUpdate
 
-
 class ProductRepository:
     @staticmethod
     def create(db: Session, product: ProductCreate):
