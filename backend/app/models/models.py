@@ -21,7 +21,6 @@ class Category(Base):
     __tablename__ = "categories"
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String)
-    parent_id = Column(Integer, ForeignKey("categories.id"))
 
 
 class Product(Base):
@@ -32,7 +31,6 @@ class Product(Base):
     description = Column(Text)
     price = Column(DECIMAL)
     category_id = Column(Integer, ForeignKey("categories.id"), nullable=False)
-    condition = Column(String)
     location = Column(String)
     status = Column(String)
     image_urls = Column(Text)
