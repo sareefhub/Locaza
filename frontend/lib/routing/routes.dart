@@ -19,4 +19,5 @@ class AppRoutes {
   static const String postEdit = '/postedit/:id';
   static const String productDetails = '/product_details';
   static const String filter = '/filter';
+  static const String purchase_history = '/purchase_history';
 }

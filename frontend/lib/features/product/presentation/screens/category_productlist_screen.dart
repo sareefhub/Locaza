@@ -70,7 +70,6 @@ class _CategoryProductListScreenState extends State<CategoryProductListScreen> {
       final productTitle = product['title']?.toString().toLowerCase() ?? '';
       final productCategoryId = product['category_id'];
       final productLocation = product['location']?.toString() ?? '';
-
       final productPrice = (product['price'] as num?)?.toInt() ?? 0;
 
       final minPriceInt =
@@ -86,11 +85,15 @@ class _CategoryProductListScreenState extends State<CategoryProductListScreen> {
       final matchesMaxPrice = productPrice <= maxPriceInt;
       final matchesSearch = productTitle.contains(_searchQuery.toLowerCase());
 
+      // แสดงเฉพาะ available
+      final matchesStatus = product['status'] == 'available';
+
       return matchesCategory &&
           matchesLocation &&
           matchesMinPrice &&
           matchesMaxPrice &&
-          matchesSearch;
+          matchesSearch &&
+          matchesStatus;
     }).toList();
 
     return Scaffold(

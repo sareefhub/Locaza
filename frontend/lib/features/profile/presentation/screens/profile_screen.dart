@@ -54,7 +54,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           backgroundColor: Colors.grey[300],
                           backgroundImage: UserSession.profileImageUrl != null
                               ? NetworkImage(UserSession.profileImageUrl!)
-                              : const AssetImage('assets/icons/user.png') as ImageProvider,
+                              : const AssetImage('assets/icons/user.png')
+                                    as ImageProvider,
                         ),
                         const SizedBox(width: 16),
                         Column(
@@ -62,11 +63,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           children: [
                             const Text(
                               'User',
-                              style: TextStyle(fontSize: 14, color: Colors.black),
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: Colors.black,
+                              ),
                             ),
                             Text(
                               username ?? 'Guest',
-                              style: const TextStyle(fontWeight: FontWeight.bold),
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                             Text(
                               userId != null ? 'User ID\n$userId' : '',
@@ -104,8 +110,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             size: 20,
                           ),
                           title: const Text("Purchase History"),
-                          onTap: () {},
+                          onTap: () {
+                            context.go('/purchase_history');
+                          },
                         ),
+
                         ListTile(
                           leading: const ImageIcon(
                             AssetImage('assets/icons/seller.png'),
@@ -143,7 +152,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               ),
                             ),
                             child: Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 12),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 40,
+                                vertical: 12,
+                              ),
                               child: Text(isLoggedIn ? 'Log Out' : 'Log In'),
                             ),
                           ),

@@ -46,6 +46,9 @@ class _SearchScreenState extends State<SearchScreen> {
       final location = product['location']?.toString() ?? '';
       final price = product['price'] as double? ?? 0;
 
+      // ตรวจสอบสถานะสินค้า ต้องเป็น available
+      if (product['status'] != 'available') return false;
+
       // ตรวจสอบ search query
       if (!title.contains(_searchQuery.toLowerCase())) return false;
 
