@@ -1,25 +1,23 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:go_router/go_router.dart';
 import 'package:frontend/data/dummy_categories.dart';
+import 'package:frontend/features/favorite/application/favorite_provider.dart';
 
-class ProductCard extends StatelessWidget {
+class ProductCard extends ConsumerWidget {
   final Map<String, dynamic> product;
-  final bool isFavorite;
 
-  const ProductCard({
-    super.key,
-    required this.product,
-    this.isFavorite = false,
-  });
+  const ProductCard({super.key, required this.product});
 
   @override
-  Widget build(BuildContext context) {
-    // ดึงรูปภาพจาก image_urls
+  Widget build(BuildContext context, WidgetRef ref) {
+    // Watch favorite state ตรง ๆ เพื่อให้ UI rebuild ทันที
+    final favorites = ref.watch(favoriteProvider);
+    final isFavorite = favorites.any((p) => p['id'] == product['id']);
+
     final imageUrls = product['image_urls'] as List<dynamic>? ?? [];
     final image = imageUrls.isNotEmpty ? imageUrls[0].toString() : '';
-
-    // ดึงหมวดหมู่จาก dummyCategories
     final category = dummyCategories.firstWhere(
       (c) => c['id'] == product['category_id'],
       orElse: () => {'label': ''},
@@ -106,7 +104,12 @@ class ProductCard extends StatelessWidget {
                         color: isFavorite ? Colors.red : Colors.white,
                       ),
                       onPressed: () {
-                        // เพิ่มฟังก์ชันกดหัวใจ
+                        final notifier = ref.read(favoriteProvider.notifier);
+                        if (isFavorite) {
+                          notifier.removeFavorite(product['id']);
+                        } else {
+                          notifier.addFavorite(product);
+                        }
                       },
                     ),
                   ),

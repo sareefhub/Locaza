@@ -6,6 +6,7 @@ import 'package:frontend/core/widgets/product_card.dart';
 import 'package:frontend/data/dummy_products.dart';
 import 'package:frontend/data/dummy_categories.dart';
 import 'package:frontend/data/dummy_users.dart';
+import 'package:frontend/features/favorite/application/favorite_provider.dart';
 
 class ProductDetailsPage extends ConsumerStatefulWidget {
   final Map<String, dynamic> product;
@@ -19,7 +20,6 @@ class ProductDetailsPage extends ConsumerStatefulWidget {
 class _ProductDetailsPageState extends ConsumerState<ProductDetailsPage> {
   late Map<String, dynamic> product;
   bool showFullDescription = false;
-  bool isFavorite = false; // เพิ่มตัวแปร favorite
 
   @override
   void initState() {
@@ -42,13 +42,13 @@ class _ProductDetailsPageState extends ConsumerState<ProductDetailsPage> {
       orElse: () => {'name': 'ไม่ทราบชื่อผู้ขาย', 'avatar_url': ''},
     );
 
-    final String productDescription =
+    final productDescription =
         (product['description'] != null &&
             product['description'].toString().isNotEmpty)
         ? product['description'].toString()
         : 'ไม่มีรายละเอียดสินค้า';
 
-    final bool hasLongDescription =
+    final hasLongDescription =
         productDescription.split('\n').length > 2 ||
         productDescription.length > 100;
 
@@ -59,6 +59,11 @@ class _ProductDetailsPageState extends ConsumerState<ProductDetailsPage> {
               p['id'] != product['id'],
         )
         .toList();
+
+    // ตรวจสอบว่าเป็น favorite หรือไม่
+    final isFavorite = ref
+        .watch(favoriteProvider.notifier)
+        .isFavorite(product['id']);
 
     return Scaffold(
       backgroundColor: const Color(0xFFE0F3F7),
@@ -109,13 +114,17 @@ class _ProductDetailsPageState extends ConsumerState<ProductDetailsPage> {
                         padding: const EdgeInsets.all(8),
                         icon: Icon(
                           isFavorite ? Icons.favorite : Icons.favorite_border,
-                          color: Colors.white,
+                          color: isFavorite ? Colors.red : Colors.white,
                           size: 24,
                         ),
                         onPressed: () {
-                          setState(() {
-                            isFavorite = !isFavorite;
-                          });
+                          final notifier = ref.read(favoriteProvider.notifier);
+                          if (isFavorite) {
+                            notifier.removeFavorite(product['id']);
+                          } else {
+                            notifier.addFavorite(product);
+                          }
+                          setState(() {}); // อัพเดต UI ทันที
                         },
                       ),
                     ),
@@ -144,69 +153,71 @@ class _ProductDetailsPageState extends ConsumerState<ProductDetailsPage> {
                       ),
                     ),
                     const SizedBox(height: 10),
-                    // Category
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 4,
-                      ),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFC9E1E6),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Icon(
-                            Icons.category,
-                            size: 14,
-                            color: Colors.grey,
+                    // Category & Location
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
                           ),
-                          const SizedBox(width: 4),
-                          Text(
-                            category ?? '',
-                            style: GoogleFonts.sarabun(
-                              fontSize: 12,
-                              color: Colors.black,
-                            ),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFC9E1E6),
+                            borderRadius: BorderRadius.circular(8),
                           ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    // Location
-                    if (product['location'] != null)
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFC9E1E6),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Icon(
-                              Icons.location_on,
-                              size: 14,
-                              color: Colors.grey,
-                            ),
-                            const SizedBox(width: 4),
-                            Text(
-                              product['location'],
-                              style: GoogleFonts.sarabun(
-                                fontSize: 12,
-                                color: Colors.black,
+                          child: Row(
+                            children: [
+                              const Icon(
+                                Icons.category,
+                                size: 14,
+                                color: Colors.grey,
                               ),
-                            ),
-                          ],
+                              const SizedBox(width: 4),
+                              Text(
+                                category ?? '',
+                                style: GoogleFonts.sarabun(
+                                  fontSize: 12,
+                                  color: Colors.black,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
+                        const SizedBox(width: 8),
+                        if (product['location'] != null)
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 4,
+                            ),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFC9E1E6),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Row(
+                              children: [
+                                const Icon(
+                                  Icons.location_on,
+                                  size: 14,
+                                  color: Colors.grey,
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  product['location'],
+                                  style: GoogleFonts.sarabun(
+                                    fontSize: 12,
+                                    color: Colors.black,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                      ],
+                    ),
                     const SizedBox(height: 16),
                     const Divider(color: Colors.grey, thickness: 1),
                     const SizedBox(height: 8),
+                    // Product description
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -259,7 +270,7 @@ class _ProductDetailsPageState extends ConsumerState<ProductDetailsPage> {
                       ],
                     ),
                     const SizedBox(height: 18),
-                    // Seller info
+                    // Seller info & chat button
                     Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
@@ -317,6 +328,7 @@ class _ProductDetailsPageState extends ConsumerState<ProductDetailsPage> {
                       ),
                     ),
                     const SizedBox(height: 30),
+                    // Similar products
                     if (similarProducts.isNotEmpty)
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
