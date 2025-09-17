@@ -1,6 +1,6 @@
 // search_bar_category.dart
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'package:frontend/core/widgets/custom_search_bar.dart'; // import CustomSearchBar
 
 class SearchFilterBar extends StatelessWidget {
   final TextEditingController searchController;
@@ -22,21 +22,10 @@ class SearchFilterBar extends StatelessWidget {
         children: [
           // ช่องค้นหา
           Expanded(
-            child: TextField(
-              style: GoogleFonts.sarabun(fontSize: 14),
+            child: CustomSearchBar(
+              hintText: 'ค้นหาสินค้า',
               controller: searchController,
               onChanged: onSearchChanged,
-              decoration: InputDecoration(
-                hintText: 'ค้นหาสินค้า',
-                prefixIcon: const Icon(Icons.search),
-                filled: true,
-                fillColor: Colors.white,
-                contentPadding: const EdgeInsets.symmetric(vertical: 0),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(25),
-                  borderSide: BorderSide.none,
-                ),
-              ),
             ),
           ),
           const SizedBox(width: 8),
@@ -45,8 +34,8 @@ class SearchFilterBar extends StatelessWidget {
           GestureDetector(
             onTap: onFilterPressed,
             child: Container(
-              height: 48,
-              width: 48,
+              height: 40,
+              width: 40,
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(12),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'custom_search_bar.dart';
+import 'package:go_router/go_router.dart';
 
 class SearchBarAll extends StatelessWidget {
   final TextEditingController searchController;
@@ -16,13 +17,13 @@ class SearchBarAll extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(right: 8),
+      padding: const EdgeInsets.only(right: 8, left: 8, top: 8, bottom: 8),
       child: Row(
         children: [
           // Back button
           IconButton(
             onPressed: () {
-              Navigator.pop(context);
+              context.go('/home');
             },
             icon: Image.asset(
               'assets/icons/angle-small-left.png',
@@ -31,23 +32,12 @@ class SearchBarAll extends StatelessWidget {
             ),
           ),
 
-          // Search field
+          // Search field (ใช้ CustomSearchBar)
           Expanded(
-            child: TextField(
-              style: GoogleFonts.sarabun(fontSize: 14),
+            child: CustomSearchBar(
+              hintText: 'ค้นหาสินค้า',
               controller: searchController,
               onChanged: onSearchChanged,
-              decoration: InputDecoration(
-                hintText: 'ค้นหาสินค้า',
-                prefixIcon: const Icon(Icons.search),
-                filled: true,
-                fillColor: Colors.white,
-                contentPadding: const EdgeInsets.symmetric(vertical: 0),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(25),
-                  borderSide: BorderSide.none,
-                ),
-              ),
             ),
           ),
 
