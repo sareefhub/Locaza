@@ -7,6 +7,8 @@ import 'package:frontend/data/dummy_products.dart';
 import 'package:frontend/data/dummy_categories.dart';
 import 'package:frontend/data/dummy_users.dart';
 import 'package:frontend/features/favorite/application/favorite_provider.dart';
+import 'package:frontend/utils/user_session.dart';
+import 'package:frontend/routing/routes.dart';
 
 class ProductDetailsPage extends ConsumerStatefulWidget {
   final Map<String, dynamic> product;
@@ -97,7 +99,7 @@ class _ProductDetailsPageState extends ConsumerState<ProductDetailsPage> {
                         width: 24,
                         height: 24,
                       ),
-                      onPressed: () => Navigator.pop(context),
+                      onPressed: () => context.pop(),
                     ),
                   ),
                   Positioned(
@@ -302,7 +304,24 @@ class _ProductDetailsPageState extends ConsumerState<ProductDetailsPage> {
                                   width: double.infinity,
                                   child: OutlinedButton.icon(
                                     onPressed: () {
-                                      GoRouter.of(context).push('/login');
+                                      final chatId =
+                                          'chat_${product['id']}_${UserSession.userId ?? '1'}_${product['seller_id']}';
+                                      GoRouter.of(context).push(
+                                        AppRoutes.chatDetail
+                                            .replaceAll(':chatId', chatId)
+                                            .replaceAll(
+                                              ':currentUserId',
+                                              UserSession.userId ?? '1',
+                                            )
+                                            .replaceAll(
+                                              ':otherUserId',
+                                              product['seller_id'].toString(),
+                                            ),
+                                        extra: {
+                                          'product':
+                                              product, // ส่ง Map ของ product
+                                        },
+                                      );
                                     },
                                     icon: const Icon(
                                       Icons.chat,

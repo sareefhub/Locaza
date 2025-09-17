@@ -3,18 +3,22 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
+// นำเข้า dummy data
+//import 'package:frontend/data/dummy_products.dart';
+import 'package:frontend/data/dummy_users.dart';
+
 class ChatDetailScreen extends StatefulWidget {
   final String chatId;
   final String currentUserId;
   final String otherUserId;
-  final String? avatarUrl;
+  final Map<String, dynamic> product;
 
   const ChatDetailScreen({
     super.key,
     required this.chatId,
     required this.currentUserId,
     required this.otherUserId,
-    this.avatarUrl,
+    required this.product,
   });
 
   @override
@@ -25,6 +29,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
   final TextEditingController _messageController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
 
+  // ตัวอย่างข้อความ mock
   List<Map<String, dynamic>> mockMessages = [
     {
       "id": "m1",
@@ -52,7 +57,11 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
   void _scrollToBottom() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (_scrollController.hasClients) {
-        _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
+        _scrollController.animateTo(
+          _scrollController.position.maxScrollExtent,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOut,
+        );
       }
     });
   }
@@ -84,40 +93,155 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
   }
 
   @override
+  void initState() {
+    super.initState();
+    _scrollToBottom();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final productTitle = widget.product['title'] ?? 'ชื่อสินค้า';
+    final productImageUrl =
+        (widget.product['image_urls'] != null &&
+            (widget.product['image_urls'] as List).isNotEmpty)
+        ? widget.product['image_urls'][0]
+        : null;
+
+    // หา seller จาก dummyUsers
+    final sellerId = widget.product['seller_id'];
+    final seller = dummyUsers.firstWhere(
+      (user) => user['id'] == sellerId,
+      orElse: () => {'name': 'ผู้ขายไม่ทราบชื่อ', 'avatar_url': null},
+    );
+    final sellerName = seller['name'];
+    final sellerAvatar = seller['avatar_url'];
+
+    final isOwner = widget.currentUserId == sellerId.toString();
+
     return Scaffold(
       backgroundColor: const Color(0xFFE0F3F7),
-      appBar: AppBar(
-        backgroundColor: const Color(0xFFC9E1E6),
-        elevation: 0,
-        leading: IconButton(
-          icon: Image.asset(
-            'assets/icons/angle-small-left.png',
-            width: 24,
-            height: 24,
+      appBar: PreferredSize(
+        preferredSize: const Size.fromHeight(120),
+        child: AppBar(
+          backgroundColor: const Color(0xFFC9E1E6),
+          elevation: 0,
+          automaticallyImplyLeading: false,
+          flexibleSpace: SafeArea(
+            child: Column(
+              children: [
+                // แถวบนสุด: Back + avatar + ชื่อผู้ขาย
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8.0,
+                    vertical: 4,
+                  ),
+                  child: Row(
+                    children: [
+                      IconButton(
+                        icon: Image.asset(
+                          'assets/icons/angle-small-left.png',
+                          width: 24,
+                          height: 24,
+                        ),
+                        onPressed: () => context.pop(),
+                      ),
+                      CircleAvatar(
+                        backgroundColor: Colors.grey[400],
+                        backgroundImage: sellerAvatar != null
+                            ? AssetImage(sellerAvatar)
+                            : null,
+                        child: sellerAvatar == null
+                            ? const Icon(Icons.person)
+                            : null,
+                      ),
+                      const SizedBox(width: 12),
+                      Text(
+                        sellerName,
+                        style: GoogleFonts.sarabun(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: const Color(0xFF062252),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                // แถบสินค้า
+                Container(
+                  margin: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 4,
+                  ),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 6,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Row(
+                    children: [
+                      // รูปสินค้า
+                      Container(
+                        width: 40,
+                        height: 40,
+                        decoration: BoxDecoration(
+                          color: Colors.grey[300],
+                          borderRadius: BorderRadius.circular(8),
+                          image: productImageUrl != null
+                              ? DecorationImage(
+                                  image: AssetImage(productImageUrl),
+                                  fit: BoxFit.cover,
+                                )
+                              : null,
+                        ),
+                        child: productImageUrl == null
+                            ? const Icon(Icons.image, color: Colors.grey)
+                            : null,
+                      ),
+                      const SizedBox(width: 8),
+                      // ชื่อสินค้า
+                      Expanded(
+                        child: Text(
+                          productTitle,
+                          style: GoogleFonts.sarabun(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                            color: const Color(0xFF062252),
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      // ปุ่มซื้อ/ขาย
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: isOwner
+                              ? const Color(0xFFE0AFAF)
+                              : const Color(0xFF62B9E8),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          isOwner ? "ขาย" : "ซื้อ",
+                          style: GoogleFonts.sarabun(
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
-          onPressed: () => context.pop(),
-        ),
-        title: Row(
-          children: [
-            CircleAvatar(
-              backgroundImage: widget.avatarUrl != null
-                  ? NetworkImage(widget.avatarUrl!)
-                  : null,
-              child: widget.avatarUrl == null ? const Icon(Icons.person) : null,
-            ),
-            const SizedBox(width: 12),
-            Text(
-              widget.otherUserId,
-              style: GoogleFonts.sarabun(fontWeight: FontWeight.bold),
-            ),
-          ],
-        ),
-        iconTheme: const IconThemeData(color: Color(0xFF062252)),
-        titleTextStyle: GoogleFonts.sarabun(
-          fontSize: 18,
-          fontWeight: FontWeight.bold,
-          color: const Color(0xFF062252),
         ),
       ),
       body: Column(
@@ -258,16 +382,19 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
                             horizontal: 16,
                           ),
                         ),
+                        onSubmitted: (_) => _sendMessage(),
                       ),
                     ),
                   ),
                   const SizedBox(width: 8),
                   CircleAvatar(
+                    backgroundColor: const Color(0xFF062252),
                     child: IconButton(
                       icon: Image.asset(
                         'assets/icons/send.png',
-                        width: 24,
-                        height: 24,
+                        width: 22,
+                        height: 22,
+                        color: Colors.white,
                       ),
                       onPressed: _sendMessage,
                     ),

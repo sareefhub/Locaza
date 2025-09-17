@@ -63,12 +63,17 @@ final GoRouter appRouter = GoRouter(
     ),
     GoRoute(
       path: AppRoutes.chatDetail,
-      builder: (_, state) => ChatDetailScreen(
-        chatId: state.pathParameters['chatId']!,
-        currentUserId: state.pathParameters['currentUserId']!,
-        otherUserId: state.pathParameters['otherUserId']!,
-      ),
+      builder: (_, state) {
+        final extra = state.extra as Map<String, dynamic>?;
+        return ChatDetailScreen(
+          chatId: state.pathParameters['chatId'] ?? "tempChatId",
+          currentUserId: state.pathParameters['currentUserId'] ?? "1",
+          otherUserId: state.pathParameters['otherUserId'] ?? "2",
+          product: extra?['product'] ?? {},
+        );
+      },
     ),
+
     GoRoute(
       path: AppRoutes.notification,
       builder: (_, __) => const NotificationScreen(),
