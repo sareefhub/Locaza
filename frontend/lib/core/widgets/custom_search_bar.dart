@@ -29,11 +29,24 @@ class CustomSearchBar extends StatelessWidget {
         contentPadding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(20),
-          borderSide: BorderSide.none,
+          borderSide: const BorderSide(
+            color: Colors.grey,
+            width: 1,
+          ), // กำหนดขอบเริ่มต้น
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(20),
+          borderSide: const BorderSide(
+            color: Colors.grey,
+            width: 1,
+          ), // ขอบก่อนกด
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(20),
-          borderSide: const BorderSide(color: Colors.blueAccent, width: 1),
+          borderSide: const BorderSide(
+            color: Colors.blueAccent,
+            width: 1,
+          ), // ขอบตอนกด
         ),
       ),
     );

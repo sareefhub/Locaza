@@ -57,15 +57,20 @@ class _MyPurchasePageState extends State<MyPurchasePage> {
       ),
       body: Column(
         children: [
-          CustomSearchBar(
-            hintText: "ค้นหาสินค้า",
-            controller: _searchController,
-            onChanged: (value) {
-              setState(() {
-                searchQuery = value;
-              });
-            },
+          const SizedBox(height: 8),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            child: CustomSearchBar(
+              hintText: "ค้นหาสินค้า",
+              controller: _searchController,
+              onChanged: (value) {
+                setState(() {
+                  searchQuery = value;
+                });
+              },
+            ),
           ),
+          const SizedBox(height: 16),
 
           // List สินค้า
           Expanded(
@@ -93,7 +98,7 @@ class _MyPurchasePageState extends State<MyPurchasePage> {
                           ? product['image_urls'][0]
                           : '',
                     ),
-                    const SizedBox(height: 10),
+                    const SizedBox(height: 2),
                   ],
                 );
               },
