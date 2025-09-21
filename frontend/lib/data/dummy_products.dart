@@ -66,4 +66,18 @@ final List<Map<String, dynamic>> dummyProducts = [
     'created_at': DateTime.now().toIso8601String(),
     'updated_at': DateTime.now().toIso8601String(),
   },
+  {
+    'id': 6,
+    'seller_id': 101,
+    'title': 'มะม่วง2',
+    'description':
+        '2 มะม่วงออร์แกนิก สดจากสวน ปลอดสารพิษ เหมาะสำหรับสุขภาพดีทุกวัย มะม่วงออร์แกนิก สดจากสวน ปลอดสารพิษ เหมาะสำหรับสุขภาพดีทุกวัย มะม่วงออร์แกนิก สดจากสวน ปลอดสารพิษ เหมาะสำหรับสุขภาพดีทุกวัย มะม่วงออร์แกนิก สดจากสวน ปลอดสารพิษ เหมาะสำหรับสุขภาพดีทุกวัย',
+    'price': 150.0,
+    'category_id': 1,
+    'location': 'กรุงเทพมหานคร',
+    'status': 'available',
+    'image_urls': ['assets/products-image/mango.jpg'],
+    'created_at': DateTime.now().toIso8601String(),
+    'updated_at': DateTime.now().toIso8601String(),
+  },
 ];

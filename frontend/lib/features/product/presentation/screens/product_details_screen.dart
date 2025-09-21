@@ -58,7 +58,14 @@ class _ProductDetailsPageState extends ConsumerState<ProductDetailsPage> {
         .where(
           (p) =>
               p['category_id'] == product['category_id'] &&
-              p['id'] != product['id'],
+              p['id'] != product['id'] &&
+              p['status'] == 'available' &&
+              dummyUsers
+                  .firstWhere(
+                    (u) => u['id'] == p['seller_id'],
+                    orElse: () => {},
+                  )
+                  .isNotEmpty,
         )
         .toList();
 
