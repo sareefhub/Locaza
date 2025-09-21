@@ -13,8 +13,11 @@ class ProductCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     // Watch favorite state ตรง ๆ เพื่อให้ UI rebuild ทันที
-    final favorites = ref.watch(favoriteProvider);
-    final isFavorite = favorites.any((p) => p['id'] == product['id']);
+    final favoriteState = ref.watch(favoriteProvider);
+    final isFavorite = favoriteState.any(
+      (item) => item['product_id'] == product['id'],
+    );
+    final notifier = ref.read(favoriteProvider.notifier);
 
     final imageUrls = product['image_urls'] as List<dynamic>? ?? [];
     final image = imageUrls.isNotEmpty ? imageUrls[0].toString() : '';
@@ -104,11 +107,10 @@ class ProductCard extends ConsumerWidget {
                         color: isFavorite ? Colors.red : Colors.white,
                       ),
                       onPressed: () {
-                        final notifier = ref.read(favoriteProvider.notifier);
                         if (isFavorite) {
                           notifier.removeFavorite(product['id']);
                         } else {
-                          notifier.addFavorite(product);
+                          notifier.addFavorite(product, 101);
                         }
                       },
                     ),

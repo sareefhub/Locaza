@@ -10,7 +10,13 @@ class FavoriteScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final favorites = ref.watch(favoriteProvider);
+    // Watch state ตรง ๆ
+    final favoriteState = ref.watch(favoriteProvider);
+
+    // ดึง product จริง ๆ จาก state
+    final favorites = favoriteState
+        .map((item) => item['product'] as Map<String, dynamic>)
+        .toList();
 
     return Scaffold(
       appBar: AppBar(

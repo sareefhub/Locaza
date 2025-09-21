@@ -63,9 +63,14 @@ class _ProductDetailsPageState extends ConsumerState<ProductDetailsPage> {
         .toList();
 
     // ตรวจสอบว่าเป็น favorite หรือไม่
-    final isFavorite = ref
-        .watch(favoriteProvider.notifier)
-        .isFavorite(product['id']);
+    // Watch state แทน
+    final favoriteState = ref.watch(favoriteProvider);
+    final isFavorite = favoriteState.any(
+      (item) => item['product_id'] == product['id'],
+    );
+
+    // อ่าน notifier สำหรับ add/remove
+    final notifier = ref.read(favoriteProvider.notifier);
 
     return Scaffold(
       backgroundColor: const Color(0xFFE0F3F7),
@@ -120,13 +125,14 @@ class _ProductDetailsPageState extends ConsumerState<ProductDetailsPage> {
                           size: 24,
                         ),
                         onPressed: () {
-                          final notifier = ref.read(favoriteProvider.notifier);
                           if (isFavorite) {
                             notifier.removeFavorite(product['id']);
                           } else {
-                            notifier.addFavorite(product);
+                            notifier.addFavorite(
+                              product,
+                              101,
+                            ); // 101 = mock user id
                           }
-                          setState(() {}); // อัพเดต UI ทันที
                         },
                       ),
                     ),
