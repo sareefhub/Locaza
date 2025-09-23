@@ -5,8 +5,10 @@ from app.db.base import Base
 class User(Base):
     __tablename__ = "users"
     id = Column(Integer, primary_key=True, index=True)
+    username = Column(String, unique=True, index=True)
     name = Column(String)
     email = Column(String, unique=True, index=True)
+    password = Column(String)
     phone = Column(String)
     avatar_url = Column(String)
     location = Column(String)

@@ -10,7 +10,7 @@ class UserBase(BaseModel):
     location: Optional[str] = None
 
 class UserCreate(UserBase):
-    pass
+    avatar_url: Optional[str] = None
 
 class UserUpdate(BaseModel):
     name: Optional[str] = None

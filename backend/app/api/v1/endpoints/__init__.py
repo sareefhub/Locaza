@@ -11,6 +11,7 @@ from app.api.v1.endpoints import (
     chats,
     transactions,
     notifications,
+    upload,
 )
 
 api_router = APIRouter()
@@ -27,3 +28,4 @@ api_router.include_router(chats.router)
 api_router.include_router(transactions.sale_router)
 api_router.include_router(transactions.review_router)
 api_router.include_router(notifications.router)
+api_router.include_router(upload.router)

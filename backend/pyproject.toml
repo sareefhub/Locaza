@@ -16,7 +16,10 @@ dependencies = [
     "sqlalchemy (>=2.0.0,<3.0.0)",
     "psycopg2-binary (>=2.9,<3.0)",
     "alembic (>=1.13,<2.0)",
-    "pydantic-settings (>=2.6.0,<3.0.0)"
+    "pydantic-settings (>=2.6.0,<3.0.0)",
+    "python-multipart (>=0.0.20,<0.0.21)",
+    "email-validator (>=2.3.0,<3.0.0)",
+    "bcrypt (<4.0.0)"
 ]
 
 [build-system]
