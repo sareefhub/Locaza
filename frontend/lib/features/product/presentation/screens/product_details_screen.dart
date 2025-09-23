@@ -294,22 +294,73 @@ class _ProductDetailsPageState extends ConsumerState<ProductDetailsPage> {
                       ),
                       child: Row(
                         children: [
-                          CircleAvatar(
-                            radius: 24,
-                            backgroundImage: seller['avatar_url'] != null
-                                ? AssetImage(seller['avatar_url'])
-                                : null,
+                          GestureDetector(
+                            onTap: () {
+                              GoRouter.of(context).push(
+                                '/store/${product['seller_id']}',
+                                extra: {
+                                  'isOwner': false,
+                                  'seller': {
+                                    'id': seller['id'],
+                                    'name': seller['name'],
+                                    'avatar_url': seller['avatar_url'],
+                                    'rating': 4.9,
+                                    'followers': 120,
+                                    'products': dummyProducts
+                                        .where(
+                                          (p) => p['seller_id'] == seller['id'],
+                                        )
+                                        .toList(),
+                                    'categories': ['หมวดหมู่1', 'หมวดหมู่2'],
+                                  },
+                                },
+                              );
+                            },
+                            child: CircleAvatar(
+                              radius: 24,
+                              backgroundImage: seller['avatar_url'] != null
+                                  ? AssetImage(seller['avatar_url'])
+                                  : null,
+                            ),
                           ),
                           const SizedBox(width: 12),
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text(
-                                  seller['name'] ?? 'ไม่ทราบชื่อผู้ขาย',
-                                  style: GoogleFonts.sarabun(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
+                                GestureDetector(
+                                  onTap: () {
+                                    GoRouter.of(context).push(
+                                      '/store/${product['seller_id']}',
+                                      extra: {
+                                        'isOwner': false,
+                                        'seller': {
+                                          'id': seller['id'],
+                                          'name': seller['name'],
+                                          'avatar_url': seller['avatar_url'],
+                                          'rating': 4.9,
+                                          'followers': 120,
+                                          'products': dummyProducts
+                                              .where(
+                                                (p) =>
+                                                    p['seller_id'] ==
+                                                    seller['id'],
+                                              )
+                                              .toList(),
+                                          'categories': [
+                                            'หมวดหมู่1',
+                                            'หมวดหมู่2',
+                                          ],
+                                        },
+                                      },
+                                    );
+                                  },
+                                  child: Text(
+                                    seller['name'] ?? 'ไม่ทราบชื่อผู้ขาย',
+                                    style: GoogleFonts.sarabun(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                    ),
                                   ),
                                 ),
                                 const SizedBox(height: 12),
