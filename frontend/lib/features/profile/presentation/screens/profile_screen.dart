@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/widgets/navigation.dart';
 import '../../../../utils/user_session.dart';
+import '../../../store/store_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -32,10 +33,36 @@ class _ProfileScreenState extends State<ProfileScreen> {
     });
   }
 
+  void _confirmLogout(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text("ยืนยันการออกจากระบบ"),
+        content: const Text("คุณแน่ใจหรือไม่ที่จะออกจากระบบ?"),
+        actions: [
+          TextButton(
+            onPressed: () => context.pop(), // ❌ ยกเลิกด้วย GoRouter
+            child: const Text("ยกเลิก"),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              context.pop(); // ปิด dialog
+              UserSession.clear();
+              context.go('/login'); // ✅ ใช้ GoRouter ไปหน้า login
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFFD1E9F2),
+              foregroundColor: Colors.black,
+            ),
+            child: const Text("ยืนยัน"),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    final bool isLoggedIn = username != null && userId != null && phone != null;
-
     return Scaffold(
       bottomNavigationBar: const BottomNavBar(currentIndex: 4),
       backgroundColor: const Color(0xFFE0F3F7),
@@ -62,21 +89,39 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             const Text(
-                              'User',
+                              'ผู้ใช้',
                               style: TextStyle(
                                 fontSize: 14,
                                 color: Colors.black,
                               ),
                             ),
                             Text(
-                              username ?? 'Guest',
+                              username!,
                               style: const TextStyle(
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
-                            Text(
-                              userId != null ? 'User ID\n$userId' : '',
-                              style: const TextStyle(fontSize: 12),
+                            RichText(
+                              text: TextSpan(
+                                children: [
+                                  const TextSpan(
+                                    text: 'หมายเลขผู้ใช้: ',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: Colors.black,
+                                      fontWeight: FontWeight.normal,
+                                    ),
+                                  ),
+                                  TextSpan(
+                                    text: userId,
+                                    style: const TextStyle(
+                                      fontSize: 12,
+                                      color: Colors.black,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
                           ],
                         ),
@@ -90,7 +135,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             AssetImage('assets/icons/edit.png'),
                             size: 16,
                           ),
-                          label: const Text('Edit Profile'),
+                          label: const Text('แก้ไขโปรไฟล์'),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: const Color(0xFFD1E9F2),
                             foregroundColor: Colors.black,
@@ -109,26 +154,40 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             AssetImage('assets/icons/seller-store.png'),
                             size: 20,
                           ),
-                          title: const Text("Purchase History"),
+                          title: const Text("ประวัติการซื้อ"),
                           onTap: () {
                             context.go('/purchase_history');
                           },
                         ),
-
                         ListTile(
                           leading: const ImageIcon(
                             AssetImage('assets/icons/seller.png'),
                             size: 20,
                           ),
-                          title: const Text("My Store"),
-                          onTap: () {},
+                          title: const Text("ร้านค้าของฉัน"),
+                          onTap: () {
+                            final sellerData = {
+                              'id': UserSession.userId ?? '1',
+                              'name': UserSession.username ?? 'ร้านค้าของฉัน',
+                              'avatar_url': UserSession.profileImageUrl ?? '',
+                              'rating': 4.9,
+                              'followers': 120,
+                              'products': [],
+                              'categories': [],
+                            };
+
+                            context.push(
+                              '/store/${UserSession.userId ?? '1'}',
+                              extra: {'isOwner': true, 'seller': sellerData},
+                            );
+                          },
                         ),
                         ListTile(
                           leading: const ImageIcon(
                             AssetImage('assets/icons/heart.png'),
                             size: 20,
                           ),
-                          title: const Text("My favorites"),
+                          title: const Text("รายการโปรด"),
                           onTap: () {
                             context.go('/favorite');
                           },
@@ -136,14 +195,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         const SizedBox(height: 20),
                         Center(
                           child: ElevatedButton(
-                            onPressed: () {
-                              if (isLoggedIn) {
-                                UserSession.clear();
-                                context.go('/login');
-                              } else {
-                                context.go('/login');
-                              }
-                            },
+                            onPressed: () => _confirmLogout(context),
                             style: ElevatedButton.styleFrom(
                               backgroundColor: const Color(0xFFD1E9F2),
                               foregroundColor: Colors.black,
@@ -151,12 +203,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 borderRadius: BorderRadius.circular(12),
                               ),
                             ),
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(
+                            child: const Padding(
+                              padding: EdgeInsets.symmetric(
                                 horizontal: 40,
                                 vertical: 12,
                               ),
-                              child: Text(isLoggedIn ? 'Log Out' : 'Log In'),
+                              child: Text('Log Out'),
                             ),
                           ),
                         ),
