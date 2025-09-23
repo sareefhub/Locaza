@@ -37,13 +37,11 @@ class LoginScreen extends StatelessWidget {
               children: [
                 Image.asset('assets/logo-splash.png', height: 120),
                 const SizedBox(height: 48),
-                // ปุ่ม Google Sign-In (ยังไม่มีฟังก์ชัน)
                 buildIconButton(
                   'Continue with Google',
                   'assets/icons/search.png',
                   () {},
                 ),
-                const SizedBox(height: 16),
                 const SizedBox(height: 24),
                 const Row(
                   children: [
@@ -57,9 +55,9 @@ class LoginScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 24),
                 ElevatedButton(
-                  onPressed: () => GoRouter.of(context).push('/loginphone'),
+                  onPressed: () => GoRouter.of(context).push('/loginusername'),
                   style: buttonStyle(bg: Colors.blue.shade100),
-                  child: const Text("Log in With Phone Number"),
+                  child: const Text("Login with Username"),
                 ),
                 const SizedBox(height: 32),
                 Row(

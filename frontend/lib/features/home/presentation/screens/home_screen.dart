@@ -128,7 +128,7 @@ class HomeScreen extends StatelessWidget {
                       crossAxisCount: crossAxisCount,
                       crossAxisSpacing: 12,
                       mainAxisSpacing: 12,
-                      childAspectRatio: sizingInfo.isMobile ? 0.67 : 0.75,
+                      childAspectRatio: sizingInfo.isMobile ? 0.60 : 0.70,
                     ),
                   ),
                 ),

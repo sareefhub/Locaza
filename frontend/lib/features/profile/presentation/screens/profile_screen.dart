@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/widgets/navigation.dart';
 import '../../../../utils/user_session.dart';
-import '../../../store/store_screen.dart';
+import '../../../store/presentation/screens/store_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -41,14 +41,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
         content: const Text("คุณแน่ใจหรือไม่ที่จะออกจากระบบ?"),
         actions: [
           TextButton(
-            onPressed: () => context.pop(), // ❌ ยกเลิกด้วย GoRouter
+            onPressed: () => context.pop(),
             child: const Text("ยกเลิก"),
           ),
           ElevatedButton(
             onPressed: () {
-              context.pop(); // ปิด dialog
+              context.pop();
               UserSession.clear();
-              context.go('/login'); // ✅ ใช้ GoRouter ไปหน้า login
+              context.go('/login');
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFFD1E9F2),
@@ -82,50 +82,53 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           backgroundImage: UserSession.profileImageUrl != null
                               ? NetworkImage(UserSession.profileImageUrl!)
                               : const AssetImage('assets/icons/user.png')
-                                    as ImageProvider,
+                                  as ImageProvider,
                         ),
                         const SizedBox(width: 16),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text(
-                              'ผู้ใช้',
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: Colors.black,
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                'ผู้ใช้',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: Colors.black,
+                                ),
                               ),
-                            ),
-                            Text(
-                              username!,
-                              style: const TextStyle(
-                                fontWeight: FontWeight.bold,
+                              Text(
+                                username!,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                ),
+                                overflow: TextOverflow.ellipsis,
                               ),
-                            ),
-                            RichText(
-                              text: TextSpan(
-                                children: [
-                                  const TextSpan(
-                                    text: 'หมายเลขผู้ใช้: ',
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      color: Colors.black,
-                                      fontWeight: FontWeight.normal,
+                              RichText(
+                                text: TextSpan(
+                                  children: [
+                                    const TextSpan(
+                                      text: 'หมายเลขผู้ใช้: ',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: Colors.black,
+                                        fontWeight: FontWeight.normal,
+                                      ),
                                     ),
-                                  ),
-                                  TextSpan(
-                                    text: userId,
-                                    style: const TextStyle(
-                                      fontSize: 12,
-                                      color: Colors.black,
-                                      fontWeight: FontWeight.bold,
+                                    TextSpan(
+                                      text: userId,
+                                      style: const TextStyle(
+                                        fontSize: 12,
+                                        color: Colors.black,
+                                        fontWeight: FontWeight.bold,
+                                      ),
                                     ),
-                                  ),
-                                ],
+                                  ],
+                                ),
+                                overflow: TextOverflow.ellipsis,
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
-                        const Spacer(),
                         ElevatedButton.icon(
                           onPressed: () async {
                             await context.push('/edit_profile');
@@ -135,7 +138,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             AssetImage('assets/icons/edit.png'),
                             size: 16,
                           ),
-                          label: const Text('แก้ไขโปรไฟล์'),
+                          label: const Text(
+                            'แก้ไขโปรไฟล์',
+                            overflow: TextOverflow.ellipsis,
+                          ),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: const Color(0xFFD1E9F2),
                             foregroundColor: Colors.black,

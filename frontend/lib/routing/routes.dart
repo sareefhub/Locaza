@@ -4,7 +4,7 @@ class AppRoutes {
   static const String home = '/home';
   static const String search = '/search';
   static const String login = '/login';
-  static const String loginPhone = '/loginphone';
+  static const String loginUsername = '/loginusername';
   static const String signup = '/signup';
   static const String profile = '/profile';
   static const String post = '/post';
@@ -19,6 +19,6 @@ class AppRoutes {
   static const String postEdit = '/postedit/:id';
   static const String productDetails = '/product_details';
   static const String filter = '/filter';
-  static const String purchase_history = '/purchase_history';
+  static const String purchaseHistory = '/purchase_history';
   static const String store = '/store/:storeId';
 }

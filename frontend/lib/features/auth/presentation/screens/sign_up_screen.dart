@@ -9,15 +9,20 @@ class SignUpScreen extends StatefulWidget {
 }
 
 class SignUpScreenState extends State<SignUpScreen> {
+  final usernameController = TextEditingController();
+  final passwordController = TextEditingController();
+  final emailController = TextEditingController();
   final phoneController = TextEditingController();
 
   @override
   void dispose() {
+    usernameController.dispose();
+    passwordController.dispose();
+    emailController.dispose();
     phoneController.dispose();
     super.dispose();
   }
 
-  // ปุ่ม style
   ButtonStyle buttonStyle({Color? bg, Color? fg, BorderSide? border}) =>
       ElevatedButton.styleFrom(
         backgroundColor: bg ?? Colors.white,
@@ -30,18 +35,32 @@ class SignUpScreenState extends State<SignUpScreen> {
         ),
       );
 
-  // ปุ่มที่มี icon
-  Widget buildButton(String label, String asset, VoidCallback onTap) =>
-      ElevatedButton.icon(
-        onPressed: onTap,
-        style: buttonStyle(
-          bg: Colors.white,
-          fg: Colors.black,
-          border: BorderSide(color: Colors.grey.shade300, width: 1.5),
+  Widget buildInputField(
+      {required String hint,
+      required TextEditingController controller,
+      bool obscure = false,
+      TextInputType type = TextInputType.text}) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey.shade300, width: 1.5),
+      ),
+      child: TextField(
+        controller: controller,
+        keyboardType: type,
+        obscureText: obscure,
+        decoration: InputDecoration(
+          hintText: hint,
+          hintStyle: const TextStyle(color: Colors.grey),
+          border: InputBorder.none,
+          contentPadding:
+              const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
         ),
-        icon: Image.asset(asset, height: 24),
-        label: Text(label, style: const TextStyle(fontSize: 16)),
-      );
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -59,7 +78,6 @@ class SignUpScreenState extends State<SignUpScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        const SizedBox(height: 20),
                         const Text(
                           'Sign Up',
                           textAlign: TextAlign.center,
@@ -70,46 +88,36 @@ class SignUpScreenState extends State<SignUpScreen> {
                           ),
                         ),
                         const SizedBox(height: 30),
-                        // กล่องกรอกเบอร์โทร
-                        Container(
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(
-                                color: Colors.grey.shade300, width: 1.5),
-                          ),
-                          child: TextField(
+                        buildInputField(
+                            hint: "Username", controller: usernameController),
+                        buildInputField(
+                            hint: "Password",
+                            controller: passwordController,
+                            obscure: true),
+                        buildInputField(
+                            hint: "Email",
+                            controller: emailController,
+                            type: TextInputType.emailAddress),
+                        buildInputField(
+                            hint: "Phone",
                             controller: phoneController,
-                            keyboardType: TextInputType.phone,
-                            decoration: const InputDecoration(
-                              hintText: 'Phone number',
-                              hintStyle: TextStyle(color: Colors.grey),
-                              border: InputBorder.none,
-                              contentPadding: EdgeInsets.symmetric(
-                                  vertical: 16, horizontal: 20),
-                            ),
-                          ),
-                        ),
+                            type: TextInputType.phone),
                         const SizedBox(height: 20),
-                        // ปุ่ม Sign Up
                         Center(
                           child: ElevatedButton(
                             onPressed: () {
-                              // ตอนนี้ยังไม่ทำฟังก์ชัน
+                              // UI เท่านั้น ยังไม่เชื่อม API
                             },
                             style: buttonStyle(
                                 bg: const Color(0xFFD0E7F9),
                                 fg: Colors.black),
                             child: const Text(
                               'Sign Up',
-                              style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.normal),
+                              style: TextStyle(fontSize: 16),
                             ),
                           ),
                         ),
                         const SizedBox(height: 30),
-                        // เส้นคั่น
                         const Row(
                           children: [
                             Expanded(
@@ -127,13 +135,19 @@ class SignUpScreenState extends State<SignUpScreen> {
                           ],
                         ),
                         const SizedBox(height: 30),
-                        // ปุ่มสมัครด้วย Google (แค่ UI)
-                        buildButton('Continue with Google',
-                            'assets/icons/search.png', () {
-                          // ยังไม่ทำฟังก์ชัน
-                        }),
+                        ElevatedButton.icon(
+                          onPressed: () {},
+                          style: buttonStyle(
+                            bg: Colors.white,
+                            fg: Colors.black,
+                            border:
+                                BorderSide(color: Colors.grey.shade300, width: 1.5),
+                          ),
+                          icon: Image.asset('assets/icons/search.png', height: 24),
+                          label: const Text("Continue with Google",
+                              style: TextStyle(fontSize: 16)),
+                        ),
                         const SizedBox(height: 16),
-                        // ลิงก์ไปหน้า Login
                         GestureDetector(
                           onTap: () {
                             GoRouter.of(context).push('/login');
@@ -156,7 +170,6 @@ class SignUpScreenState extends State<SignUpScreen> {
                           ),
                         ),
                         const Spacer(),
-                        // โลโก้ด้านล่าง
                         Padding(
                           padding: const EdgeInsets.only(bottom: 24),
                           child: Center(

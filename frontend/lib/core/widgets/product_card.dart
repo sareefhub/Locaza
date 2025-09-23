@@ -12,7 +12,6 @@ class ProductCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // Watch favorite state ตรง ๆ เพื่อให้ UI rebuild ทันที
     final favoriteState = ref.watch(favoriteProvider);
     final isFavorite = favoriteState.any(
       (item) => item['product_id'] == product['id'],
@@ -74,7 +73,7 @@ class ProductCard extends ConsumerWidget {
           borderRadius: BorderRadius.circular(12),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.05),
+              color: Colors.black.withValues(alpha: 0.05),
               blurRadius: 4,
               offset: const Offset(0, 2),
             ),
@@ -96,7 +95,7 @@ class ProductCard extends ConsumerWidget {
                     width: favoriteIconSize + 8,
                     height: favoriteIconSize + 8,
                     decoration: BoxDecoration(
-                      color: Colors.grey.withOpacity(0.3),
+                      color: Colors.grey.withValues(alpha: 0.3),
                       shape: BoxShape.circle,
                     ),
                     child: IconButton(

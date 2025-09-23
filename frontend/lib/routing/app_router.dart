@@ -4,7 +4,7 @@ import '../features/splash/presentation/screens/splash_screen.dart';
 import '../features/auth/presentation/screens/onboarding_screen.dart';
 import '../features/home/presentation/screens/home_screen.dart';
 import '../features/auth/presentation/screens/login_screen.dart';
-import '../features/auth/presentation/screens/login_phone_screen.dart';
+import '../features/auth/presentation/screens/login_username_screen.dart';
 import '../features/auth/presentation/screens/sign_up_screen.dart';
 import '../features/profile/presentation/screens/profile_screen.dart';
 import '../features/product/presentation/screens/post_screen.dart';
@@ -20,7 +20,7 @@ import '../features/product/presentation/screens/product_details_screen.dart';
 import '../features/product/presentation/screens/search_screen.dart';
 import '../features/product/presentation/screens/filter_screen.dart';
 import '../features/product/presentation/screens/purchase_history_screen.dart';
-import '../features/store/store_screen.dart';
+import '../features/store/presentation/screens/store_screen.dart';
 
 import '../utils/user_session.dart';
 import 'routes.dart';
@@ -37,8 +37,8 @@ final GoRouter appRouter = GoRouter(
     GoRoute(path: AppRoutes.search, builder: (_, __) => const SearchScreen()),
     GoRoute(path: AppRoutes.login, builder: (_, __) => const LoginScreen()),
     GoRoute(
-      path: AppRoutes.loginPhone,
-      builder: (_, __) => const LoginPhoneScreen(),
+      path: AppRoutes.loginUsername,
+      builder: (_, __) => const LoginUsernameScreen(),
     ),
     GoRoute(path: AppRoutes.signup, builder: (_, __) => const SignUpScreen()),
     GoRoute(path: AppRoutes.profile, builder: (_, __) => const ProfileScreen()),
@@ -75,7 +75,6 @@ final GoRouter appRouter = GoRouter(
         );
       },
     ),
-
     GoRoute(
       path: AppRoutes.notification,
       builder: (_, __) => const NotificationScreen(),
@@ -98,7 +97,7 @@ final GoRouter appRouter = GoRouter(
           FilterScreen(initialFilters: state.extra as Map<String, dynamic>?),
     ),
     GoRoute(
-      path: AppRoutes.purchase_history,
+      path: AppRoutes.purchaseHistory,
       builder: (context, state) => const MyPurchasePage(),
     ),
     GoRoute(
