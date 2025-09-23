@@ -25,9 +25,7 @@ def read_current_user(
 ):
     payload = security.decode_token(token.credentials)
     if not payload:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token"
-        )
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
     user_id = payload.get("sub")
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
