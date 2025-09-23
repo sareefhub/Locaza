@@ -20,6 +20,7 @@ import '../features/product/presentation/screens/product_details_screen.dart';
 import '../features/product/presentation/screens/search_screen.dart';
 import '../features/product/presentation/screens/filter_screen.dart';
 import '../features/product/presentation/screens/purchase_history_screen.dart';
+import '../features/store/store_screen.dart';
 
 import '../utils/user_session.dart';
 import 'routes.dart';
@@ -99,6 +100,19 @@ final GoRouter appRouter = GoRouter(
     GoRoute(
       path: AppRoutes.purchase_history,
       builder: (context, state) => const MyPurchasePage(),
+    ),
+    GoRoute(
+      path: AppRoutes.store,
+      builder: (_, state) {
+        final storeId = state.pathParameters['storeId'] ?? '';
+        final extra = state.extra as Map<String, dynamic>?;
+
+        return StoreScreen(
+          storeId: storeId,
+          isOwner: extra?['isOwner'] ?? false,
+          seller: extra?['seller'],
+        );
+      },
     ),
   ],
 );
