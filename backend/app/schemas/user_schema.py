@@ -1,19 +1,24 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, EmailStr
 from datetime import datetime
 from typing import Optional
 
 class UserBase(BaseModel):
+    username: str
     name: str
-    email: str
+    email: EmailStr
     phone: Optional[str] = None
     avatar_url: Optional[str] = None
     location: Optional[str] = None
 
 class UserCreate(UserBase):
+    password: str
     avatar_url: Optional[str] = None
 
 class UserUpdate(BaseModel):
+    username: Optional[str] = None
     name: Optional[str] = None
+    email: Optional[EmailStr] = None
+    password: Optional[str] = None
     phone: Optional[str] = None
     avatar_url: Optional[str] = None
     location: Optional[str] = None
@@ -31,8 +36,9 @@ class UserResponse(UserBase):
 
 class UserOut(BaseModel):
     id: int
+    username: Optional[str] = None
     name: Optional[str] = None
-    email: Optional[str] = None
+    email: Optional[EmailStr] = None
     phone: Optional[str] = None
     avatar_url: Optional[str] = None
     location: Optional[str] = None
