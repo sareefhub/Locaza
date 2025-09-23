@@ -61,7 +61,7 @@ final GoRouter appRouter = GoRouter(
     ),
     GoRoute(
       path: AppRoutes.chat,
-      builder: (_, __) => ChatScreen(currentUserId: UserSession.userId ?? ''),
+      builder: (_, __) => ChatScreen(currentUserId: UserSession.id ?? ''),
     ),
     GoRoute(
       path: AppRoutes.chatDetail,

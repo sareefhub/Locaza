@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/widgets/navigation.dart';
 import '../../../../utils/user_session.dart';
-import '../../../store/presentation/screens/store_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -27,7 +26,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     await Future.delayed(const Duration(milliseconds: 500));
     setState(() {
       username = UserSession.username ?? "Mock User";
-      userId = UserSession.userId ?? "U123456789";
+      userId = UserSession.id ?? "U123456789";
       phone = UserSession.phone ?? "0812345678";
       isLoading = false;
     });
@@ -79,8 +78,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         CircleAvatar(
                           radius: 35,
                           backgroundColor: Colors.grey[300],
-                          backgroundImage: UserSession.profileImageUrl != null
-                              ? NetworkImage(UserSession.profileImageUrl!)
+                          backgroundImage: UserSession.avatarUrl != null
+                              ? NetworkImage(UserSession.avatarUrl!)
                               : const AssetImage('assets/icons/user.png')
                                   as ImageProvider,
                         ),
@@ -173,9 +172,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           title: const Text("ร้านค้าของฉัน"),
                           onTap: () {
                             final sellerData = {
-                              'id': UserSession.userId ?? '1',
+                              'id': UserSession.id ?? '1',
                               'name': UserSession.username ?? 'ร้านค้าของฉัน',
-                              'avatar_url': UserSession.profileImageUrl ?? '',
+                              'avatar_url': UserSession.avatarUrl ?? '',
                               'rating': 4.9,
                               'followers': 120,
                               'products': [],
@@ -183,7 +182,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             };
 
                             context.push(
-                              '/store/${UserSession.userId ?? '1'}',
+                              '/store/${UserSession.id ?? '1'}',
                               extra: {'isOwner': true, 'seller': sellerData},
                             );
                           },
