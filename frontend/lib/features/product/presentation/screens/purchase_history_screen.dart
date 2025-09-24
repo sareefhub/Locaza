@@ -97,6 +97,7 @@ class _MyPurchasePageState extends State<MyPurchasePage> {
                       imageUrl: product['image_urls'].isNotEmpty
                           ? product['image_urls'][0]
                           : '',
+                      product: product,
                     ),
                     const SizedBox(height: 2),
                   ],

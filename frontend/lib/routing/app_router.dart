@@ -21,6 +21,7 @@ import '../features/product/presentation/screens/search_screen.dart';
 import '../features/product/presentation/screens/filter_screen.dart';
 import '../features/product/presentation/screens/purchase_history_screen.dart';
 import '../features/store/presentation/screens/store_screen.dart';
+import '../features/product/presentation/screens/sold_product_details.dart';
 
 import '../utils/user_session.dart';
 import 'routes.dart';
@@ -111,6 +112,13 @@ final GoRouter appRouter = GoRouter(
           isOwner: extra?['isOwner'] ?? false,
           seller: extra?['seller'],
         );
+      },
+    ),
+    GoRoute(
+      path: '/sold_products',
+      builder: (context, state) {
+        final product = state.extra as Map<String, dynamic>;
+        return SoldProductDetailsPage(product: product);
       },
     ),
   ],
