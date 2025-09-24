@@ -1,21 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:awesome_dialog/awesome_dialog.dart';
 import 'package:go_router/go_router.dart';
-import '../../infrastructure/services/auth_api.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../application/auth_provider.dart';
 
-class LoginUsernameScreen extends StatefulWidget {
+class LoginUsernameScreen extends ConsumerStatefulWidget {
   const LoginUsernameScreen({super.key});
 
   @override
-  State<LoginUsernameScreen> createState() => _LoginUsernameScreenState();
+  ConsumerState<LoginUsernameScreen> createState() => _LoginUsernameScreenState();
 }
 
-class _LoginUsernameScreenState extends State<LoginUsernameScreen> {
+class _LoginUsernameScreenState extends ConsumerState<LoginUsernameScreen> {
   final TextEditingController usernameController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
-  final AuthApi _authApi = AuthApi();
-
-  bool _isLoading = false;
 
   @override
   void dispose() {
@@ -30,44 +28,37 @@ class _LoginUsernameScreenState extends State<LoginUsernameScreen> {
 
     if (username.isEmpty || password.isEmpty) return;
 
-    setState(() => _isLoading = true);
+    final success = await ref.read(authProviderNotifier.notifier).login(username, password);
 
-    try {
-      final token = await _authApi.login(username, password);
-      debugPrint("Login success: $token");
+    if (!mounted) return;
 
-      if (mounted) {
-        AwesomeDialog(
-          context: context,
-          dialogType: DialogType.success,
-          animType: AnimType.scale,
-          title: "Success",
-          desc: "Login successful!",
-          btnOkOnPress: () {
-            context.go('/home');
-          },
-        ).show();
-      }
-    } catch (e) {
-      debugPrint("Login failed: $e");
-
-      if (mounted) {
-        AwesomeDialog(
-          context: context,
-          dialogType: DialogType.error,
-          animType: AnimType.rightSlide,
-          title: "Error",
-          desc: "Login failed: $e",
-          btnOkOnPress: () {},
-        ).show();
-      }
-    } finally {
-      if (mounted) setState(() => _isLoading = false);
+    if (success) {
+      AwesomeDialog(
+        context: context,
+        dialogType: DialogType.success,
+        animType: AnimType.scale,
+        title: "Success",
+        desc: "Login successful!",
+        btnOkOnPress: () {
+          context.go('/home');
+        },
+      ).show();
+    } else {
+      AwesomeDialog(
+        context: context,
+        dialogType: DialogType.error,
+        animType: AnimType.rightSlide,
+        title: "Error",
+        desc: "Login failed",
+        btnOkOnPress: () {},
+      ).show();
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final state = ref.watch(authProviderNotifier);
+
     return Scaffold(
       backgroundColor: const Color(0xFFE6F5F9),
       body: SafeArea(
@@ -97,8 +88,7 @@ class _LoginUsernameScreenState extends State<LoginUsernameScreen> {
                     hintText: 'Username or Email',
                     hintStyle: TextStyle(color: Colors.grey),
                     border: InputBorder.none,
-                    contentPadding:
-                        EdgeInsets.symmetric(vertical: 16, horizontal: 20),
+                    contentPadding: EdgeInsets.symmetric(vertical: 16, horizontal: 20),
                   ),
                 ),
               ),
@@ -119,8 +109,7 @@ class _LoginUsernameScreenState extends State<LoginUsernameScreen> {
                     hintText: 'Password',
                     hintStyle: TextStyle(color: Colors.grey),
                     border: InputBorder.none,
-                    contentPadding:
-                        EdgeInsets.symmetric(vertical: 16, horizontal: 20),
+                    contentPadding: EdgeInsets.symmetric(vertical: 16, horizontal: 20),
                   ),
                 ),
               ),
@@ -129,25 +118,22 @@ class _LoginUsernameScreenState extends State<LoginUsernameScreen> {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 40),
               child: ElevatedButton(
-                onPressed: _isLoading ? null : _handleLogin,
+                onPressed: state.isLoading ? null : _handleLogin,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFFD0E7F9),
                   foregroundColor: Colors.black,
                   elevation: 0,
-                  padding:
-                      const EdgeInsets.symmetric(vertical: 14, horizontal: 24),
+                  padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 24),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                     side: BorderSide(color: Colors.grey.shade300, width: 1.5),
                   ),
                 ),
-                child: _isLoading
-                    ? const CircularProgressIndicator(
-                        strokeWidth: 2, color: Colors.black)
+                child: state.isLoading
+                    ? const CircularProgressIndicator(strokeWidth: 2, color: Colors.black)
                     : const Text(
                         'Log In',
-                        style: TextStyle(
-                            fontSize: 16, fontWeight: FontWeight.normal),
+                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.normal),
                       ),
               ),
             ),
