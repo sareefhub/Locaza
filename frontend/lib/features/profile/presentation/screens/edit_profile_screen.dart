@@ -43,7 +43,12 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       backgroundColor: const Color(0xFFE0F3F7),
       appBar: AppBar(
         backgroundColor: const Color(0xFFE0F3F7),
-        title: const Text('Edit Profile'),
+        title: Text(
+          'Edit Profile',
+          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
+        ),
         elevation: 0,
         leading: IconButton(
           icon: Image.asset('assets/icons/angle-small-left.png', width: 24, height: 24),
@@ -77,21 +82,35 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
             ),
             const SizedBox(height: 30),
             Row(
-              children: const [
-                Text('User ID', style: TextStyle(fontWeight: FontWeight.bold)),
-                SizedBox(width: 10),
-                Text('N/A'),
+              children: [
+                Text(
+                  'User ID',
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                ),
+                const SizedBox(width: 10),
+                Text(
+                  'N/A',
+                  style: Theme.of(context).textTheme.bodyMedium,
+                ),
               ],
             ),
             const SizedBox(height: 20),
             TextFormField(
               controller: _usernameController,
-              decoration: const InputDecoration(labelText: 'Username'),
+              decoration: InputDecoration(
+                labelText: 'Username',
+                labelStyle: Theme.of(context).textTheme.bodyMedium,
+              ),
             ),
             const SizedBox(height: 10),
             TextFormField(
               controller: _phoneController,
-              decoration: const InputDecoration(labelText: 'Phone'),
+              decoration: InputDecoration(
+                labelText: 'Phone',
+                labelStyle: Theme.of(context).textTheme.bodyMedium,
+              ),
               keyboardType: TextInputType.phone,
             ),
             const SizedBox(height: 40),
@@ -112,7 +131,10 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                       height: 24,
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
-                  : const Text('Save Edit'),
+                  : Text(
+                      'Save Edit',
+                      style: Theme.of(context).textTheme.bodyMedium,
+                    ),
             ),
           ],
         ),

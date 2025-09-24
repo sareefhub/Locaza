@@ -19,7 +19,8 @@ class MyApp extends StatelessWidget {
       title: 'Locaza',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        textTheme: GoogleFonts.poppinsTextTheme(),
+        fontFamily: GoogleFonts.sarabun().fontFamily,
+        textTheme: GoogleFonts.sarabunTextTheme(),
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.blueGrey),
         useMaterial3: true,
       ),
