@@ -1,14 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../application/auth_provider.dart';
 
-class SignUpScreen extends StatefulWidget {
+class SignUpScreen extends ConsumerStatefulWidget {
   const SignUpScreen({super.key});
 
   @override
   SignUpScreenState createState() => SignUpScreenState();
 }
 
-class SignUpScreenState extends State<SignUpScreen> {
+class SignUpScreenState extends ConsumerState<SignUpScreen> {
   final usernameController = TextEditingController();
   final passwordController = TextEditingController();
   final emailController = TextEditingController();
@@ -64,6 +66,8 @@ class SignUpScreenState extends State<SignUpScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final authState = ref.watch(authProviderNotifier);
+
     return Scaffold(
       backgroundColor: const Color(0xFFE6F5F9),
       body: SafeArea(
@@ -105,18 +109,46 @@ class SignUpScreenState extends State<SignUpScreen> {
                         const SizedBox(height: 20),
                         Center(
                           child: ElevatedButton(
-                            onPressed: () {
-                              // UI เท่านั้น ยังไม่เชื่อม API
-                            },
+                            onPressed: authState.isLoading
+                                ? null
+                                : () async {
+                                    final success = await ref
+                                        .read(authProviderNotifier.notifier)
+                                        .register(
+                                          usernameController.text,
+                                          passwordController.text,
+                                          emailController.text,
+                                          phoneController.text,
+                                        );
+                                    if (success && mounted) {
+                                      context.go('/home');
+                                    } else {
+                                      ScaffoldMessenger.of(context)
+                                          .showSnackBar(
+                                        const SnackBar(
+                                          content:
+                                              Text('สมัครสมาชิกไม่สำเร็จ'),
+                                        ),
+                                      );
+                                    }
+                                  },
                             style: buttonStyle(
-                                bg: const Color(0xFFD0E7F9),
-                                fg: Colors.black),
-                            child: const Text(
-                              'Sign Up',
-                              style: TextStyle(fontSize: 16),
-                            ),
+                                bg: const Color(0xFFD0E7F9), fg: Colors.black),
+                            child: authState.isLoading
+                                ? const SizedBox(
+                                    width: 22,
+                                    height: 22,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                    ),
+                                  )
+                                : const Text(
+                                    'Sign Up',
+                                    style: TextStyle(fontSize: 16),
+                                  ),
                           ),
                         ),
+                        // ส่วนอื่นๆ ไม่เปลี่ยน
                         const SizedBox(height: 30),
                         const Row(
                           children: [
@@ -140,10 +172,11 @@ class SignUpScreenState extends State<SignUpScreen> {
                           style: buttonStyle(
                             bg: Colors.white,
                             fg: Colors.black,
-                            border:
-                                BorderSide(color: Colors.grey.shade300, width: 1.5),
+                            border: BorderSide(
+                                color: Colors.grey.shade300, width: 1.5),
                           ),
-                          icon: Image.asset('assets/icons/search.png', height: 24),
+                          icon: Image.asset('assets/icons/search.png',
+                              height: 24),
                           label: const Text("Continue with Google",
                               style: TextStyle(fontSize: 16)),
                         ),
@@ -173,7 +206,8 @@ class SignUpScreenState extends State<SignUpScreen> {
                         Padding(
                           padding: const EdgeInsets.only(bottom: 24),
                           child: Center(
-                              child: Image.asset('assets/logo.png', height: 40)),
+                              child:
+                                  Image.asset('assets/logo.png', height: 40)),
                         ),
                       ],
                     ),

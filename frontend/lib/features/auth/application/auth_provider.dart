@@ -24,19 +24,41 @@ class AuthProvider extends StateNotifier<AuthState> {
   Future<bool> login(String username, String password) async {
     state = state.copyWith(isLoading: true);
     try {
-      // step 1: login เอา token
       final result = await api.login(username, password);
       UserSession.token = result['access_token']?.toString();
       UserSession.isLoggedIn = true;
 
-      // step 2: ใช้ token ไปเรียก /auth/me
       final userData = await api.me(UserSession.token!);
       UserSession.id = userData['id']?.toString();
       UserSession.username = userData['username'];
       UserSession.phone = userData['phone'];
       UserSession.avatarUrl = userData['avatar_url'];
 
-      // step 3: เก็บลง SharedPreferences
+      await UserSession.saveToStorage();
+
+      state = state.copyWith(isLoading: false);
+      return true;
+    } catch (_) {
+      state = state.copyWith(isLoading: false);
+      return false;
+    }
+  }
+
+  Future<bool> register(
+      String username, String password, String email, String phone) async {
+    state = state.copyWith(isLoading: true);
+    try {
+      final result = await api.register(username, password, email, phone);
+
+      UserSession.token = result['access_token']?.toString();
+      UserSession.isLoggedIn = true;
+
+      final userData = await api.me(UserSession.token!);
+      UserSession.id = userData['id']?.toString();
+      UserSession.username = userData['username'];
+      UserSession.phone = userData['phone'];
+      UserSession.avatarUrl = userData['avatar_url'];
+
       await UserSession.saveToStorage();
 
       state = state.copyWith(isLoading: false);
