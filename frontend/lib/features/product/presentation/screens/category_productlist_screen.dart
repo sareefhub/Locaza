@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:responsive_builder/responsive_builder.dart';
 import '../../../../core/widgets/product_card.dart';
 import '../../../../data/dummy_products.dart';
 import '../../../../data/dummy_categories.dart';
@@ -22,7 +23,6 @@ class _CategoryProductListScreenState extends State<CategoryProductListScreen> {
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
 
-  // เก็บค่า filter ปัจจุบัน
   String? _selectedLocation;
   String _minPrice = '';
   String _maxPrice = '';
@@ -57,9 +57,24 @@ class _CategoryProductListScreenState extends State<CategoryProductListScreen> {
     }
   }
 
+  int _getCrossAxisCount(double width) {
+    if (width >= 1600) return 6;
+    if (width >= 1300) return 5;
+    if (width >= 1000) return 4;
+    if (width >= 600) return 3;
+    return 2;
+  }
+
+  double _getChildAspectRatio(double screenWidth, int crossAxisCount) {
+    double padding = 16 * 2;
+    double spacing = 12 * (crossAxisCount - 1);
+    double cardWidth = (screenWidth - padding - spacing) / crossAxisCount;
+    double cardHeight = cardWidth * 0.8 + 120;
+    return cardWidth / cardHeight;
+  }
+
   @override
   Widget build(BuildContext context) {
-    // หา category id จากชื่อ category
     final category = dummyCategories.firstWhere(
       (c) => c['label'] == widget.categoryName,
       orElse: () => {},
@@ -85,7 +100,6 @@ class _CategoryProductListScreenState extends State<CategoryProductListScreen> {
       final matchesMaxPrice = productPrice <= maxPriceInt;
       final matchesSearch = productTitle.contains(_searchQuery.toLowerCase());
 
-      // แสดงเฉพาะ available
       final matchesStatus = product['status'] == 'available';
 
       return matchesCategory &&
@@ -149,26 +163,53 @@ class _CategoryProductListScreenState extends State<CategoryProductListScreen> {
                         ),
                       ),
                     )
-                  : Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: GridView.count(
-                        crossAxisCount: 2,
-                        crossAxisSpacing: 8,
-                        mainAxisSpacing: 8,
-                        childAspectRatio: 0.65,
-                        children: filteredProducts.map((product) {
-                          // ดึง seller info จาก dummyUsers
-                          final seller = dummyUsers.firstWhere(
-                            (u) => u['id'] == product['seller_id'],
-                            orElse: () => {},
-                          );
-                          product['sellerName'] =
-                              seller['name'] ?? 'ไม่ทราบชื่อผู้ขาย';
-                          product['sellerImage'] = seller['avatar_url'] ?? '';
+                  : ResponsiveBuilder(
+                      builder: (context, sizingInfo) {
+                        final screenWidth = sizingInfo.screenSize.width;
+                        final crossAxisCount = _getCrossAxisCount(screenWidth);
+                        final aspectRatio = _getChildAspectRatio(
+                          screenWidth,
+                          crossAxisCount,
+                        );
 
-                          return ProductCard(product: product);
-                        }).toList(),
-                      ),
+                        return CustomScrollView(
+                          slivers: [
+                            SliverPadding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                              ),
+                              sliver: SliverGrid(
+                                delegate: SliverChildBuilderDelegate((
+                                  context,
+                                  index,
+                                ) {
+                                  final product = filteredProducts[index];
+                                  final seller = dummyUsers.firstWhere(
+                                    (u) => u['id'] == product['seller_id'],
+                                    orElse: () => {},
+                                  );
+                                  product['sellerName'] =
+                                      seller['name'] ?? 'ไม่ทราบชื่อผู้ขาย';
+                                  product['sellerImage'] =
+                                      seller['avatar_url'] ?? '';
+
+                                  return ProductCard(product: product);
+                                }, childCount: filteredProducts.length),
+                                gridDelegate:
+                                    SliverGridDelegateWithFixedCrossAxisCount(
+                                      crossAxisCount: crossAxisCount,
+                                      crossAxisSpacing: 12,
+                                      mainAxisSpacing: 12,
+                                      childAspectRatio: aspectRatio,
+                                    ),
+                              ),
+                            ),
+                            const SliverToBoxAdapter(
+                              child: SizedBox(height: 80),
+                            ),
+                          ],
+                        );
+                      },
                     ),
             ),
           ],
