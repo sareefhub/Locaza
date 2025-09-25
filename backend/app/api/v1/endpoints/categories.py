@@ -11,6 +11,10 @@ router = APIRouter(prefix="/categories", tags=["Categories"])
 def create_category(category: CategoryCreate, db: Session = Depends(get_db)):
     return CategoryService.create_category(db, category)
 
+@router.post("/bulk", response_model=List[CategoryResponse])
+def create_categories(categories: List[CategoryCreate], db: Session = Depends(get_db)):
+    return CategoryService.create_categories(db, categories)
+
 @router.get("/{category_id}", response_model=CategoryResponse)
 def get_category(category_id: int, db: Session = Depends(get_db)):
     return CategoryService.get_category(db, category_id)

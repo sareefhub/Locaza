@@ -4,7 +4,7 @@ from app.schemas.user_schema import UserCreate, UserUpdate
 from datetime import datetime
 from app.core.security import get_password_hash
 
-DEFAULT_AVATAR = "http://localhost:8000/uploads/avatars/default.png"
+DEFAULT_AVATAR = "/uploads/avatars/default.png"
 
 class UserService:
     @staticmethod

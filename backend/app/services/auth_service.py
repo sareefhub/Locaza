@@ -5,7 +5,7 @@ from app.repositories.auth_repository import AuthRepository
 from app.schemas.auth_schema import UsernameRegisterRequest, LoginRequest, AuthResponse
 from app.core.security import create_access_token, verify_password, get_password_hash
 
-DEFAULT_AVATAR = "http://localhost:8000/uploads/avatars/default.png"
+DEFAULT_AVATAR = "/uploads/avatars/default.png"
 
 
 class AuthBase:

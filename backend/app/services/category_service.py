@@ -1,4 +1,5 @@
 from sqlalchemy.orm import Session
+from typing import List
 from app.schemas.category_schema import CategoryCreate, CategoryUpdate
 from app.repositories.category_repository import CategoryRepository
 
@@ -6,6 +7,10 @@ class CategoryService:
     @staticmethod
     def create_category(db: Session, category: CategoryCreate):
         return CategoryRepository.create(db, category)
+
+    @staticmethod
+    def create_categories(db: Session, categories: List[CategoryCreate]):
+        return CategoryRepository.create_bulk(db, categories)
 
     @staticmethod
     def get_category(db: Session, category_id: int):

@@ -1,5 +1,6 @@
 import os
 from fastapi import APIRouter, UploadFile, File, HTTPException
+from fastapi.responses import JSONResponse
 
 router = APIRouter(prefix="/upload", tags=["Upload"])
 
@@ -15,9 +16,10 @@ async def upload_avatar(file: UploadFile = File(...)):
     if len(contents) > 2 * 1024 * 1024:
         raise HTTPException(status_code=400, detail="File too large (max 2MB)")
 
-    file_path = os.path.join(UPLOAD_DIR, file.filename)
+    filename = file.filename.replace(" ", "_")
+    file_path = os.path.join(UPLOAD_DIR, filename)
     with open(file_path, "wb") as f:
         f.write(contents)
 
-    file_url = f"http://localhost:8000/uploads/avatars/{file.filename}"
-    return {"avatar_url": file_url}
+    file_url = f"/{UPLOAD_DIR}/{filename}"
+    return JSONResponse(content={"avatar_url": file_url})

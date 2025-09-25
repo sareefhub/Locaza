@@ -1,4 +1,5 @@
 from sqlalchemy.orm import Session
+from typing import List
 from app.models.models import Category
 from app.schemas.category_schema import CategoryCreate, CategoryUpdate
 
@@ -10,6 +11,15 @@ class CategoryRepository:
         db.commit()
         db.refresh(db_category)
         return db_category
+
+    @staticmethod
+    def create_bulk(db: Session, categories: List[CategoryCreate]):
+        db_categories = [Category(**c.dict()) for c in categories]
+        db.add_all(db_categories)
+        db.commit()
+        for c in db_categories:
+            db.refresh(c)
+        return db_categories
 
     @staticmethod
     def get(db: Session, category_id: int):

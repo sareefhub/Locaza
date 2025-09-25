@@ -42,6 +42,36 @@ class ProfileNotifier extends StateNotifier<ProfileState> {
       state = state.copyWith(isLoading: false);
     }
   }
+
+  Future<void> updateProfile({
+    required String userId,
+    required String name,
+    required String email,
+    required String phone,
+    required String avatarUrl,
+    required String location,
+  }) async {
+    state = state.copyWith(isLoading: true);
+    try {
+      final updated = await api.updateProfile(
+        userId: userId,
+        name: name,
+        email: email,
+        phone: phone,
+        avatarUrl: avatarUrl,
+        location: location,
+      );
+      if (updated != null) {
+        state = state.copyWith(user: updated);
+        UserSession.username = updated['username'];
+        UserSession.phone = updated['phone'];
+        UserSession.avatarUrl = updated['avatar_url'];
+        await UserSession.saveToStorage();
+      }
+    } catch (_) {} finally {
+      state = state.copyWith(isLoading: false);
+    }
+  }
 }
 
 final profileProviderNotifier =

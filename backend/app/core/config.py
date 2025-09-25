@@ -9,6 +9,7 @@ class Settings(BaseSettings):
     APP_NAME: str = "Locaza API"
     APP_VERSION: str = "1.0.0"
     DEBUG: bool = True
+    BASE_URL: str = "http://localhost:8000"
 
     class Config:
         env_file = ".env"

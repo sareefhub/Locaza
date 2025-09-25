@@ -4,7 +4,7 @@ from typing import Optional
 
 class UserBase(BaseModel):
     username: str
-    name: str
+    name: Optional[str] = None
     email: EmailStr
     phone: Optional[str] = None
     avatar_url: Optional[str] = None
