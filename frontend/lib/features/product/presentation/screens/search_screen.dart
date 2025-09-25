@@ -6,6 +6,7 @@ import 'package:frontend/data/dummy_users.dart';
 import '../../../../core/widgets/product_card.dart';
 import 'filter_screen.dart';
 import '../../../../core/widgets/search_bar_all.dart';
+import 'package:responsive_builder/responsive_builder.dart';
 
 class SearchScreen extends StatefulWidget {
   const SearchScreen({super.key});
@@ -38,6 +39,22 @@ class _SearchScreenState extends State<SearchScreen> {
     }
   }
 
+  int _getCrossAxisCount(double width) {
+    if (width >= 1600) return 6;
+    if (width >= 1300) return 5;
+    if (width >= 1000) return 4;
+    if (width >= 600) return 3;
+    return 2;
+  }
+
+  double _getChildAspectRatio(double screenWidth, int crossAxisCount) {
+    double padding = 16 * 2;
+    double spacing = 12 * (crossAxisCount - 1);
+    double cardWidth = (screenWidth - padding - spacing) / crossAxisCount;
+    double cardHeight = cardWidth * 0.8 + 120;
+    return cardWidth / cardHeight;
+  }
+
   @override
   Widget build(BuildContext context) {
     final filtered = dummyProducts.where((product) {
@@ -46,13 +63,8 @@ class _SearchScreenState extends State<SearchScreen> {
       final location = product['location']?.toString() ?? '';
       final price = product['price'] as double? ?? 0;
 
-      // ตรวจสอบสถานะสินค้า ต้องเป็น available
       if (product['status'] != 'available') return false;
-
-      // ตรวจสอบ search query
       if (!title.contains(_searchQuery.toLowerCase())) return false;
-
-      // ตรวจสอบ category filter
       if (_filters['category'] != null &&
           _filters['category'].toString().isNotEmpty) {
         final category = dummyCategories.firstWhere(
@@ -61,21 +73,16 @@ class _SearchScreenState extends State<SearchScreen> {
         );
         if (category['id'] != categoryId) return false;
       }
-
-      // ตรวจสอบ location filter
       if (_filters['location'] != null &&
           _filters['location'].toString().isNotEmpty) {
         if (location != _filters['location']) return false;
       }
-
-      // ตรวจสอบ price range filter
       double? minPrice = double.tryParse(
         _filters['minPrice']?.toString().trim() ?? '',
       );
       double? maxPrice = double.tryParse(
         _filters['maxPrice']?.toString().trim() ?? '',
       );
-
       if (minPrice != null && price < minPrice) return false;
       if (maxPrice != null && price > maxPrice) return false;
 
@@ -96,44 +103,56 @@ class _SearchScreenState extends State<SearchScreen> {
         ),
       ),
       body: SafeArea(
-        child: Column(
-          children: [
-            const SizedBox(height: 16),
-            Expanded(
-              child: filtered.isEmpty
-                  ? Center(
-                      child: Text(
-                        "ไม่พบสินค้าที่ค้นหา",
-                        style: GoogleFonts.sarabun(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w400,
+        child: filtered.isEmpty
+            ? Center(
+                child: Text(
+                  "ไม่พบสินค้าที่ค้นหา",
+                  style: GoogleFonts.sarabun(fontSize: 16),
+                ),
+              )
+            : ResponsiveBuilder(
+                builder: (context, sizingInfo) {
+                  final screenWidth = sizingInfo.screenSize.width;
+                  final crossAxisCount = _getCrossAxisCount(screenWidth);
+                  final childAspectRatio = _getChildAspectRatio(
+                    screenWidth,
+                    crossAxisCount,
+                  );
+
+                  return CustomScrollView(
+                    slivers: [
+                      SliverPadding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        sliver: SliverGrid(
+                          delegate: SliverChildBuilderDelegate((
+                            context,
+                            index,
+                          ) {
+                            final product = filtered[index];
+                            final seller = dummyUsers.firstWhere(
+                              (u) => u['id'] == product['seller_id'],
+                              orElse: () => {},
+                            );
+                            product['sellerName'] =
+                                seller['name'] ?? 'ไม่ทราบชื่อผู้ขาย';
+                            product['sellerImage'] = seller['avatar_url'] ?? '';
+
+                            return ProductCard(product: product);
+                          }, childCount: filtered.length),
+                          gridDelegate:
+                              SliverGridDelegateWithFixedCrossAxisCount(
+                                crossAxisCount: crossAxisCount,
+                                crossAxisSpacing: 12,
+                                mainAxisSpacing: 12,
+                                childAspectRatio: childAspectRatio,
+                              ),
                         ),
                       ),
-                    )
-                  : Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: GridView.count(
-                        crossAxisCount: 2,
-                        crossAxisSpacing: 8,
-                        mainAxisSpacing: 8,
-                        childAspectRatio: 0.65,
-                        children: filtered.map((product) {
-                          // เพิ่มข้อมูล seller ให้ ProductCard ใช้
-                          final seller = dummyUsers.firstWhere(
-                            (u) => u['id'] == product['seller_id'],
-                            orElse: () => {},
-                          );
-                          product['sellerName'] =
-                              seller['name'] ?? 'ไม่ทราบชื่อผู้ขาย';
-                          product['sellerImage'] = seller['avatar_url'] ?? '';
-
-                          return ProductCard(product: product);
-                        }).toList(),
-                      ),
-                    ),
-            ),
-          ],
-        ),
+                      const SliverToBoxAdapter(child: SizedBox(height: 80)),
+                    ],
+                  );
+                },
+              ),
       ),
     );
   }
