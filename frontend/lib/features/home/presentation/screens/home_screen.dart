@@ -22,6 +22,20 @@ class HomeScreen extends StatelessWidget {
     return 2; // Mobile
   }
 
+  double _getChildAspectRatio(double screenWidth, int crossAxisCount) {
+    // คำนวณความกว้างของ card
+    double padding = 16 * 2; // padding ของ SliverPadding
+    double spacing = 12 * (crossAxisCount - 1); // spacing ระหว่าง card
+    double cardWidth = (screenWidth - padding - spacing) / crossAxisCount;
+
+    // height ของ card ประกอบด้วย
+    // - รูปภาพ (80% ของความกว้าง)
+    // - ข้อความ + ปุ่ม ประมาณ 120
+    double cardHeight = cardWidth * 0.8 + 120;
+
+    return cardWidth / cardHeight;
+  }
+
   // ฟิลเตอร์สินค้า: แสดงเฉพาะสินค้าที่ยังว่างและผู้ขายถูกต้อง
   List<Map<String, dynamic>> _getBestSaleProducts() {
     return dummyProducts
@@ -93,12 +107,12 @@ class HomeScreen extends StatelessWidget {
                           borderRadius: BorderRadius.circular(25),
                         ),
                         child: Row(
-                          children: const [
-                            Icon(Icons.search, color: Colors.grey),
-                            SizedBox(width: 8),
+                          children: [
+                            const Icon(Icons.search, color: Colors.grey),
+                            const SizedBox(width: 8),
                             Text(
                               'ค้นหา',
-                              style: TextStyle(
+                              style: GoogleFonts.sarabun(
                                 color: Colors.grey,
                                 fontSize: 14,
                               ),
@@ -121,14 +135,19 @@ class HomeScreen extends StatelessWidget {
                 SliverPadding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   sliver: SliverGrid(
-                    delegate: SliverChildBuilderDelegate((context, index) {
-                      return ProductCard(product: bestSaleProducts[index]);
-                    }, childCount: bestSaleProducts.length),
+                    delegate: SliverChildBuilderDelegate(
+                      (context, index) =>
+                          ProductCard(product: bestSaleProducts[index]),
+                      childCount: bestSaleProducts.length,
+                    ),
                     gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                       crossAxisCount: crossAxisCount,
                       crossAxisSpacing: 12,
                       mainAxisSpacing: 12,
-                      childAspectRatio: sizingInfo.isMobile ? 0.60 : 0.70,
+                      childAspectRatio: _getChildAspectRatio(
+                        screenWidth,
+                        crossAxisCount,
+                      ),
                     ),
                   ),
                 ),

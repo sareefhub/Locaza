@@ -25,11 +25,9 @@ class ProductCard extends ConsumerWidget {
       orElse: () => {'label': ''},
     )['label'];
 
-    const cardWidth = 160.0;
-    const imageHeight = 150.0;
     const favoriteIconSize = 22.0;
 
-    Widget buildImage() {
+    Widget buildImage(double imageHeight) {
       if (image.isEmpty) {
         return Image.asset(
           'assets/images/placeholder.png',
@@ -60,100 +58,111 @@ class ProductCard extends ConsumerWidget {
       );
     }
 
-    return InkWell(
-      onTap: () {
-        GoRouter.of(context).push('/product_details', extra: product);
-      },
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        width: cardWidth,
-        padding: const EdgeInsets.all(10),
-        decoration: BoxDecoration(
-          color: Colors.white,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final cardWidth = constraints.maxWidth;
+        final imageHeight = cardWidth * 0.8; // ยืดหยุ่นตามความกว้าง
+
+        return InkWell(
+          onTap: () {
+            GoRouter.of(context).push('/product_details', extra: product);
+          },
           borderRadius: BorderRadius.circular(12),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.05),
-              blurRadius: 4,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Stack(
-              children: [
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(8),
-                  child: buildImage(),
+          child: Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(
+                    0.05,
+                  ), // แก้ from withValues -> withOpacity
+                  blurRadius: 4,
+                  offset: const Offset(0, 2),
                 ),
-                Positioned(
-                  top: 8,
-                  right: 8,
-                  child: Container(
-                    width: favoriteIconSize + 8,
-                    height: favoriteIconSize + 8,
-                    decoration: BoxDecoration(
-                      color: Colors.grey.withValues(alpha: 0.3),
-                      shape: BoxShape.circle,
+              ],
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min, // << ป้องกัน card หดจน error
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Stack(
+                  children: [
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: buildImage(imageHeight),
                     ),
-                    child: IconButton(
-                      padding: const EdgeInsets.all(4),
-                      iconSize: favoriteIconSize,
-                      icon: Icon(
-                        isFavorite ? Icons.favorite : Icons.favorite_border,
-                        color: isFavorite ? Colors.red : Colors.white,
+                    Positioned(
+                      top: 8,
+                      right: 8,
+                      child: Container(
+                        width: favoriteIconSize + 8,
+                        height: favoriteIconSize + 8,
+                        decoration: BoxDecoration(
+                          color: Colors.grey.withOpacity(
+                            0.3,
+                          ), // แก้ from withValues -> withOpacity
+                          shape: BoxShape.circle,
+                        ),
+                        child: IconButton(
+                          padding: const EdgeInsets.all(4),
+                          iconSize: favoriteIconSize,
+                          icon: Icon(
+                            isFavorite ? Icons.favorite : Icons.favorite_border,
+                            color: isFavorite ? Colors.red : Colors.white,
+                          ),
+                          onPressed: () {
+                            if (isFavorite) {
+                              notifier.removeFavorite(product['id']);
+                            } else {
+                              notifier.addFavorite(product, 101);
+                            }
+                          },
+                        ),
                       ),
-                      onPressed: () {
-                        if (isFavorite) {
-                          notifier.removeFavorite(product['id']);
-                        } else {
-                          notifier.addFavorite(product, 101);
-                        }
-                      },
                     ),
+                  ],
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  product['title']?.toString() ?? '',
+                  style: GoogleFonts.sarabun(
+                    fontWeight: FontWeight.normal,
+                    fontSize: 14,
+                    color: Colors.black,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  category?.toString() ?? '',
+                  style: GoogleFonts.sarabun(fontSize: 12, color: Colors.grey),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  product['location']?.toString() ?? '',
+                  style: GoogleFonts.sarabun(fontSize: 12, color: Colors.grey),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  '฿${product['price'] ?? ''}',
+                  style: GoogleFonts.sarabun(
+                    fontWeight: FontWeight.bold,
+                    color: const Color(0xFF315EB2),
+                    fontSize: 16,
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 6),
-            Text(
-              product['title']?.toString() ?? '',
-              style: GoogleFonts.sarabun(
-                fontWeight: FontWeight.normal,
-                fontSize: 14,
-                color: Colors.black,
-              ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-            const SizedBox(height: 4),
-            Text(
-              category?.toString() ?? '',
-              style: GoogleFonts.sarabun(fontSize: 12, color: Colors.grey),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-            const SizedBox(height: 2),
-            Text(
-              product['location']?.toString() ?? '',
-              style: GoogleFonts.sarabun(fontSize: 12, color: Colors.grey),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-            const SizedBox(height: 14),
-            Text(
-              '฿${product['price'] ?? ''}',
-              style: GoogleFonts.sarabun(
-                fontWeight: FontWeight.bold,
-                color: const Color(0xFF315EB2),
-                fontSize: 16,
-              ),
-            ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 }
