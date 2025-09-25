@@ -64,19 +64,25 @@ class _ProfileScreenState extends State<ProfileScreen> {
     showDialog(
       context: context,
       builder: (ctx) => Theme(
-        data: Theme.of(context).copyWith(
-          textTheme: GoogleFonts.sarabunTextTheme(),
-        ),
+        data: Theme.of(
+          context,
+        ).copyWith(textTheme: GoogleFonts.sarabunTextTheme()),
         child: AlertDialog(
-          title: Text("ยืนยันการออกจากระบบ",
-              style: Theme.of(context).textTheme.titleMedium),
-          content: Text("คุณแน่ใจหรือไม่ที่จะออกจากระบบ?",
-              style: Theme.of(context).textTheme.bodyMedium),
+          title: Text(
+            "ยืนยันการออกจากระบบ",
+            style: Theme.of(context).textTheme.titleMedium,
+          ),
+          content: Text(
+            "คุณแน่ใจหรือไม่ที่จะออกจากระบบ?",
+            style: Theme.of(context).textTheme.bodyMedium,
+          ),
           actions: [
             TextButton(
               onPressed: () => context.pop(),
-              child:
-                  Text("ยกเลิก", style: Theme.of(context).textTheme.bodyMedium),
+              child: Text(
+                "ยกเลิก",
+                style: Theme.of(context).textTheme.bodyMedium,
+              ),
             ),
             ElevatedButton(
               onPressed: () {
@@ -90,8 +96,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 backgroundColor: const Color(0xFFD1E9F2),
                 foregroundColor: Colors.black,
               ),
-              child:
-                  Text("ยืนยัน", style: Theme.of(context).textTheme.bodyMedium),
+              child: Text(
+                "ยืนยัน",
+                style: Theme.of(context).textTheme.bodyMedium,
+              ),
             ),
           ],
         ),
@@ -102,9 +110,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   Widget build(BuildContext context) {
     return Theme(
-      data: Theme.of(context).copyWith(
-        textTheme: GoogleFonts.sarabunTextTheme(),
-      ),
+      data: Theme.of(
+        context,
+      ).copyWith(textTheme: GoogleFonts.sarabunTextTheme()),
       child: Scaffold(
         bottomNavigationBar: const BottomNavBar(currentIndex: 4),
         backgroundColor: const Color(0xFFE0F3F7),
@@ -124,7 +132,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             backgroundImage: avatarUrl != null
                                 ? NetworkImage(ApiConfig.fixUrl(avatarUrl))
                                 : const AssetImage('assets/icons/user.png')
-                                    as ImageProvider,
+                                      as ImageProvider,
                           ),
                           const SizedBox(width: 16),
                           Expanded(
@@ -133,9 +141,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               children: [
                                 Text(
                                   'ผู้ใช้',
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .bodyMedium
+                                  style: Theme.of(context).textTheme.bodyMedium
                                       ?.copyWith(
                                         fontSize: 14,
                                         color: Colors.black,
@@ -143,18 +149,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 ),
                                 Text(
                                   username ?? "",
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .bodyLarge
-                                      ?.copyWith(
-                                        fontWeight: FontWeight.bold,
-                                      ),
+                                  style: Theme.of(context).textTheme.bodyLarge
+                                      ?.copyWith(fontWeight: FontWeight.bold),
                                   overflow: TextOverflow.ellipsis,
                                 ),
                                 RichText(
                                   text: TextSpan(
-                                    style:
-                                        Theme.of(context).textTheme.bodySmall,
+                                    style: Theme.of(
+                                      context,
+                                    ).textTheme.bodySmall,
                                     children: [
                                       TextSpan(
                                         text: 'หมายเลขผู้ใช้: ',
@@ -194,9 +197,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               AssetImage('assets/icons/edit.png'),
                               size: 16,
                             ),
-                            label: Text('แก้ไขโปรไฟล์',
-                                style: Theme.of(context).textTheme.bodyMedium,
-                                overflow: TextOverflow.ellipsis),
+                            label: Text(
+                              'แก้ไขโปรไฟล์',
+                              style: Theme.of(context).textTheme.bodyMedium,
+                              overflow: TextOverflow.ellipsis,
+                            ),
                             style: ElevatedButton.styleFrom(
                               backgroundColor: const Color(0xFFD1E9F2),
                               foregroundColor: Colors.black,
@@ -215,8 +220,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               AssetImage('assets/icons/seller-store.png'),
                               size: 20,
                             ),
-                            title: Text("ประวัติการซื้อ",
-                                style: Theme.of(context).textTheme.bodyMedium),
+                            title: Text(
+                              "ประวัติการซื้อ",
+                              style: Theme.of(context).textTheme.bodyMedium,
+                            ),
                             onTap: () => context.go('/purchase_history'),
                           ),
                           ListTile(
@@ -224,13 +231,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               AssetImage('assets/icons/seller.png'),
                               size: 20,
                             ),
-                            title: Text("ร้านค้าของฉัน",
-                                style: Theme.of(context).textTheme.bodyMedium),
+                            title: Text(
+                              "ร้านค้าของฉัน",
+                              style: Theme.of(context).textTheme.bodyMedium,
+                            ),
                             onTap: () {
                               final sellerData = {
                                 'id': userId ?? '1',
                                 'name': username ?? 'ร้านค้าของฉัน',
-                                'avatar_url': avatarUrl ?? '',
+                                'avatar_url': avatarUrl != null
+                                    ? ApiConfig.fixUrl(avatarUrl)
+                                    : '', // ส่ง avatarUrl ที่โหลดมา
                                 'rating': 4.9,
                                 'followers': 120,
                                 'products': [],
@@ -247,8 +258,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               AssetImage('assets/icons/heart.png'),
                               size: 20,
                             ),
-                            title: Text("รายการโปรด",
-                                style: Theme.of(context).textTheme.bodyMedium),
+                            title: Text(
+                              "รายการโปรด",
+                              style: Theme.of(context).textTheme.bodyMedium,
+                            ),
                             onTap: () => context.go('/favorite'),
                           ),
                           const SizedBox(height: 20),
@@ -273,8 +286,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                   UserSession.token != null
                                       ? 'Log Out'
                                       : 'Log In',
-                                  style:
-                                      Theme.of(context).textTheme.bodyMedium,
+                                  style: Theme.of(context).textTheme.bodyMedium,
                                 ),
                               ),
                             ),
