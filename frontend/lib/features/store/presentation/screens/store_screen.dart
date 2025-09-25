@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../review/reviews_screen.dart';
 
+// Dummy store provider
 final storeProvider = Provider<Map<String, dynamic>>((ref) {
   return {
     "id": "101",
@@ -123,7 +125,6 @@ class StoreScreen extends ConsumerWidget {
                         ],
                       ),
                     ),
-
                     if (!isOwner)
                       Column(
                         children: [
@@ -143,48 +144,71 @@ class StoreScreen extends ConsumerWidget {
               ),
 
               // 💬 Review Section
-              if (store["reviews"] != null &&
-                  (store["reviews"] as List).isNotEmpty)
-                Container(
-                  color: Colors.grey[100],
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 12,
-                  ),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              (store["reviews"][0]["user"] ?? '') as String,
-                              style: const TextStyle(
-                                fontWeight: FontWeight.bold,
+              Container(
+                width: double.infinity,
+                color: Colors.white,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 16,
+                ),
+                child:
+                    (store["reviews"] != null &&
+                        (store["reviews"] as List).isNotEmpty)
+                    ? Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  (store["reviews"][0]["user"] ?? '') as String,
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                Text(
+                                  (store["reviews"][0]["comment"] ?? '')
+                                      as String,
+                                ),
+                              ],
+                            ),
+                          ),
+                          GestureDetector(
+                            onTap: () {
+                              showModalBottomSheet(
+                                context: context,
+                                isScrollControlled: true,
+                                backgroundColor: Colors.white,
+                                shape: const RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.vertical(
+                                    top: Radius.circular(16),
+                                  ),
+                                ),
+                                builder: (_) => ReviewScreen(
+                                  storeName: store["name"],
+                                  reviews: store["reviews"],
+                                  isOwner: isOwner,
+                                ),
+                              );
+                            },
+                            child: const Text(
+                              "ดูทั้งหมด",
+                              style: TextStyle(
+                                color: Colors.blue,
+                                decoration: TextDecoration.underline,
                               ),
                             ),
-                            Text(
-                              (store["reviews"][0]["comment"] ?? '') as String,
-                            ),
-                          ],
-                        ),
-                      ),
-                      GestureDetector(
-                        onTap: () {
-                          // TODO: ไปหน้ารีวิวทั้งหมด
-                        },
-                        child: const Text(
-                          "ดูทั้งหมด",
-                          style: TextStyle(
-                            color: Colors.blue,
-                            decoration: TextDecoration.underline,
                           ),
+                        ],
+                      )
+                    : const Center(
+                        child: Text(
+                          "ยังไม่มีรีวิว",
+                          style: TextStyle(color: Colors.grey),
                         ),
                       ),
-                    ],
-                  ),
-                ),
+              ),
 
               // 📑 Tabs
               const TabBar(
