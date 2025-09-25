@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:http/http.dart' as http;
+import 'package:http_parser/http_parser.dart';
 import '../../../../config/api_config.dart';
 import '../../../../utils/user_session.dart';
 
@@ -27,7 +28,13 @@ class ProfileApi {
   Future<String?> uploadAvatar(File file) async {
     final url = Uri.parse("${ApiConfig.baseUrl}/upload/avatar/");
     final request = http.MultipartRequest("POST", url);
-    request.files.add(await http.MultipartFile.fromPath("file", file.path));
+    request.files.add(
+      await http.MultipartFile.fromPath(
+        "file",
+        file.path,
+        contentType: MediaType("image", "jpeg"), // บังคับเป็น image/*
+      ),
+    );
 
     final streamedResponse = await request.send();
     final response = await http.Response.fromStream(streamedResponse);
