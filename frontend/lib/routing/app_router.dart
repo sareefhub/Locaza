@@ -22,6 +22,7 @@ import '../features/product/presentation/screens/filter_screen.dart';
 import '../features/product/presentation/screens/purchase_history_screen.dart';
 import '../features/store/presentation/screens/store_screen.dart';
 import '../features/product/presentation/screens/sold_product_details.dart';
+import '../features/review/review_screen.dart';
 
 import '../utils/user_session.dart';
 import 'routes.dart';
@@ -67,12 +68,16 @@ final GoRouter appRouter = GoRouter(
     GoRoute(
       path: AppRoutes.chatDetail,
       builder: (_, state) {
-        final extra = state.extra as Map<String, dynamic>?;
+        final extra = state.extra as Map<String, dynamic>? ?? {};
         return ChatDetailScreen(
-          chatId: state.pathParameters['chatId'] ?? "tempChatId",
-          currentUserId: state.pathParameters['currentUserId'] ?? "1",
-          otherUserId: state.pathParameters['otherUserId'] ?? "2",
-          product: extra?['product'] ?? {},
+          chatId: extra['chatId'] ?? "tempChatId",
+          currentUserId: extra['currentUserId'] ?? UserSession.id ?? '1',
+          otherUserId:
+              extra['otherUserId'] ??
+              extra['product']?['seller_id']?.toString() ??
+              '2',
+          product: extra['product'] ?? {},
+          fromProductDetail: extra['fromProductDetail'] ?? false,
         );
       },
     ),
@@ -119,6 +124,18 @@ final GoRouter appRouter = GoRouter(
       builder: (context, state) {
         final product = state.extra as Map<String, dynamic>;
         return SoldProductDetailsPage(product: product);
+      },
+    ),
+    GoRoute(
+      path: AppRoutes.review,
+      builder: (_, state) {
+        final extra = state.extra as Map<String, dynamic>? ?? {};
+        return ReviewScreen(
+          storeName: extra['storeName'] ?? '',
+          product: extra['product'] ?? {},
+          reviewerId: extra['reviewerId'] ?? '',
+          revieweeId: extra['revieweeId'] ?? '',
+        );
       },
     ),
   ],

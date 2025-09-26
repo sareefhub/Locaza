@@ -4,7 +4,6 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 // นำเข้า dummy data
-//import 'package:frontend/data/dummy_products.dart';
 import 'package:frontend/data/dummy_users.dart';
 
 class ChatDetailScreen extends StatefulWidget {
@@ -12,6 +11,7 @@ class ChatDetailScreen extends StatefulWidget {
   final String currentUserId;
   final String otherUserId;
   final Map<String, dynamic> product;
+  final bool fromProductDetail; // true = มาจาก ProductDetail
 
   const ChatDetailScreen({
     super.key,
@@ -19,6 +19,7 @@ class ChatDetailScreen extends StatefulWidget {
     required this.currentUserId,
     required this.otherUserId,
     required this.product,
+    required this.fromProductDetail,
   });
 
   @override
@@ -29,7 +30,9 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
   final TextEditingController _messageController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
 
-  // ตัวอย่างข้อความ mock
+  bool isSold = false; // ผู้ขายยืนยันการขาย
+  bool isPurchased = false; // ผู้ซื้อยืนยันการซื้อ
+
   List<Map<String, dynamic>> mockMessages = [
     {
       "id": "m1",
@@ -107,7 +110,6 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
         ? widget.product['image_urls'][0]
         : null;
 
-    // หา seller จาก dummyUsers
     final sellerId = widget.product['seller_id'];
     final seller = dummyUsers.firstWhere(
       (user) => user['id'] == sellerId,
@@ -117,6 +119,12 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
     final sellerAvatar = seller['avatar_url'];
 
     final isOwner = widget.currentUserId == sellerId.toString();
+
+    String actionButtonText() {
+      if (isOwner) return "ขาย";
+      if (!isSold) return "ซื้อ"; // ยังกดไม่ได้
+      return isPurchased ? "รีวิว" : "ซื้อ";
+    }
 
     return Scaffold(
       backgroundColor: const Color(0xFFE0F3F7),
@@ -129,7 +137,6 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
           flexibleSpace: SafeArea(
             child: Column(
               children: [
-                // แถวบนสุด: Back + avatar + ชื่อผู้ขาย
                 Padding(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 8.0,
@@ -166,8 +173,6 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
                     ],
                   ),
                 ),
-
-                // แถบสินค้า
                 Container(
                   margin: const EdgeInsets.symmetric(
                     horizontal: 12,
@@ -183,7 +188,6 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
                   ),
                   child: Row(
                     children: [
-                      // รูปสินค้า
                       Container(
                         width: 40,
                         height: 40,
@@ -202,7 +206,6 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
                             : null,
                       ),
                       const SizedBox(width: 8),
-                      // ชื่อสินค้า
                       Expanded(
                         child: Text(
                           productTitle,
@@ -215,7 +218,6 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
                         ),
                       ),
                       const SizedBox(width: 8),
-                      // ปุ่มซื้อ/ขาย
                       Container(
                         padding: const EdgeInsets.symmetric(
                           horizontal: 12,
@@ -224,15 +226,99 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
                         decoration: BoxDecoration(
                           color: isOwner
                               ? const Color(0xFFE0AFAF)
-                              : const Color(0xFF62B9E8),
+                              : (!isSold
+                                    ? Colors.grey
+                                    : const Color(0xFF62B9E8)),
                           borderRadius: BorderRadius.circular(8),
                         ),
-                        child: Text(
-                          isOwner ? "ขาย" : "ซื้อ",
-                          style: GoogleFonts.sarabun(
-                            fontSize: 14,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
+                        child: InkWell(
+                          onTap: () async {
+                            if (isOwner) {
+                              // ผู้ขายยืนยันการขาย
+                              final confirmed = await showDialog<bool>(
+                                context: context,
+                                builder: (context) => AlertDialog(
+                                  title: const Text("ยืนยันการขาย"),
+                                  content: const Text(
+                                    "คุณต้องการยืนยันการขายสินค้านี้หรือไม่?",
+                                  ),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () =>
+                                          Navigator.pop(context, false),
+                                      child: const Text("ยกเลิก"),
+                                    ),
+                                    TextButton(
+                                      onPressed: () =>
+                                          Navigator.pop(context, true),
+                                      child: const Text("ยืนยัน"),
+                                    ),
+                                  ],
+                                ),
+                              );
+                              if (confirmed == true) {
+                                setState(() {
+                                  isSold = true;
+                                });
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text("ขายสินค้าสำเร็จ"),
+                                  ),
+                                );
+                              }
+                            } else if (!isOwner && isSold && !isPurchased) {
+                              // ผู้ซื้อยืนยันการซื้อ
+                              final confirmed = await showDialog<bool>(
+                                context: context,
+                                builder: (context) => AlertDialog(
+                                  title: const Text("ยืนยันการซื้อ"),
+                                  content: const Text(
+                                    "คุณต้องการยืนยันการซื้อสินค้านี้หรือไม่?",
+                                  ),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () =>
+                                          Navigator.pop(context, false),
+                                      child: const Text("ยกเลิก"),
+                                    ),
+                                    TextButton(
+                                      onPressed: () =>
+                                          Navigator.pop(context, true),
+                                      child: const Text("ยืนยัน"),
+                                    ),
+                                  ],
+                                ),
+                              );
+                              if (confirmed == true) {
+                                setState(() {
+                                  isPurchased = true;
+                                });
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text("ซื้อสินค้าสำเร็จ"),
+                                  ),
+                                );
+                              }
+                            } else if (!isOwner && isPurchased) {
+                              // ไปหน้ารีวิว
+                              context.push(
+                                '/review',
+                                extra: {
+                                  'storeName': sellerName,
+                                  'product': widget.product,
+                                  'revieweeId': sellerId,
+                                  'reviewerId': widget.currentUserId,
+                                },
+                              );
+                            }
+                          },
+                          child: Text(
+                            actionButtonText(),
+                            style: GoogleFonts.sarabun(
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
                           ),
                         ),
                       ),
