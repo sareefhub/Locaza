@@ -29,7 +29,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Future<void> _loadUserData() async {
     await UserSession.loadFromStorage();
 
-    if (UserSession.token != null) {
+    if (UserSession.token != null && UserSession.token!.isNotEmpty) {
       try {
         final profile = await ProfileApi().getProfile();
         if (profile != null) {
@@ -39,14 +39,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
             phone = profile['phone'] ?? "-";
             avatarUrl = profile['avatar_url'];
           });
+          UserSession.isLoggedIn = true;
         } else {
           _setGuest();
+          UserSession.isLoggedIn = false;
         }
       } catch (_) {
         _setGuest();
+        UserSession.isLoggedIn = false;
       }
     } else {
       _setGuest();
+      UserSession.isLoggedIn = false;
     }
 
     await Future.delayed(const Duration(milliseconds: 300));
@@ -132,7 +136,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             backgroundImage: avatarUrl != null
                                 ? NetworkImage(ApiConfig.fixUrl(avatarUrl))
                                 : const AssetImage('assets/icons/user.png')
-                                      as ImageProvider,
+                                    as ImageProvider,
                           ),
                           const SizedBox(width: 16),
                           Expanded(
@@ -241,7 +245,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 'name': username ?? 'ร้านค้าของฉัน',
                                 'avatar_url': avatarUrl != null
                                     ? ApiConfig.fixUrl(avatarUrl)
-                                    : '', // ส่ง avatarUrl ที่โหลดมา
+                                    : '',
                                 'rating': 4.9,
                                 'followers': 120,
                                 'products': [],
@@ -267,9 +271,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           const SizedBox(height: 20),
                           Center(
                             child: ElevatedButton(
-                              onPressed: UserSession.token != null
-                                  ? () => _confirmLogout(context)
-                                  : () => context.go('/login'),
+                              onPressed: () {
+                                if (UserSession.isLoggedIn) {
+                                  _confirmLogout(context);
+                                } else {
+                                  context.go('/login');
+                                }
+                              },
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: const Color(0xFFD1E9F2),
                                 foregroundColor: Colors.black,
@@ -283,7 +291,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                   vertical: 12,
                                 ),
                                 child: Text(
-                                  UserSession.token != null
+                                  UserSession.isLoggedIn
                                       ? 'Log Out'
                                       : 'Log In',
                                   style: Theme.of(context).textTheme.bodyMedium,

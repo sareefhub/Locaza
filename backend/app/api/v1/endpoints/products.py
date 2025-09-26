@@ -10,6 +10,10 @@ router = APIRouter(prefix="/products", tags=["Products"])
 def create_product(product: ProductCreate, db: Session = Depends(get_db)):
     return ProductService.create_product(db, product)
 
+@router.post("/bulk", response_model=list[ProductResponse])
+def create_products(products: list[ProductCreate], db: Session = Depends(get_db)):
+    return ProductService.create_products(db, products)
+
 @router.get("/", response_model=list[ProductResponse])
 def list_products(db: Session = Depends(get_db)):
     return ProductService.get_products(db)

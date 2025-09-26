@@ -65,6 +65,6 @@ class UserSession {
     createdAt = prefs.getString('created_at');
     updatedAt = prefs.getString('updated_at');
     token = prefs.getString('token');
-    isLoggedIn = prefs.getBool('isLoggedIn') ?? false;
+    isLoggedIn = token != null && token!.isNotEmpty;
   }
 }

@@ -91,10 +91,10 @@ final GoRouter appRouter = GoRouter(
           EditPostFormScreen(postId: state.pathParameters['id']!),
     ),
     GoRoute(
-      path: AppRoutes.productDetails,
+      path: '${AppRoutes.productDetails}/:id',
       builder: (_, state) {
-        final product = state.extra as Map<String, dynamic>;
-        return ProductDetailsPage(product: product);
+        final productId = int.parse(state.pathParameters['id']!);
+        return ProductDetailsPage(productId: productId);
       },
     ),
     GoRoute(

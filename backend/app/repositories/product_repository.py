@@ -12,6 +12,15 @@ class ProductRepository:
         return db_product
 
     @staticmethod
+    def create_bulk(db: Session, products: list[ProductCreate]):
+        db_products = [Product(**p.dict()) for p in products]
+        db.add_all(db_products)
+        db.commit()
+        for p in db_products:
+            db.refresh(p)
+        return db_products
+
+    @staticmethod
     def get(db: Session, product_id: int):
         return db.query(Product).filter(Product.id == product_id).first()
 

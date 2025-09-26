@@ -8,6 +8,10 @@ class ProductService:
         return ProductRepository.create(db, product)
 
     @staticmethod
+    def create_products(db: Session, products: list[ProductCreate]):
+        return ProductRepository.create_bulk(db, products)
+
+    @staticmethod
     def get_product(db: Session, product_id: int):
         return ProductRepository.get(db, product_id)
 

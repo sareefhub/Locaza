@@ -102,7 +102,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
       ),
       body: state.isLoading
           ? const Center(child: CircularProgressIndicator())
-          : Padding(
+          : SingleChildScrollView(
               padding: const EdgeInsets.all(20),
               child: Column(
                 children: [
@@ -116,7 +116,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                           : (UserSession.avatarUrl != null
                               ? NetworkImage(ApiConfig.fixUrl(UserSession.avatarUrl))
                               : const AssetImage('assets/icons/circle-user.png'))
-                          as ImageProvider,
+                              as ImageProvider,
                       child: Align(
                         alignment: Alignment.bottomRight,
                         child: Container(

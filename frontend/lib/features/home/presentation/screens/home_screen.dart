@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:responsive_builder/responsive_builder.dart';
 import 'package:go_router/go_router.dart';
@@ -6,52 +7,32 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/widgets/navigation.dart';
 import '../../../../core/widgets/product_card.dart';
 import '../../../../core/widgets/category_list.dart';
-import 'package:frontend/data/dummy_products.dart';
-import 'package:frontend/data/dummy_categories.dart';
-import 'package:frontend/data/dummy_users.dart';
 import 'package:frontend/routing/routes.dart';
+import '../../../product/application/product_provider.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
 
   int _getCrossAxisCount(double width) {
-    if (width >= 1600) return 6; // Desktop ใหญ่
+    if (width >= 1600) return 6;
     if (width >= 1300) return 5;
     if (width >= 1000) return 4;
-    if (width >= 600) return 3; // Tablet
-    return 2; // Mobile
+    if (width >= 600) return 3;
+    return 2;
   }
 
   double _getChildAspectRatio(double screenWidth, int crossAxisCount) {
-    // คำนวณความกว้างของ card
-    double padding = 16 * 2; // padding ของ SliverPadding
-    double spacing = 12 * (crossAxisCount - 1); // spacing ระหว่าง card
+    double padding = 16 * 2;
+    double spacing = 12 * (crossAxisCount - 1);
     double cardWidth = (screenWidth - padding - spacing) / crossAxisCount;
-
-    // height ของ card ประกอบด้วย
-    // - รูปภาพ (80% ของความกว้าง)
-    // - ข้อความ + ปุ่ม ประมาณ 120
     double cardHeight = cardWidth * 0.8 + 120;
-
     return cardWidth / cardHeight;
   }
 
-  // ฟิลเตอร์สินค้า: แสดงเฉพาะสินค้าที่ยังว่างและผู้ขายถูกต้อง
-  List<Map<String, dynamic>> _getBestSaleProducts() {
-    return dummyProducts
-        .where((product) {
-          final seller = dummyUsers.firstWhere(
-            (u) => u['id'] == product['seller_id'],
-            orElse: () => {},
-          );
-          return product['status'] == 'available' && seller.isNotEmpty;
-        })
-        .take(8)
-        .toList();
-  }
-
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final productState = ref.watch(productListProvider);
+
     return Scaffold(
       backgroundColor: const Color(0xFFE0F3F7),
       body: SafeArea(
@@ -59,11 +40,9 @@ class HomeScreen extends StatelessWidget {
           builder: (context, sizingInfo) {
             final screenWidth = sizingInfo.screenSize.width;
             final crossAxisCount = _getCrossAxisCount(screenWidth);
-            final bestSaleProducts = _getBestSaleProducts();
 
             return CustomScrollView(
               slivers: [
-                // Header
                 SliverToBoxAdapter(
                   child: Padding(
                     padding: const EdgeInsets.symmetric(
@@ -75,8 +54,6 @@ class HomeScreen extends StatelessWidget {
                     ),
                   ),
                 ),
-
-                // Search bar
                 SliverToBoxAdapter(
                   child: Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -110,34 +87,41 @@ class HomeScreen extends StatelessWidget {
                   ),
                 ),
                 const SliverToBoxAdapter(child: SizedBox(height: 16)),
-
-                // Categories
-                SliverToBoxAdapter(
-                  child: CategoryList(categories: dummyCategories),
+                const SliverToBoxAdapter(
+                  child: CategoryList(),
                 ),
                 const SliverToBoxAdapter(child: SizedBox(height: 16)),
+                productState.when(
+                  data: (products) {
+                    final allProducts = products; // เอามาทั้งหมด
 
-                // Products Grid
-                SliverPadding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  sliver: SliverGrid(
-                    delegate: SliverChildBuilderDelegate(
-                      (context, index) =>
-                          ProductCard(product: bestSaleProducts[index]),
-                      childCount: bestSaleProducts.length,
-                    ),
-                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: crossAxisCount,
-                      crossAxisSpacing: 12,
-                      mainAxisSpacing: 12,
-                      childAspectRatio: _getChildAspectRatio(
-                        screenWidth,
-                        crossAxisCount,
+                    return SliverPadding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      sliver: SliverGrid(
+                        delegate: SliverChildBuilderDelegate(
+                          (context, index) =>
+                              ProductCard(product: allProducts[index]),
+                          childCount: allProducts.length,
+                        ),
+                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: crossAxisCount,
+                          crossAxisSpacing: 12,
+                          mainAxisSpacing: 12,
+                          childAspectRatio: _getChildAspectRatio(
+                            screenWidth,
+                            crossAxisCount,
+                          ),
+                        ),
                       ),
-                    ),
+                    );
+                  },
+                  loading: () => const SliverToBoxAdapter(
+                    child: Center(child: CircularProgressIndicator()),
+                  ),
+                  error: (err, _) => SliverToBoxAdapter(
+                    child: Center(child: Text("Error: $err")),
                   ),
                 ),
-
                 const SliverToBoxAdapter(child: SizedBox(height: 80)),
               ],
             );
