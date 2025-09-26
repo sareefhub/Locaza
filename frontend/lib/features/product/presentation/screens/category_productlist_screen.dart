@@ -4,11 +4,10 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:responsive_builder/responsive_builder.dart';
 import '../../../../core/widgets/product_card.dart';
-import '../../../../data/dummy_products.dart';
-import '../../../../data/dummy_users.dart';
 import '../../../../core/widgets/search_bar_category.dart';
 import 'package:frontend/routing/routes.dart';
 import '../../application/category_provider.dart';
+import '../../application/product_provider.dart';
 
 class CategoryProductListScreen extends ConsumerStatefulWidget {
   final String categoryName;
@@ -78,6 +77,7 @@ class _CategoryProductListScreenState
   @override
   Widget build(BuildContext context) {
     final categories = ref.watch(categoryListProvider);
+    final products = ref.watch(productListProvider);
 
     return Scaffold(
       backgroundColor: const Color(0xFFE0F3F7),
@@ -90,142 +90,144 @@ class _CategoryProductListScreenState
             );
             final categoryId = category['id'];
 
-            final filteredProducts = dummyProducts.where((product) {
-              final productTitle =
-                  product['title']?.toString().toLowerCase() ?? '';
-              final productCategoryId = product['category_id'];
-              final productLocation = product['location']?.toString() ?? '';
-              final productPrice = (product['price'] as num?)?.toInt() ?? 0;
+            return products.when(
+              data: (productData) {
+                final filteredProducts = productData.where((product) {
+                  final productTitle =
+                      product['title']?.toString().toLowerCase() ?? '';
+                  final productCategoryId = product['category_id'];
+                  final productLocation = product['location']?.toString() ?? '';
+                  final productPrice =
+                      (product['price'] as num?)?.toInt() ?? 0;
 
-              final minPriceInt =
-                  int.tryParse(_minPrice.replaceAll(RegExp(r'[^\d]'), '')) ?? 0;
-              final maxPriceInt =
-                  int.tryParse(_maxPrice.replaceAll(RegExp(r'[^\d]'), '')) ??
+                  final minPriceInt = int.tryParse(
+                          _minPrice.replaceAll(RegExp(r'[^\d]'), '')) ??
+                      0;
+                  final maxPriceInt = int.tryParse(
+                          _maxPrice.replaceAll(RegExp(r'[^\d]'), '')) ??
                       9999999;
 
-              final matchesCategory = productCategoryId == categoryId;
-              final matchesLocation = _selectedLocation != null
-                  ? productLocation == _selectedLocation
-                  : true;
-              final matchesMinPrice = productPrice >= minPriceInt;
-              final matchesMaxPrice = productPrice <= maxPriceInt;
-              final matchesSearch =
-                  productTitle.contains(_searchQuery.toLowerCase());
+                  final matchesCategory = productCategoryId == categoryId;
+                  final matchesLocation = _selectedLocation != null
+                      ? productLocation == _selectedLocation
+                      : true;
+                  final matchesMinPrice = productPrice >= minPriceInt;
+                  final matchesMaxPrice = productPrice <= maxPriceInt;
+                  final matchesSearch =
+                      productTitle.contains(_searchQuery.toLowerCase());
 
-              final matchesStatus = product['status'] == 'available';
+                  final matchesStatus = product['status'] == 'available';
 
-              return matchesCategory &&
-                  matchesLocation &&
-                  matchesMinPrice &&
-                  matchesMaxPrice &&
-                  matchesSearch &&
-                  matchesStatus;
-            }).toList();
+                  return matchesCategory &&
+                      matchesLocation &&
+                      matchesMinPrice &&
+                      matchesMaxPrice &&
+                      matchesSearch &&
+                      matchesStatus;
+                }).toList();
 
-            return Column(
-              children: [
-                Stack(
+                return Column(
                   children: [
-                    Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 12,
-                      ),
-                      child: Center(
-                        child: Text(
-                          widget.categoryName,
-                          style: GoogleFonts.sarabun(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 18,
+                    Stack(
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 12,
                           ),
-                        ),
-                      ),
-                    ),
-                    Positioned(
-                      top: 8,
-                      left: 8,
-                      child: IconButton(
-                        icon: Image.asset(
-                          'assets/icons/angle-small-left.png',
-                          width: 24,
-                          height: 24,
-                        ),
-                        onPressed: () => Navigator.pop(context),
-                      ),
-                    ),
-                  ],
-                ),
-                SearchFilterBar(
-                  searchController: _searchController,
-                  onSearchChanged: _onSearchChanged,
-                  onFilterPressed: _onFilterPressed,
-                ),
-                const SizedBox(height: 16),
-                Expanded(
-                  child: filteredProducts.isEmpty
-                      ? Center(
-                          child: Text(
-                            "ไม่มีสินค้าสำหรับหมวดหมู่นี้",
-                            style: GoogleFonts.sarabun(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w400,
+                          child: Center(
+                            child: Text(
+                              widget.categoryName,
+                              style: GoogleFonts.sarabun(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 18,
+                              ),
                             ),
                           ),
-                        )
-                      : ResponsiveBuilder(
-                          builder: (context, sizingInfo) {
-                            final screenWidth = sizingInfo.screenSize.width;
-                            final crossAxisCount =
-                                _getCrossAxisCount(screenWidth);
-                            final aspectRatio =
-                                _getChildAspectRatio(screenWidth, crossAxisCount);
-
-                            return CustomScrollView(
-                              slivers: [
-                                SliverPadding(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 16,
-                                  ),
-                                  sliver: SliverGrid(
-                                    delegate: SliverChildBuilderDelegate(
-                                      (context, index) {
-                                        final product =
-                                            filteredProducts[index];
-                                        final seller = dummyUsers.firstWhere(
-                                          (u) => u['id'] == product['seller_id'],
-                                          orElse: () => {},
-                                        );
-                                        product['sellerName'] =
-                                            seller['name'] ?? 'ไม่ทราบชื่อผู้ขาย';
-                                        product['sellerImage'] =
-                                            seller['avatar_url'] ?? '';
-
-                                        return ProductCard(product: product);
-                                      },
-                                      childCount: filteredProducts.length,
-                                    ),
-                                    gridDelegate:
-                                        SliverGridDelegateWithFixedCrossAxisCount(
-                                      crossAxisCount: crossAxisCount,
-                                      crossAxisSpacing: 12,
-                                      mainAxisSpacing: 12,
-                                      childAspectRatio: aspectRatio,
-                                    ),
-                                  ),
-                                ),
-                                const SliverToBoxAdapter(
-                                  child: SizedBox(height: 80),
-                                ),
-                              ],
-                            );
-                          },
                         ),
-                ),
-              ],
+                        Positioned(
+                          top: 8,
+                          left: 8,
+                          child: IconButton(
+                            icon: Image.asset(
+                              'assets/icons/angle-small-left.png',
+                              width: 24,
+                              height: 24,
+                            ),
+                            onPressed: () => Navigator.pop(context),
+                          ),
+                        ),
+                      ],
+                    ),
+                    SearchFilterBar(
+                      searchController: _searchController,
+                      onSearchChanged: _onSearchChanged,
+                      onFilterPressed: _onFilterPressed,
+                    ),
+                    const SizedBox(height: 16),
+                    Expanded(
+                      child: filteredProducts.isEmpty
+                          ? Center(
+                              child: Text(
+                                "ไม่มีสินค้าสำหรับหมวดหมู่นี้",
+                                style: GoogleFonts.sarabun(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w400,
+                                ),
+                              ),
+                            )
+                          : ResponsiveBuilder(
+                              builder: (context, sizingInfo) {
+                                final screenWidth =
+                                    sizingInfo.screenSize.width;
+                                final crossAxisCount =
+                                    _getCrossAxisCount(screenWidth);
+                                final aspectRatio = _getChildAspectRatio(
+                                    screenWidth, crossAxisCount);
+
+                                return CustomScrollView(
+                                  slivers: [
+                                    SliverPadding(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 16,
+                                      ),
+                                      sliver: SliverGrid(
+                                        delegate: SliverChildBuilderDelegate(
+                                          (context, index) {
+                                            final product =
+                                                filteredProducts[index];
+                                            return ProductCard(
+                                                product: product);
+                                          },
+                                          childCount: filteredProducts.length,
+                                        ),
+                                        gridDelegate:
+                                            SliverGridDelegateWithFixedCrossAxisCount(
+                                          crossAxisCount: crossAxisCount,
+                                          crossAxisSpacing: 12,
+                                          mainAxisSpacing: 12,
+                                          childAspectRatio: aspectRatio,
+                                        ),
+                                      ),
+                                    ),
+                                    const SliverToBoxAdapter(
+                                      child: SizedBox(height: 80),
+                                    ),
+                                  ],
+                                );
+                              },
+                            ),
+                    ),
+                  ],
+                );
+              },
+              loading: () => const Center(
+                child: CircularProgressIndicator(),
+              ),
+              error: (err, _) => Center(child: Text("Error: $err")),
             );
           },
-          loading: () =>
-              const Center(child: CircularProgressIndicator()),
+          loading: () => const Center(child: CircularProgressIndicator()),
           error: (err, _) => Center(child: Text("Error: $err")),
         ),
       ),
