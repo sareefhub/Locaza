@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:go_router/go_router.dart';
 import 'package:frontend/features/favorite/application/favorite_provider.dart';
 import 'package:frontend/config/api_config.dart';
+import 'package:frontend/features/product/application/category_provider.dart';
 
 class ProductCard extends ConsumerWidget {
   final Map<String, dynamic> product;
@@ -17,6 +18,18 @@ class ProductCard extends ConsumerWidget {
       (item) => item['product_id'] == product['id'],
     );
     final notifier = ref.read(favoriteProvider.notifier);
+
+    final categories = ref.watch(categoryListProvider).maybeWhen(
+      data: (data) => data,
+      orElse: () => [],
+    );
+
+    final categoryName = categories
+        .firstWhere(
+          (c) => c['id'] == product['category_id'],
+          orElse: () => {'name': ''},
+        )['name']
+        .toString();
 
     final image = product['image_urls']?.toString() ?? '';
     const favoriteIconSize = 22.0;
@@ -127,6 +140,13 @@ class ProductCard extends ConsumerWidget {
                   overflow: TextOverflow.ellipsis,
                 ),
                 const SizedBox(height: 4),
+                Text(
+                  categoryName,
+                  style: GoogleFonts.sarabun(fontSize: 12, color: Colors.grey),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 2),
                 Text(
                   product['location']?.toString() ?? '',
                   style: GoogleFonts.sarabun(fontSize: 12, color: Colors.grey),

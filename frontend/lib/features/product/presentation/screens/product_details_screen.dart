@@ -1,132 +1,112 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:frontend/core/widgets/product_card.dart';
-import 'package:frontend/features/favorite/application/favorite_provider.dart';
-import 'package:frontend/utils/user_session.dart';
-import 'package:frontend/routing/routes.dart';
 import 'package:frontend/config/api_config.dart';
-import '../../../product/application/product_provider.dart';
+import 'package:frontend/features/product/application/product_provider.dart';
+import 'package:frontend/features/product/application/category_provider.dart';
+import 'package:frontend/features/auth/application/user_provider.dart';
 
-class ProductDetailsPage extends ConsumerStatefulWidget {
+class ProductDetailsPage extends ConsumerWidget {
   final int productId;
 
   const ProductDetailsPage({super.key, required this.productId});
 
   @override
-  ConsumerState<ProductDetailsPage> createState() => _ProductDetailsPageState();
-}
-
-class _ProductDetailsPageState extends ConsumerState<ProductDetailsPage> {
-  bool showFullDescription = false;
-
-  @override
-  Widget build(BuildContext context) {
-    final productState = ref.watch(productByIdProvider(widget.productId));
+  Widget build(BuildContext context, WidgetRef ref) {
+    final productState = ref.watch(productByIdProvider(productId));
     final allProducts = ref.watch(productListProvider);
 
     return Scaffold(
-      backgroundColor: const Color(0xFFE0F3F7),
+      backgroundColor: Colors.white,
+      bottomNavigationBar: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Row(
+          children: [
+            Expanded(
+              child: ElevatedButton.icon(
+                onPressed: () {},
+                icon: const Icon(Icons.chat_bubble_outline),
+                label: const Text("Chat"),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: ElevatedButton.icon(
+                onPressed: () {},
+                icon: const Icon(Icons.call_outlined),
+                label: const Text("Call"),
+              ),
+            ),
+          ],
+        ),
+      ),
       body: SafeArea(
         child: productState.when(
           data: (product) {
             if (product == null) {
-              return const Center(child: Text("ไม่พบข้อมูลสินค้า"));
+              return const Center(child: Text("ไม่พบสินค้า"));
             }
 
             final rawImage = product['image_urls'];
-            final image = rawImage is List
-                ? (rawImage.isNotEmpty ? rawImage.first.toString() : '')
-                : rawImage?.toString() ?? '';
+            String image = '';
+            if (rawImage is List && rawImage.isNotEmpty) {
+              image = rawImage.first.toString();
+            } else if (rawImage is String && rawImage.isNotEmpty) {
+              image = rawImage;
+            }
 
             final productDescription =
                 (product['description'] != null && product['description'].toString().isNotEmpty)
-                    ? product['description'].toString()
+                    ? product['description']
                     : 'ไม่มีรายละเอียดสินค้า';
 
-            final hasLongDescription =
-                productDescription.split('\n').length > 2 || productDescription.length > 100;
-
-            final favoriteState = ref.watch(favoriteProvider);
-            final isFavorite = favoriteState.any(
-              (item) => item['product_id'] == product['id'],
+            final categoryState = ref.watch(categoryListProvider);
+            final categoryName = categoryState.maybeWhen(
+              data: (categories) {
+                return categories
+                    .firstWhere(
+                      (c) => c['id'] == product['category_id'],
+                      orElse: () => {'name': ''},
+                    )['name']
+                    .toString();
+              },
+              orElse: () => '',
             );
 
-            final notifier = ref.read(favoriteProvider.notifier);
+            final sellerState = ref.watch(userByIdProvider(product['seller_id']));
 
-            return allProducts.when(
-              data: (products) {
-                final similarProducts = products
-                    .where(
-                      (p) =>
-                          p['category_id'] == product['category_id'] &&
-                          p['id'] != product['id'] &&
-                          p['status'] == 'available',
-                    )
-                    .toList();
-
+            return sellerState.when(
+              data: (seller) {
                 return SingleChildScrollView(
                   child: Column(
                     children: [
                       Stack(
                         children: [
-                          ClipRRect(
-                            child: image.isNotEmpty
-                                ? Image.network(
-                                    ApiConfig.fixUrl(image),
-                                    height: 310,
-                                    width: double.infinity,
-                                    fit: BoxFit.cover,
-                                  )
-                                : Image.asset(
-                                    'assets/images/placeholder.png',
-                                    height: 310,
-                                    width: double.infinity,
-                                    fit: BoxFit.cover,
-                                  ),
-                          ),
+                          image.isNotEmpty
+                              ? Image.network(
+                                  ApiConfig.fixUrl(image),
+                                  height: 250,
+                                  width: double.infinity,
+                                  fit: BoxFit.cover,
+                                )
+                              : Image.asset(
+                                  'assets/images/placeholder.png',
+                                  height: 250,
+                                  width: double.infinity,
+                                  fit: BoxFit.cover,
+                                ),
                           Positioned(
                             top: 16,
                             left: 8,
                             child: IconButton(
-                              icon: Image.asset(
-                                'assets/icons/angle-small-left.png',
-                                width: 24,
-                                height: 24,
-                              ),
-                              onPressed: () => context.pop(),
+                              icon: const Icon(Icons.arrow_back),
+                              onPressed: () => Navigator.pop(context),
                             ),
                           ),
-                          Positioned(
+                          const Positioned(
                             top: 16,
-                            right: 16,
-                            child: Container(
-                              width: 40,
-                              height: 40,
-                              decoration: BoxDecoration(
-                                color: Colors.grey.withValues(alpha: 0.3),
-                                shape: BoxShape.circle,
-                              ),
-                              child: IconButton(
-                                padding: const EdgeInsets.all(8),
-                                icon: Icon(
-                                  isFavorite ? Icons.favorite : Icons.favorite_border,
-                                  color: isFavorite ? Colors.red : Colors.white,
-                                  size: 24,
-                                ),
-                                onPressed: () {
-                                  final userId = UserSession.id != null
-                                      ? int.parse(UserSession.id!)
-                                      : 101;
-                                  if (isFavorite) {
-                                    notifier.removeFavorite(product['id'], userId);
-                                  } else {
-                                    notifier.addFavorite(product, userId);
-                                  }
-                                },
-                              ),
-                            ),
+                            right: 8,
+                            child: Icon(Icons.favorite_border),
                           ),
                         ],
                       ),
@@ -137,232 +117,189 @@ class _ProductDetailsPageState extends ConsumerState<ProductDetailsPage> {
                           children: [
                             Text(
                               '฿${product['price'] ?? ''}',
-                              style: GoogleFonts.sarabun(
+                              style: const TextStyle(
                                 fontSize: 22,
                                 fontWeight: FontWeight.bold,
-                                color: const Color(0xFF315EB2),
+                                color: Colors.green,
                               ),
                             ),
-                            const SizedBox(height: 4),
-                            Text(
-                              product['title'] ?? '',
-                              style: GoogleFonts.sarabun(
-                                fontSize: 20,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            const SizedBox(height: 10),
+                            Text(product['title'] ?? '', style: const TextStyle(fontSize: 18)),
+                            const SizedBox(height: 8),
                             Row(
                               children: [
-                                if (product['category_id'] != null)
+                                if (categoryName.isNotEmpty)
                                   Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 8,
-                                      vertical: 4,
-                                    ),
+                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                                     decoration: BoxDecoration(
-                                      color: const Color(0xFFC9E1E6),
+                                      color: Colors.grey[200],
                                       borderRadius: BorderRadius.circular(8),
                                     ),
-                                    child: Row(
-                                      children: [
-                                        const Icon(
-                                          Icons.category,
-                                          size: 14,
-                                          color: Colors.grey,
-                                        ),
-                                        const SizedBox(width: 4),
-                                        Text(
-                                          "หมวดหมู่ ${product['category_id']}",
-                                          style: GoogleFonts.sarabun(
-                                            fontSize: 12,
-                                            color: Colors.black,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
+                                    child: Text(categoryName),
                                   ),
                                 const SizedBox(width: 8),
                                 if (product['location'] != null)
                                   Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 8,
-                                      vertical: 4,
-                                    ),
+                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                                     decoration: BoxDecoration(
-                                      color: const Color(0xFFC9E1E6),
+                                      color: Colors.grey[200],
                                       borderRadius: BorderRadius.circular(8),
                                     ),
-                                    child: Row(
-                                      children: [
-                                        const Icon(
-                                          Icons.location_on,
-                                          size: 14,
-                                          color: Colors.grey,
-                                        ),
-                                        const SizedBox(width: 4),
-                                        Text(
-                                          product['location'],
-                                          style: GoogleFonts.sarabun(
-                                            fontSize: 12,
-                                            color: Colors.black,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
+                                    child: Text(product['location']),
                                   ),
                               ],
                             ),
                             const SizedBox(height: 16),
-                            const Divider(color: Colors.grey, thickness: 1),
-                            const SizedBox(height: 8),
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
+                            Text(productDescription),
+                            TextButton(
+                              onPressed: () {},
+                              child: const Text("Read more"),
+                            ),
+                            const SizedBox(height: 16),
+                            Row(
                               children: [
-                                Text(
-                                  'รายละเอียดสินค้า',
-                                  style: GoogleFonts.sarabun(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w600,
-                                  ),
+                                CircleAvatar(
+                                  radius: 24,
+                                  backgroundColor: Colors.grey[300],
+                                  backgroundImage: seller != null &&
+                                          seller['avatar_url'] != null &&
+                                          seller['avatar_url'].toString().isNotEmpty
+                                      ? NetworkImage(ApiConfig.fixUrl(seller['avatar_url']))
+                                      : null,
+                                  child: (seller == null ||
+                                          seller['avatar_url'] == null ||
+                                          seller['avatar_url'].toString().isEmpty)
+                                      ? const Icon(Icons.person, color: Colors.white)
+                                      : null,
                                 ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  productDescription,
-                                  maxLines: showFullDescription ? null : 2,
-                                  overflow: showFullDescription
-                                      ? TextOverflow.visible
-                                      : TextOverflow.ellipsis,
-                                  style: GoogleFonts.sarabun(fontSize: 14),
-                                ),
-                                if (hasLongDescription)
-                                  TextButton(
-                                    onPressed: () {
-                                      setState(() {
-                                        showFullDescription = !showFullDescription;
-                                      });
-                                    },
-                                    child: Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        Icon(
-                                          showFullDescription
-                                              ? Icons.keyboard_arrow_up
-                                              : Icons.keyboard_arrow_down,
-                                          size: 16,
-                                          color: const Color(0xFF315EB2),
-                                        ),
-                                        const SizedBox(width: 4),
-                                        Text(
-                                          showFullDescription ? "ดูน้อยลง" : "อ่านเพิ่มเติม",
-                                          style: GoogleFonts.sarabun(
-                                            fontSize: 14,
-                                            color: const Color(0xFF315EB2),
-                                          ),
-                                        ),
-                                      ],
+                                const SizedBox(width: 12),
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      seller != null ? seller['name'] ?? '' : '',
+                                      style: const TextStyle(
+                                          fontWeight: FontWeight.bold, fontSize: 16),
                                     ),
-                                  ),
+                                  ],
+                                )
                               ],
                             ),
                             const SizedBox(height: 18),
-                            Container(
-                              padding: const EdgeInsets.all(12),
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: Row(
-                                children: [
-                                  CircleAvatar(
-                                    radius: 24,
-                                    backgroundColor: Colors.grey[300],
-                                    child: const Icon(Icons.person, color: Colors.white),
+                            Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 16),
+                              child: Align(
+                                alignment: Alignment.centerLeft,
+                                child: Text(
+                                  'สินค้าที่คล้ายกัน',
+                                  style: GoogleFonts.sarabun(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 16,
                                   ),
-                                  const SizedBox(width: 12),
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          "Seller ID: ${product['seller_id']}",
-                                          style: GoogleFonts.sarabun(
-                                            fontSize: 16,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
-                                        const SizedBox(height: 12),
-                                        SizedBox(
-                                          width: double.infinity,
-                                          child: OutlinedButton.icon(
-                                            onPressed: () {
-                                              final chatId =
-                                                  'chat_${product['id']}_${UserSession.id ?? '1'}_${product['seller_id']}';
-                                              GoRouter.of(context).push(
-                                                AppRoutes.chatDetail
-                                                    .replaceAll(':chatId', chatId)
-                                                    .replaceAll(
-                                                      ':currentUserId',
-                                                      UserSession.id ?? '1',
-                                                    )
-                                                    .replaceAll(
-                                                      ':otherUserId',
-                                                      product['seller_id'].toString(),
-                                                    ),
-                                                extra: {'product': product},
-                                              );
-                                            },
-                                            icon: const Icon(
-                                              Icons.chat,
-                                              color: Color(0xFF315EB2),
-                                            ),
-                                            label: Text(
-                                              "แชต",
-                                              style: GoogleFonts.sarabun(
-                                                color: const Color(0xFF315EB2),
-                                              ),
-                                            ),
-                                            style: OutlinedButton.styleFrom(
-                                              side: const BorderSide(
-                                                color: Color(0xFF315EB2),
-                                              ),
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ],
+                                ),
                               ),
                             ),
-                            const SizedBox(height: 30),
-                            if (similarProducts.isNotEmpty)
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    'สินค้าที่คล้ายกัน',
-                                    style: GoogleFonts.sarabun(
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.bold,
-                                    ),
+                            const SizedBox(height: 8),
+                            allProducts.when(
+                              data: (products) {
+                                final similarProducts = products
+                                    .where((p) =>
+                                        p['category_id'] == product['category_id'] &&
+                                        p['id'] != product['id'])
+                                    .take(4)
+                                    .toList();
+
+                                return Padding(
+                                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                                  child: GridView.count(
+                                    crossAxisCount: 2,
+                                    shrinkWrap: true,
+                                    physics: const NeverScrollableScrollPhysics(),
+                                    crossAxisSpacing: 8,
+                                    mainAxisSpacing: 8,
+                                    childAspectRatio: 0.55,
+                                    children: List.generate(similarProducts.length, (index) {
+                                      final p = similarProducts[index];
+                                      final rawImg = p['image_urls'];
+                                      String img = '';
+                                      if (rawImg is List && rawImg.isNotEmpty) {
+                                        img = rawImg.first.toString();
+                                      } else if (rawImg is String && rawImg.isNotEmpty) {
+                                        img = rawImg;
+                                      }
+                                      return GestureDetector(
+                                        onTap: () {
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (_) =>
+                                                  ProductDetailsPage(productId: p['id']),
+                                            ),
+                                          );
+                                        },
+                                        child: Container(
+                                          padding: const EdgeInsets.all(8),
+                                          decoration: BoxDecoration(
+                                            color: Colors.white,
+                                            borderRadius: BorderRadius.circular(12),
+                                          ),
+                                          child: Column(
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            children: [
+                                              Stack(
+                                                children: [
+                                                  ClipRRect(
+                                                    borderRadius: BorderRadius.circular(8),
+                                                    child: img.isNotEmpty
+                                                        ? Image.network(
+                                                            ApiConfig.fixUrl(img),
+                                                            height: 130,
+                                                            width: double.infinity,
+                                                            fit: BoxFit.cover,
+                                                          )
+                                                        : Image.asset(
+                                                            'assets/images/placeholder.png',
+                                                            height: 130,
+                                                            width: double.infinity,
+                                                            fit: BoxFit.cover,
+                                                          ),
+                                                  ),
+                                                  const Positioned(
+                                                    top: 4,
+                                                    right: 4,
+                                                    child: Icon(Icons.favorite_border),
+                                                  ),
+                                                ],
+                                              ),
+                                              const SizedBox(height: 8),
+                                              Text(
+                                                p['title'] ?? '',
+                                                style: const TextStyle(
+                                                    fontWeight: FontWeight.bold),
+                                              ),
+                                              Text(
+                                                p['location'] ?? '',
+                                                style: const TextStyle(fontSize: 12),
+                                              ),
+                                              const SizedBox(height: 4),
+                                              Text(
+                                                '฿${p['price'] ?? ''}',
+                                                style: const TextStyle(
+                                                  fontWeight: FontWeight.bold,
+                                                  color: Colors.green,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      );
+                                    }),
                                   ),
-                                  const SizedBox(height: 8),
-                                  SizedBox(
-                                    height: 280,
-                                    child: ListView.separated(
-                                      scrollDirection: Axis.horizontal,
-                                      itemCount: similarProducts.length,
-                                      separatorBuilder: (_, __) =>
-                                          const SizedBox(width: 8),
-                                      itemBuilder: (context, index) {
-                                        final sp = similarProducts[index];
-                                        return ProductCard(product: sp);
-                                      },
-                                    ),
-                                  ),
-                                ],
-                              ),
+                                );
+                              },
+                              loading: () =>
+                                  const Center(child: CircularProgressIndicator()),
+                              error: (err, _) => Center(child: Text("Error: $err")),
+                            ),
                             const SizedBox(height: 80),
                           ],
                         ),
