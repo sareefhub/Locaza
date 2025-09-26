@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../../../review/reviews_screen.dart';
+import '../../../review/view_reviews_screen.dart';
 
 // Dummy store provider
 final storeProvider = Provider<Map<String, dynamic>>((ref) {
@@ -185,7 +185,7 @@ class StoreScreen extends ConsumerWidget {
                                     top: Radius.circular(16),
                                   ),
                                 ),
-                                builder: (_) => ReviewScreen(
+                                builder: (_) => ViewReviewScreen(
                                   storeName: store["name"],
                                   reviews: store["reviews"],
                                   isOwner: isOwner,
