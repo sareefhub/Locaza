@@ -11,9 +11,7 @@ final favoriteProvider =
     );
 
 class FavoriteNotifier extends StateNotifier<List<Map<String, dynamic>>> {
-  FavoriteNotifier() : super([]) {
-    loadFavoritesFromPrefs(); // โหลด favorite ตอนเริ่ม
-  }
+  FavoriteNotifier() : super([]);
 
   // ------------------ ADD / REMOVE FAVORITE ------------------
   Future<void> addFavorite(Map<String, dynamic> product, int userId) async {
@@ -22,7 +20,7 @@ class FavoriteNotifier extends StateNotifier<List<Map<String, dynamic>>> {
     final exists = state.any((item) => item['product_id'] == product['id']);
     if (!exists) {
       final newItem = {
-        'id': state.length + 1,
+        'id': DateTime.now().millisecondsSinceEpoch, // ไม่ซ้ำแน่
         'wishlist_id': wishlistId,
         'product_id': product['id'],
         'created_at': DateTime.now().toIso8601String(),
@@ -31,8 +29,7 @@ class FavoriteNotifier extends StateNotifier<List<Map<String, dynamic>>> {
       state = [...state, newItem];
 
       debugPrint(
-        "✅ INSERT INTO wishlist_items "
-        "(id, wishlist_id, product_id, created_at) "
+        "✅ INSERT INTO wishlist_items (id, wishlist_id, product_id, created_at) "
         "VALUES (${newItem['id']}, $wishlistId, ${product['id']}, '${newItem['created_at']}');",
       );
 
@@ -40,7 +37,7 @@ class FavoriteNotifier extends StateNotifier<List<Map<String, dynamic>>> {
     }
   }
 
-  Future<void> removeFavorite(int productId, {int userId = 101}) async {
+  Future<void> removeFavorite(int productId, int userId) async {
     final removedItems = state
         .where((item) => item['product_id'] == productId)
         .toList();
@@ -69,16 +66,15 @@ class FavoriteNotifier extends StateNotifier<List<Map<String, dynamic>>> {
     await prefs.setStringList('favorite_$userId', productIds);
   }
 
-  Future<void> loadFavoritesFromPrefs({int userId = 101}) async {
+  Future<void> loadFavoritesFromPrefs(int userId) async {
     final prefs = await SharedPreferences.getInstance();
     final productIds = prefs.getStringList('favorite_$userId') ?? [];
 
-    // โหลด product map จาก mockProducts
     state = dummyProducts
         .where((p) => productIds.contains(p['id'].toString()))
         .map(
           (p) => {
-            'id': state.length + 1,
+            'id': DateTime.now().millisecondsSinceEpoch,
             'wishlist_id': mockWishlists.first['id'],
             'product_id': p['id'],
             'created_at': DateTime.now().toIso8601String(),

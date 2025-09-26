@@ -45,12 +45,14 @@ class _ProductDetailsPageState extends ConsumerState<ProductDetailsPage> {
     );
 
     final productDescription =
-        (product['description'] != null && product['description'].toString().isNotEmpty)
-            ? product['description'].toString()
-            : 'ไม่มีรายละเอียดสินค้า';
+        (product['description'] != null &&
+            product['description'].toString().isNotEmpty)
+        ? product['description'].toString()
+        : 'ไม่มีรายละเอียดสินค้า';
 
     final hasLongDescription =
-        productDescription.split('\n').length > 2 || productDescription.length > 100;
+        productDescription.split('\n').length > 2 ||
+        productDescription.length > 100;
 
     final similarProducts = dummyProducts
         .where(
@@ -127,13 +129,14 @@ class _ProductDetailsPageState extends ConsumerState<ProductDetailsPage> {
                           size: 24,
                         ),
                         onPressed: () {
+                          final userId = UserSession.id != null
+                              ? int.parse(UserSession.id!)
+                              : 101; // fallback ถ้า UserSession.id เป็น null
+
                           if (isFavorite) {
-                            notifier.removeFavorite(product['id']);
+                            notifier.removeFavorite(product['id'], userId);
                           } else {
-                            notifier.addFavorite(
-                              product,
-                              101,
-                            );
+                            notifier.addFavorite(product, userId);
                           }
                         },
                       ),
@@ -264,7 +267,9 @@ class _ProductDetailsPageState extends ConsumerState<ProductDetailsPage> {
                                 ),
                                 const SizedBox(width: 4),
                                 Text(
-                                  showFullDescription ? "ดูน้อยลง" : "อ่านเพิ่มเติม",
+                                  showFullDescription
+                                      ? "ดูน้อยลง"
+                                      : "อ่านเพิ่มเติม",
                                   style: GoogleFonts.sarabun(
                                     fontSize: 14,
                                     color: const Color(0xFF315EB2),
@@ -332,7 +337,9 @@ class _ProductDetailsPageState extends ConsumerState<ProductDetailsPage> {
                                           'followers': 120,
                                           'products': dummyProducts
                                               .where(
-                                                (p) => p['seller_id'] == seller['id'],
+                                                (p) =>
+                                                    p['seller_id'] ==
+                                                    seller['id'],
                                               )
                                               .toList(),
                                           'categories': [
@@ -369,9 +376,7 @@ class _ProductDetailsPageState extends ConsumerState<ProductDetailsPage> {
                                               ':otherUserId',
                                               product['seller_id'].toString(),
                                             ),
-                                        extra: {
-                                          'product': product,
-                                        },
+                                        extra: {'product': product},
                                       );
                                     },
                                     icon: const Icon(
@@ -415,7 +420,8 @@ class _ProductDetailsPageState extends ConsumerState<ProductDetailsPage> {
                             child: ListView.separated(
                               scrollDirection: Axis.horizontal,
                               itemCount: similarProducts.length,
-                              separatorBuilder: (_, __) => const SizedBox(width: 8),
+                              separatorBuilder: (_, __) =>
+                                  const SizedBox(width: 8),
                               itemBuilder: (context, index) {
                                 final sp = similarProducts[index];
                                 return ProductCard(product: sp);

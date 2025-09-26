@@ -71,21 +71,7 @@ class HomeScreen extends StatelessWidget {
                       vertical: 12,
                     ),
                     child: Row(
-                      children: [
-                        Image.asset('assets/logo.png', height: 24),
-                        const SizedBox(width: 6),
-                        if (!sizingInfo.isMobile)
-                          Expanded(
-                            child: Text(
-                              'Local Community Marketplace',
-                              style: GoogleFonts.notoSansThai(
-                                fontSize: 20,
-                                fontWeight: FontWeight.bold,
-                              ),
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                      ],
+                      children: [Image.asset('assets/logo.png', height: 24)],
                     ),
                   ),
                 ),

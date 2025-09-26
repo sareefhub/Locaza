@@ -113,10 +113,12 @@ class ProductCard extends ConsumerWidget {
                             color: isFavorite ? Colors.red : Colors.white,
                           ),
                           onPressed: () {
+                            final userId =
+                                101; // TODO: ดึงจาก authProvider จริง ๆ
                             if (isFavorite) {
-                              notifier.removeFavorite(product['id']);
+                              notifier.removeFavorite(product['id'], userId);
                             } else {
-                              notifier.addFavorite(product, 101);
+                              notifier.addFavorite(product, userId);
                             }
                           },
                         ),

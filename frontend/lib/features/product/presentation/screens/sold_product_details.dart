@@ -115,10 +115,17 @@ class _SoldProductDetailsPageState
                           size: 24,
                         ),
                         onPressed: () {
+                          final userId = UserSession.id != null
+                              ? int.parse(UserSession.id!) // ดึงจาก session
+                              : 101; // fallback user id
+
                           if (isFavorite) {
-                            notifier.removeFavorite(product['id']);
+                            notifier.removeFavorite(
+                              product['id'],
+                              userId,
+                            ); // เพิ่ม userId
                           } else {
-                            notifier.addFavorite(product, 101); // mock user id
+                            notifier.addFavorite(product, userId);
                           }
                         },
                       ),
