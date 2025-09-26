@@ -3,8 +3,11 @@ from fastapi.staticfiles import StaticFiles
 from app.db.base import Base
 from app.db.session import engine
 from app.api.v1.endpoints import api_router
+from app.core.middleware import setup_cors
 
 app = FastAPI(title="Locaza API", version="1.0.0")
+
+setup_cors(app)
 
 Base.metadata.create_all(bind=engine)
 
