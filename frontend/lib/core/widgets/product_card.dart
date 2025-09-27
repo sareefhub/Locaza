@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:frontend/features/favorite/application/favorite_provider.dart';
 import 'package:frontend/config/api_config.dart';
 import 'package:frontend/features/product/application/category_provider.dart';
+import 'package:frontend/utils/user_session.dart';
 
 class ProductCard extends ConsumerWidget {
   final Map<String, dynamic> product;
@@ -14,15 +15,20 @@ class ProductCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final favoriteState = ref.watch(favoriteProvider);
-    final isFavorite = favoriteState.any(
-      (item) => item['product_id'] == product['id'],
-    );
     final notifier = ref.read(favoriteProvider.notifier);
+    final userId = int.tryParse(UserSession.id ?? ''); // ดึง userId จาก session
 
-    final categories = ref.watch(categoryListProvider).maybeWhen(
-      data: (data) => data,
-      orElse: () => [],
-    );
+    final isFavorite = userId != null
+        ? favoriteState.any(
+            (item) =>
+                item['product_id'] == product['id'] &&
+                item['user_id'] == userId,
+          )
+        : false;
+
+    final categories = ref
+        .watch(categoryListProvider)
+        .maybeWhen(data: (data) => data, orElse: () => []);
 
     final categoryName = categories
         .firstWhere(
@@ -51,10 +57,8 @@ class ProductCard extends ConsumerWidget {
         child: Image.network(
           ApiConfig.fixUrl(image),
           fit: BoxFit.cover,
-          errorBuilder: (_, __, ___) => Image.asset(
-            'assets/images/placeholder.png',
-            fit: BoxFit.cover,
-          ),
+          errorBuilder: (_, __, ___) =>
+              Image.asset('assets/images/placeholder.png', fit: BoxFit.cover),
         ),
       );
     }
@@ -115,7 +119,8 @@ class ProductCard extends ConsumerWidget {
                               color: isFavorite ? Colors.red : Colors.white,
                             ),
                             onPressed: () {
-                              final userId = 101;
+                              if (userId == null) return;
+
                               if (isFavorite) {
                                 notifier.removeFavorite(product['id'], userId);
                               } else {

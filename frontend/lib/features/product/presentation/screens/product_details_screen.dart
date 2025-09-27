@@ -7,6 +7,8 @@ import 'package:frontend/features/product/application/category_provider.dart';
 import 'package:frontend/features/auth/application/user_provider.dart';
 import 'package:frontend/core/widgets/product_card.dart';
 import 'package:responsive_builder/responsive_builder.dart';
+import 'package:frontend/utils/user_session.dart';
+import 'package:frontend/features/favorite/application/favorite_provider.dart';
 
 class ProductDetailsPage extends ConsumerStatefulWidget {
   final int productId;
@@ -107,17 +109,58 @@ class _ProductDetailsPageState extends ConsumerState<ProductDetailsPage> {
                           Positioned(
                             top: 16,
                             right: 16,
-                            child: Container(
-                              width: 40,
-                              height: 40,
-                              decoration: BoxDecoration(
-                                color: Colors.grey.withOpacity(0.3),
-                                shape: BoxShape.circle,
-                              ),
-                              child: const Icon(
-                                Icons.favorite_border,
-                                color: Colors.white,
-                              ),
+                            child: Consumer(
+                              builder: (context, ref, _) {
+                                final notifier = ref.read(
+                                  favoriteProvider.notifier,
+                                );
+                                final favoriteState = ref.watch(
+                                  favoriteProvider,
+                                );
+                                final userId = int.tryParse(
+                                  UserSession.id ?? '',
+                                );
+
+                                final isFavorite = userId != null
+                                    ? favoriteState.any(
+                                        (item) =>
+                                            item['product_id'] ==
+                                                product['id'] &&
+                                            item['user_id'] == userId,
+                                      )
+                                    : false;
+
+                                return Container(
+                                  width: 40,
+                                  height: 40,
+                                  decoration: BoxDecoration(
+                                    color: Colors.grey.withOpacity(0.3),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: IconButton(
+                                    icon: Icon(
+                                      isFavorite
+                                          ? Icons.favorite
+                                          : Icons.favorite_border,
+                                      color: isFavorite
+                                          ? Colors.red
+                                          : Colors.white,
+                                    ),
+                                    onPressed: () {
+                                      if (userId == null) return;
+
+                                      if (isFavorite) {
+                                        notifier.removeFavorite(
+                                          product['id'],
+                                          userId,
+                                        );
+                                      } else {
+                                        notifier.addFavorite(product, userId);
+                                      }
+                                    },
+                                  ),
+                                );
+                              },
                             ),
                           ),
                         ],

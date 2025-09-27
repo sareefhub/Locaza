@@ -17,12 +17,17 @@ class FavoriteNotifier extends StateNotifier<List<Map<String, dynamic>>> {
   Future<void> addFavorite(Map<String, dynamic> product, int userId) async {
     final wishlistId = mockWishlists.first['id'];
 
-    final exists = state.any((item) => item['product_id'] == product['id']);
+    final exists = state.any(
+      (item) =>
+          item['product_id'] == product['id'] && item['user_id'] == userId,
+    );
+
     if (!exists) {
       final newItem = {
         'id': DateTime.now().millisecondsSinceEpoch, // ไม่ซ้ำแน่
         'wishlist_id': wishlistId,
         'product_id': product['id'],
+        'user_id': userId,
         'created_at': DateTime.now().toIso8601String(),
         'product': product,
       };
@@ -42,7 +47,12 @@ class FavoriteNotifier extends StateNotifier<List<Map<String, dynamic>>> {
         .where((item) => item['product_id'] == productId)
         .toList();
 
-    state = state.where((item) => item['product_id'] != productId).toList();
+    state = state
+        .where(
+          (item) =>
+              !(item['product_id'] == productId && item['user_id'] == userId),
+        )
+        .toList();
 
     if (removedItems.isNotEmpty) {
       final removed = removedItems.first;
@@ -53,8 +63,10 @@ class FavoriteNotifier extends StateNotifier<List<Map<String, dynamic>>> {
     }
   }
 
-  bool isFavorite(int productId) {
-    return state.any((item) => item['product_id'] == productId);
+  bool isFavorite(int productId, int userId) {
+    return state.any(
+      (item) => item['product_id'] == productId && item['user_id'] == userId,
+    );
   }
 
   // ------------------ LOCAL STORAGE ------------------
@@ -77,6 +89,7 @@ class FavoriteNotifier extends StateNotifier<List<Map<String, dynamic>>> {
             'id': DateTime.now().millisecondsSinceEpoch,
             'wishlist_id': mockWishlists.first['id'],
             'product_id': p['id'],
+            'user_id': userId,
             'created_at': DateTime.now().toIso8601String(),
             'product': p,
           },

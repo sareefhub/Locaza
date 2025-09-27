@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:go_router/go_router.dart';
 import 'package:frontend/features/favorite/application/favorite_provider.dart';
 import 'package:frontend/core/widgets/product_card.dart';
+import 'package:frontend/utils/user_session.dart';
 
 class FavoriteScreen extends ConsumerWidget {
   const FavoriteScreen({super.key});
@@ -13,8 +14,9 @@ class FavoriteScreen extends ConsumerWidget {
     // Watch state ตรง ๆ
     final favoriteState = ref.watch(favoriteProvider);
 
-    // ดึง product จริง ๆ จาก state
+    final userId = int.tryParse(UserSession.id ?? '');
     final favorites = favoriteState
+        .where((item) => item['user_id'] == userId)
         .map((item) => item['product'] as Map<String, dynamic>)
         .toList();
 
