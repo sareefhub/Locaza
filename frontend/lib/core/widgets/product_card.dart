@@ -16,7 +16,7 @@ class ProductCard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final favoriteState = ref.watch(favoriteProvider);
     final notifier = ref.read(favoriteProvider.notifier);
-    final userId = int.tryParse(UserSession.id ?? ''); // ดึง userId จาก session
+    final userId = int.tryParse(UserSession.id ?? '');
 
     final isFavorite = userId != null
         ? favoriteState.any(
@@ -37,7 +37,15 @@ class ProductCard extends ConsumerWidget {
         )['name']
         .toString();
 
-    final image = product['image_urls']?.toString() ?? '';
+    // ✅ เลือกรูปภาพแรกเสมอ
+    String image = '';
+    final rawImage = product['image_urls'];
+    if (rawImage is List && rawImage.isNotEmpty) {
+      image = rawImage.first.toString();
+    } else if (rawImage is String && rawImage.isNotEmpty) {
+      image = rawImage;
+    }
+
     const favoriteIconSize = 22.0;
 
     Widget buildImage(double imageHeight) {

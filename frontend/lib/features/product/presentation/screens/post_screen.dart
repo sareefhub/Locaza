@@ -1,205 +1,152 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:go_router/go_router.dart';
 import 'package:frontend/core/widgets/navigation.dart';
+import 'package:frontend/config/api_config.dart';
+import '../../../../utils/user_session.dart';
+import '../../application/product_provider.dart';
 
 extension StringExtension on String {
-  String capitalize() {
-    if (isEmpty) return this;
-    return this[0].toUpperCase() + substring(1).toLowerCase();
-  }
+  String capitalize() => isEmpty ? this : this[0].toUpperCase() + substring(1).toLowerCase();
 }
 
-class PostScreen extends StatefulWidget {
+class PostScreen extends ConsumerStatefulWidget {
   const PostScreen({super.key});
-
   @override
-  State<PostScreen> createState() => _PostScreenState();
+  ConsumerState<PostScreen> createState() => _PostScreenState();
 }
 
-class _PostScreenState extends State<PostScreen> {
-  final List<Map<String, dynamic>> posts = [
-    {
-      "id": "1",
-      "name": "มะม่วงน้ำดอกไม้",
-      "description": "สดใหม่จากสวน",
-      "state": "post",
-      "createdAt": DateTime.now(),
-    },
-    {
-      "id": "2",
-      "name": "ทุเรียนหมอนทอง",
-      "description": "เนื้อแน่น หวานมัน",
-      "state": "draft",
-      "createdAt": DateTime.now().subtract(const Duration(days: 1)),
-    },
-  ];
+class _PostScreenState extends ConsumerState<PostScreen> {
+  Future<bool?> _confirmDelete() => showDialog<bool>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: Text('ยืนยันการลบ', style: GoogleFonts.sarabun(fontWeight: FontWeight.bold)),
+          content: Text('คุณต้องการลบโพสต์นี้หรือไม่?', style: GoogleFonts.sarabun()),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text('ยกเลิก', style: GoogleFonts.sarabun())),
+            TextButton(onPressed: () => Navigator.pop(ctx, true), child: Text('ลบ', style: GoogleFonts.sarabun(color: Colors.red))),
+          ],
+        ),
+      );
 
-  Future<bool?> _showDeleteConfirmationDialog() {
-    return showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text('ยืนยันการลบ', style: GoogleFonts.sarabun(fontWeight: FontWeight.bold)),
-        content: Text('คุณต้องการลบโพสต์นี้หรือไม่?', style: GoogleFonts.sarabun()),
-        actions: [
-          TextButton(onPressed: () => Navigator.of(ctx).pop(false), child: Text('ยกเลิก', style: GoogleFonts.sarabun())),
-          TextButton(onPressed: () => Navigator.of(ctx).pop(true), child: Text('ลบ', style: GoogleFonts.sarabun(color: Colors.red))),
-        ],
-      ),
-    );
+  String? _firstImage(dynamic raw) {
+    if (raw == null) return null;
+    if (raw is List && raw.isNotEmpty) return ApiConfig.fixUrl(raw.first.toString());
+    if (raw is String && raw.isNotEmpty) {
+      final urls = raw.replaceAll('[', '').replaceAll(']', '').replaceAll('"', '').split(',');
+      return urls.isNotEmpty ? ApiConfig.fixUrl(urls.first.trim()) : null;
+    }
+    return null;
   }
 
   @override
   Widget build(BuildContext context) {
+    final userId = int.tryParse(UserSession.id ?? "0") ?? 0;
+    final productsAsync = ref.watch(productListByUserProvider(userId));
     return Scaffold(
       appBar: AppBar(
         backgroundColor: const Color(0xFFE0F3F7),
         title: Text('โพสต์', style: GoogleFonts.sarabun(color: Colors.black, fontSize: 18, fontWeight: FontWeight.bold)),
         centerTitle: true,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.add, color: Colors.black),
-            onPressed: () => GoRouter.of(context).push('/postform'),
-          ),
-        ],
+        actions: [IconButton(icon: const Icon(Icons.add, color: Colors.black), onPressed: () => context.push('/choose_photo'))],
         elevation: 0,
       ),
-      body: posts.isEmpty
-          ? Center(child: Text('ยังไม่มีโพสต์', style: GoogleFonts.sarabun()))
-          : ListView.builder(
-              itemCount: posts.length,
-              padding: const EdgeInsets.symmetric(vertical: 8),
-              itemBuilder: (context, index) {
-                final post = posts[index];
-                final name = post['name'] as String;
-                final description = post['description'] as String;
-                final status = (post['state'] as String).capitalize();
-                final createdAt = post['createdAt'] as DateTime;
-                final postId = post['id'] as String;
-
-                return GestureDetector(
-                  onTap: () => GoRouter.of(context).push('/postedit/$postId'),
-                  child: _buildPostItem(context, name, description, status, createdAt, postId),
-                );
-              },
-            ),
+      body: productsAsync.when(
+        data: (posts) => posts.isEmpty
+            ? Center(child: Text('ยังไม่มีโพสต์', style: GoogleFonts.sarabun()))
+            : RefreshIndicator(
+                onRefresh: () async {
+                  ref.invalidate(productListByUserProvider(userId));
+                },
+                child: ListView.builder(
+                  itemCount: posts.length,
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  itemBuilder: (context, i) {
+                    final p = posts[i];
+                    final firstImage = _firstImage(p['image_urls']);
+                    return GestureDetector(
+                      onTap: () => context.push('/postedit/${p['id']}'),
+                      child: _postItem(
+                        p['title'] ?? '',
+                        p['description'] ?? '',
+                        (p['status'] ?? '').toString().capitalize(),
+                        DateTime.tryParse(p['created_at']?.toString() ?? '') ?? DateTime.now(),
+                        p['id'].toString(),
+                        firstImage,
+                      ),
+                    );
+                  },
+                ),
+              ),
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (err, _) => Center(child: Text('เกิดข้อผิดพลาด: $err', style: GoogleFonts.sarabun())),
+      ),
       bottomNavigationBar: const BottomNavBar(currentIndex: 2),
     );
   }
 
-  Widget _buildPostItem(BuildContext context, String name, String description, String status, DateTime createdAt, String postId) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: Container(
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
-          boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 4, offset: Offset(0, 2))],
-        ),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
+  Widget _postItem(String name, String desc, String status, DateTime created, String id, String? img) => Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        child: Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12), boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 4, offset: Offset(0, 2))]),
+          child: Row(children: [
             Container(
               width: 50,
               height: 50,
               decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(8)),
-              child: const Icon(Icons.image, color: Colors.white),
+              child: img != null && img.isNotEmpty
+                  ? ClipRRect(borderRadius: BorderRadius.circular(8), child: Image.network(img, fit: BoxFit.cover, width: 50, height: 50))
+                  : const Icon(Icons.image, color: Colors.white),
             ),
             const SizedBox(width: 12),
             Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(name, style: GoogleFonts.sarabun(fontWeight: FontWeight.bold, fontSize: 16)),
-                  const SizedBox(height: 4),
-                  Text(
-                    description,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: GoogleFonts.sarabun(fontSize: 13, color: Colors.black87),
-                  ),
-                  const SizedBox(height: 8),
-                  Row(
-                    children: [
-                      _buildStatusLabel(status),
-                      const SizedBox(width: 8),
-                      Text(
-                        "${createdAt.day}/${createdAt.month}/${createdAt.year}",
-                        style: GoogleFonts.sarabun(fontSize: 12, color: Colors.black54),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
+              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Text(name, style: GoogleFonts.sarabun(fontWeight: FontWeight.bold, fontSize: 16)),
+                const SizedBox(height: 4),
+                Text(desc, maxLines: 1, overflow: TextOverflow.ellipsis, style: GoogleFonts.sarabun(fontSize: 13, color: Colors.black87)),
+                const SizedBox(height: 8),
+                Row(children: [
+                  _statusLabel(status),
+                  const SizedBox(width: 8),
+                  Text("${created.day}/${created.month}/${created.year}", style: GoogleFonts.sarabun(fontSize: 12, color: Colors.black54)),
+                ]),
+              ]),
             ),
             PopupMenuButton<String>(
               icon: const Icon(Icons.more_vert, color: Colors.black54),
-              onSelected: (value) async {
-                if (value == 'edit') {
-                  GoRouter.of(context).push('/postedit/$postId');
-                } else if (value == 'delete') {
-                  final confirmed = await _showDeleteConfirmationDialog();
-                  if (confirmed == true) {
-                    setState(() {
-                      posts.removeWhere((p) => p['id'] == postId);
-                    });
-                  }
+              onSelected: (v) async {
+                if (v == 'edit') {
+                  context.push('/postedit/$id');
+                } else if (v == 'delete' && await _confirmDelete() == true) {
+                  ref.invalidate(productListByUserProvider(int.tryParse(UserSession.id ?? "0") ?? 0));
                 }
               },
-              itemBuilder: (BuildContext context) => [
-                PopupMenuItem<String>(
-                  value: 'edit',
-                  child: Row(
-                    children: [
-                      const Icon(Icons.edit, size: 18),
-                      const SizedBox(width: 8),
-                      Text('แก้ไข', style: GoogleFonts.sarabun()),
-                    ],
-                  ),
-                ),
-                PopupMenuItem<String>(
-                  value: 'delete',
-                  child: Row(
-                    children: [
-                      const Icon(Icons.delete_outline, size: 18, color: Colors.red),
-                      const SizedBox(width: 8),
-                      Text('ลบโพสต์', style: GoogleFonts.sarabun(color: Colors.red)),
-                    ],
-                  ),
-                ),
+              itemBuilder: (_) => [
+                PopupMenuItem(value: 'edit', child: Row(children: [const Icon(Icons.edit, size: 18), const SizedBox(width: 8), Text('แก้ไข', style: GoogleFonts.sarabun())])),
+                PopupMenuItem(value: 'delete', child: Row(children: [const Icon(Icons.delete_outline, size: 18, color: Colors.red), const SizedBox(width: 8), Text('ลบโพสต์', style: GoogleFonts.sarabun(color: Colors.red))])),
               ],
             ),
-          ],
+          ]),
         ),
-      ),
-    );
-  }
+      );
 
-  Widget _buildStatusLabel(String status) {
-    Color bgColor;
-    const Color borderColor = Color(0xFF062252);
-
+  Widget _statusLabel(String status) {
+    Color bg;
     switch (status) {
-      case 'Post':
-        bgColor = const Color(0xFFB9E8C9);
+      case 'Available':
+        bg = const Color(0xFFB9E8C9);
         break;
       case 'Draft':
-        bgColor = Colors.white;
+        bg = Colors.white;
         break;
       default:
-        bgColor = const Color(0xFFDCEFF3);
-        break;
+        bg = const Color(0xFFDCEFF3);
     }
-
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-      decoration: BoxDecoration(
-        color: bgColor,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: borderColor),
-      ),
+      decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(20), border: Border.all(color: const Color(0xFF062252))),
       child: Text(status, style: GoogleFonts.sarabun(fontSize: 12, color: Colors.black)),
     );
   }

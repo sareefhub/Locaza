@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Boolean, Text, DECIMAL, ForeignKey, TIMESTAMP
+from sqlalchemy import Column, Integer, String, Boolean, Text, DECIMAL, ForeignKey, TIMESTAMP, JSON
 from app.db.base import Base
 
 
@@ -36,7 +36,7 @@ class Product(Base):
     category_id = Column(Integer, ForeignKey("categories.id"), nullable=False)
     location = Column(String)
     status = Column(String)
-    image_urls = Column(Text)
+    image_urls = Column(JSON, default=[])
     created_at = Column(TIMESTAMP)
     updated_at = Column(TIMESTAMP)
 

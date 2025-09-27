@@ -26,6 +26,7 @@ import '../features/review/review_screen.dart';
 
 import '../utils/user_session.dart';
 import 'routes.dart';
+import 'package:image_picker/image_picker.dart';
 
 final GoRouter appRouter = GoRouter(
   initialLocation: AppRoutes.home,
@@ -51,7 +52,10 @@ final GoRouter appRouter = GoRouter(
     ),
     GoRoute(
       path: AppRoutes.postForm,
-      builder: (_, __) => const PostFormScreen(),
+      builder: (context, state) {
+        final images = state.extra as List<XFile>?;
+        return PostFormScreen(images: images);
+      },
     ),
     GoRoute(
       path: AppRoutes.favorite,
@@ -87,8 +91,10 @@ final GoRouter appRouter = GoRouter(
     ),
     GoRoute(
       path: AppRoutes.postEdit,
-      builder: (_, state) =>
-          EditPostFormScreen(postId: state.pathParameters['id']!),
+      builder: (_, state) {
+        final id = int.parse(state.pathParameters['id']!);
+        return EditPostFormScreen(postId: id);
+      },
     ),
     GoRoute(
       path: '${AppRoutes.productDetails}/:id',

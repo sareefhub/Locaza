@@ -46,13 +46,13 @@ class _ProductDetailsPageState extends ConsumerState<ProductDetailsPage> {
 
             final productDescription =
                 (product['description'] != null &&
-                    product['description'].toString().isNotEmpty)
-                ? product['description'].toString()
-                : 'ไม่มีรายละเอียดสินค้า';
+                        product['description'].toString().isNotEmpty)
+                    ? product['description'].toString()
+                    : 'ไม่มีรายละเอียดสินค้า';
 
             final hasLongDescription =
                 productDescription.split('\n').length > 2 ||
-                productDescription.length > 100;
+                    productDescription.length > 100;
 
             final categoryState = ref.watch(categoryListProvider);
             final categoryName = categoryState.maybeWhen(
@@ -76,7 +76,6 @@ class _ProductDetailsPageState extends ConsumerState<ProductDetailsPage> {
                 return SingleChildScrollView(
                   child: Column(
                     children: [
-                      /// ---------------- HEADER IMAGE ----------------
                       Stack(
                         children: [
                           ClipRRect(
@@ -111,15 +110,12 @@ class _ProductDetailsPageState extends ConsumerState<ProductDetailsPage> {
                             right: 16,
                             child: Consumer(
                               builder: (context, ref, _) {
-                                final notifier = ref.read(
-                                  favoriteProvider.notifier,
-                                );
-                                final favoriteState = ref.watch(
-                                  favoriteProvider,
-                                );
-                                final userId = int.tryParse(
-                                  UserSession.id ?? '',
-                                );
+                                final notifier =
+                                    ref.read(favoriteProvider.notifier);
+                                final favoriteState =
+                                    ref.watch(favoriteProvider);
+                                final userId =
+                                    int.tryParse(UserSession.id ?? '');
 
                                 final isFavorite = userId != null
                                     ? favoriteState.any(
@@ -165,8 +161,6 @@ class _ProductDetailsPageState extends ConsumerState<ProductDetailsPage> {
                           ),
                         ],
                       ),
-
-                      /// ---------------- PRODUCT INFO ----------------
                       Padding(
                         padding: const EdgeInsets.all(16),
                         child: Column(
@@ -177,7 +171,7 @@ class _ProductDetailsPageState extends ConsumerState<ProductDetailsPage> {
                               style: const TextStyle(
                                 fontSize: 22,
                                 fontWeight: FontWeight.bold,
-                                color: const Color(0xFF315EB2),
+                                color: Color(0xFF315EB2),
                               ),
                             ),
                             const SizedBox(height: 4),
@@ -189,8 +183,6 @@ class _ProductDetailsPageState extends ConsumerState<ProductDetailsPage> {
                               ),
                             ),
                             const SizedBox(height: 10),
-
-                            // Category & Location
                             Row(
                               children: [
                                 if (categoryName.isNotEmpty)
@@ -253,8 +245,6 @@ class _ProductDetailsPageState extends ConsumerState<ProductDetailsPage> {
                             const SizedBox(height: 16),
                             const Divider(color: Colors.grey, thickness: 1),
                             const SizedBox(height: 8),
-
-                            /// ---------------- DESCRIPTION ----------------
                             Text(
                               'รายละเอียดสินค้า',
                               style: GoogleFonts.sarabun(
@@ -286,7 +276,7 @@ class _ProductDetailsPageState extends ConsumerState<ProductDetailsPage> {
                                           ? Icons.keyboard_arrow_up
                                           : Icons.keyboard_arrow_down,
                                       size: 16,
-                                      color: const Color(0xFF315EB2),
+                                      color: Color(0xFF315EB2),
                                     ),
                                     const SizedBox(width: 4),
                                     Text(
@@ -295,16 +285,13 @@ class _ProductDetailsPageState extends ConsumerState<ProductDetailsPage> {
                                           : "อ่านเพิ่มเติม",
                                       style: GoogleFonts.sarabun(
                                         fontSize: 14,
-                                        color: const Color(0xFF315EB2),
+                                        color: Color(0xFF315EB2),
                                       ),
                                     ),
                                   ],
                                 ),
                               ),
-
                             const SizedBox(height: 18),
-
-                            /// ---------------- SELLER INFO ----------------
                             Container(
                               padding: const EdgeInsets.all(12),
                               decoration: BoxDecoration(
@@ -318,18 +305,17 @@ class _ProductDetailsPageState extends ConsumerState<ProductDetailsPage> {
                                     backgroundColor: Colors.grey[300],
                                     backgroundImage:
                                         seller != null &&
-                                            seller['avatar_url'] != null &&
-                                            seller['avatar_url']
-                                                .toString()
-                                                .isNotEmpty
-                                        ? NetworkImage(
-                                            ApiConfig.fixUrl(
-                                              seller['avatar_url'],
-                                            ),
-                                          )
-                                        : null,
-                                    child:
-                                        (seller == null ||
+                                                seller['avatar_url'] != null &&
+                                                seller['avatar_url']
+                                                    .toString()
+                                                    .isNotEmpty
+                                            ? NetworkImage(
+                                                ApiConfig.fixUrl(
+                                                  seller['avatar_url'],
+                                                ),
+                                              )
+                                            : null,
+                                    child: (seller == null ||
                                             seller['avatar_url'] == null ||
                                             seller['avatar_url']
                                                 .toString()
@@ -367,7 +353,7 @@ class _ProductDetailsPageState extends ConsumerState<ProductDetailsPage> {
                                             label: Text(
                                               "แชต",
                                               style: GoogleFonts.sarabun(
-                                                color: const Color(0xFF315EB2),
+                                                color: Color(0xFF315EB2),
                                               ),
                                             ),
                                             style: OutlinedButton.styleFrom(
@@ -383,13 +369,10 @@ class _ProductDetailsPageState extends ConsumerState<ProductDetailsPage> {
                                 ],
                               ),
                             ),
-
-                            /// ---------------- SIMILAR PRODUCTS ----------------
                             const SizedBox(height: 18),
                             Padding(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 8,
-                              ),
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 8),
                               child: Align(
                                 alignment: Alignment.centerLeft,
                                 child: Text(
@@ -436,9 +419,9 @@ class _ProductDetailsPageState extends ConsumerState<ProductDetailsPage> {
                                     double spacing = 12 * (crossAxisCount - 1);
                                     double cardWidth =
                                         (screenWidth -
-                                            horizontalPadding * 2 -
-                                            spacing) /
-                                        crossAxisCount;
+                                                horizontalPadding * 2 -
+                                                spacing) /
+                                            crossAxisCount;
                                     double cardHeight = cardWidth * 0.8 + 120;
                                     double childAspectRatio =
                                         cardWidth / cardHeight;
@@ -449,11 +432,11 @@ class _ProductDetailsPageState extends ConsumerState<ProductDetailsPage> {
                                           const NeverScrollableScrollPhysics(),
                                       gridDelegate:
                                           SliverGridDelegateWithFixedCrossAxisCount(
-                                            crossAxisCount: crossAxisCount,
-                                            crossAxisSpacing: 12,
-                                            mainAxisSpacing: 12,
-                                            childAspectRatio: childAspectRatio,
-                                          ),
+                                        crossAxisCount: crossAxisCount,
+                                        crossAxisSpacing: 12,
+                                        mainAxisSpacing: 12,
+                                        childAspectRatio: childAspectRatio,
+                                      ),
                                       itemCount: similarProducts.length,
                                       itemBuilder: (context, index) {
                                         final p = similarProducts[index];
@@ -469,7 +452,6 @@ class _ProductDetailsPageState extends ConsumerState<ProductDetailsPage> {
                               error: (err, _) =>
                                   Center(child: Text("Error: $err")),
                             ),
-
                             const SizedBox(height: 30),
                           ],
                         ),

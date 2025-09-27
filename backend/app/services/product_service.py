@@ -1,6 +1,7 @@
 from sqlalchemy.orm import Session
 from app.schemas.product_schema import ProductCreate, ProductUpdate
 from app.repositories.product_repository import ProductRepository
+from app.services.upload_service import UploadService
 
 class ProductService:
     @staticmethod
@@ -20,9 +21,27 @@ class ProductService:
         return ProductRepository.get_all(db, skip, limit)
 
     @staticmethod
+    def get_products_by_user(db: Session, user_id: int):
+        return ProductRepository.get_by_user(db, user_id)
+
+    @staticmethod
     def update_product(db: Session, product_id: int, product: ProductUpdate):
-        return ProductRepository.update(db, product_id, product)
+        old_product = ProductRepository.get(db, product_id)
+        if not old_product:
+            return None
+        updated_product = ProductRepository.update(db, product_id, product)
+        old_images = set(old_product.get("image_urls") or [])
+        new_images = set(updated_product.get("image_urls") or [])
+        unused_images = old_images - new_images
+        for img in unused_images:
+            UploadService.delete_file(img)
+        return updated_product
 
     @staticmethod
     def delete_product(db: Session, product_id: int):
+        product = ProductRepository.get(db, product_id)
+        if not product:
+            return None
+        for img in product.get("image_urls") or []:
+            UploadService.delete_file(img)
         return ProductRepository.delete(db, product_id)

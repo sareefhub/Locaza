@@ -8,3 +8,8 @@ router = APIRouter(prefix="/upload", tags=["Upload"])
 async def upload_avatar(file: UploadFile = File(...)):
     file_url = await UploadService.save_avatar(file)
     return JSONResponse(content={"avatar_url": file_url})
+
+@router.post("/product/")
+async def upload_product(file: UploadFile = File(...)):
+    file_url = await UploadService.save_product(file)
+    return JSONResponse(content={"image_url": file_url})

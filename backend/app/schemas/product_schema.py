@@ -10,7 +10,7 @@ class ProductBase(BaseModel):
     category_id: int
     location: Optional[str] = None
     status: Optional[str] = "available"
-    image_urls: Optional[str] = None
+    image_urls: list[str] = []
 
 class ProductCreate(ProductBase):
     pass
@@ -22,7 +22,7 @@ class ProductUpdate(BaseModel):
     category_id: Optional[int] = None
     location: Optional[str] = None
     status: Optional[str] = None
-    image_urls: Optional[str] = None
+    image_urls: Optional[list[str]] = None
 
 class ProductResponse(ProductBase):
     id: int

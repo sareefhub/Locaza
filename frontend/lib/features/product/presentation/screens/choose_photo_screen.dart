@@ -23,24 +23,20 @@ class _ChoosePhotoScreenState extends State<ChoosePhotoScreen> {
   Future<void> _pickImages() async {
     final ImagePicker picker = ImagePicker();
     final List<XFile> pickedImages = await picker.pickMultiImage();
-
     if (pickedImages.isNotEmpty) {
       setState(() {
-        _allImages.addAll(pickedImages); // เก็บภาพทั้งหมดที่เลือก
+        _allImages.addAll(pickedImages);
       });
     }
   }
 
-// เมื่อผู้ใช้แตะที่ภาพ
   void _onImageTapped(XFile image) {
     setState(() {
       if (_selectedImages.contains(image)) {
-        // ถ้าเลือกภาพอยู่แล้ว
-        _selectedImages.remove(image); // ลบภาพที่เลือกออก
+        _selectedImages.remove(image);
       } else {
         if (_selectedImages.length < 5) {
-          // จำกัดการเลือกสูงสุด 5 ภาพ
-          _selectedImages.add(image); // เพิ่มภาพที่เลือก
+          _selectedImages.add(image);
         }
       }
     });
@@ -94,9 +90,7 @@ class _ChoosePhotoScreenState extends State<ChoosePhotoScreen> {
                     ),
                     onPressed: _selectedImages.isNotEmpty
                         ? () {
-                            context.push('/postform',
-                                extra:
-                                    _selectedImages); // ส่งภาพที่เลือกไปยัง PostFormScreen
+                            context.push('/postform', extra: _selectedImages);
                           }
                         : null,
                   ),
@@ -113,17 +107,15 @@ class _ChoosePhotoScreenState extends State<ChoosePhotoScreen> {
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: GridView.builder(
-                itemCount: _allImages.length, // ใช้ _allImages แทน
+                itemCount: _allImages.length,
                 gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                   crossAxisCount: 3,
                   crossAxisSpacing: 12,
                   mainAxisSpacing: 12,
                 ),
                 itemBuilder: (context, index) {
-                  final image =
-                      _allImages[index]; // ใช้ _allImages แทน _selectedImages
+                  final image = _allImages[index];
                   final selectionIndex = _getSelectionIndex(image);
-
                   return GestureDetector(
                     onTap: () => _onImageTapped(image),
                     child: Stack(

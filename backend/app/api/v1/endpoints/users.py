@@ -3,7 +3,9 @@ from sqlalchemy.orm import Session
 from typing import List
 from app.db.session import get_db
 from app.schemas.user_schema import UserCreate, UserUpdate, UserResponse
+from app.schemas.product_schema import ProductResponse
 from app.services.user_service import UserService
+from app.services.product_service import ProductService
 
 router = APIRouter(prefix="/users", tags=["Users"])
 
@@ -35,3 +37,8 @@ def delete_user(user_id: int, db: Session = Depends(get_db)):
     if not deleted_user:
         raise HTTPException(status_code=404, detail="User not found")
     return deleted_user
+
+@router.get("/{user_id}/products", response_model=List[ProductResponse])
+def get_products_by_user(user_id: int, db: Session = Depends(get_db)):
+    products = ProductService.get_products_by_user(db, user_id)
+    return products
