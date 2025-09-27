@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:http/http.dart' as http;
-import 'package:http_parser/http_parser.dart';
 import '../../../../config/api_config.dart';
 import '../../../../utils/user_session.dart';
 
@@ -32,7 +31,6 @@ class ProfileApi {
       await http.MultipartFile.fromPath(
         "file",
         file.path,
-        contentType: MediaType("image", "jpeg"), // บังคับเป็น image/*
       ),
     );
 
