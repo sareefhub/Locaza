@@ -24,7 +24,7 @@ class FavoriteNotifier extends StateNotifier<List<Map<String, dynamic>>> {
 
     if (!exists) {
       final newItem = {
-        'id': DateTime.now().millisecondsSinceEpoch, // ไม่ซ้ำแน่
+        'id': DateTime.now().millisecondsSinceEpoch, // ไม่ซ้ำ
         'wishlist_id': wishlistId,
         'product_id': product['id'],
         'user_id': userId,
@@ -72,17 +72,20 @@ class FavoriteNotifier extends StateNotifier<List<Map<String, dynamic>>> {
   // ------------------ LOCAL STORAGE ------------------
   Future<void> _saveFavoritesToPrefs(int userId) async {
     final prefs = await SharedPreferences.getInstance();
-    final productIds = state
+    // เก็บเฉพาะรายการของ userId ปัจจุบัน
+    final userFavorites = state
+        .where((item) => item['user_id'] == userId)
         .map((item) => item['product_id'].toString())
         .toList();
-    await prefs.setStringList('favorite_$userId', productIds);
+    await prefs.setStringList('favorite_$userId', userFavorites);
   }
 
   Future<void> loadFavoritesFromPrefs(int userId) async {
     final prefs = await SharedPreferences.getInstance();
     final productIds = prefs.getStringList('favorite_$userId') ?? [];
 
-    state = dummyProducts
+    // โหลดรายการโปรดของ userId ปัจจุบัน
+    final loadedItems = dummyProducts
         .where((p) => productIds.contains(p['id'].toString()))
         .map(
           (p) => {
@@ -95,6 +98,13 @@ class FavoriteNotifier extends StateNotifier<List<Map<String, dynamic>>> {
           },
         )
         .toList();
+
+    // คง state ของ user อื่น ๆ ไว้
+    final otherUsers = state
+        .where((item) => item['user_id'] != userId)
+        .toList();
+
+    state = [...otherUsers, ...loadedItems];
   }
 
   // ------------------ GET FAVORITE PRODUCTS ------------------
