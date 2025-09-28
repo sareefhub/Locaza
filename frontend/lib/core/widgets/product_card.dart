@@ -54,7 +54,7 @@ class ProductCard extends ConsumerWidget {
           height: imageHeight,
           width: double.infinity,
           child: Image.asset(
-            'assets/images/placeholder.png',
+            'assets/products-image/placeholder_product.png',
             fit: BoxFit.cover,
           ),
         );
@@ -66,7 +66,7 @@ class ProductCard extends ConsumerWidget {
           ApiConfig.fixUrl(image),
           fit: BoxFit.cover,
           errorBuilder: (_, __, ___) =>
-              Image.asset('assets/images/placeholder.png', fit: BoxFit.cover),
+              Image.asset('assets/products-image/placeholder_product.png', fit: BoxFit.cover),
         ),
       );
     }

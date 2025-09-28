@@ -1,24 +1,24 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:frontend/core/widgets/filter_components.dart';
-import 'package:frontend/data/dummy_categories.dart';
+import 'package:frontend/features/product/application/category_provider.dart';
 
-class FilterScreen extends StatefulWidget {
+class FilterScreen extends ConsumerStatefulWidget {
   final Map<String, dynamic>? initialFilters;
 
   const FilterScreen({super.key, this.initialFilters});
 
   @override
-  State<FilterScreen> createState() => _FilterScreenState();
+  ConsumerState<FilterScreen> createState() => _FilterScreenState();
 }
 
-class _FilterScreenState extends State<FilterScreen> {
-  String? selectedCategory;
+class _FilterScreenState extends ConsumerState<FilterScreen> {
+  int? selectedCategoryId;
   String? selectedLocation;
   final TextEditingController minPriceController = TextEditingController();
   final TextEditingController maxPriceController = TextEditingController();
 
-  late final List<String> categories;
   final List<String> locations = [
     "กรุงเทพมหานคร",
     "เชียงใหม่",
@@ -29,18 +29,10 @@ class _FilterScreenState extends State<FilterScreen> {
   @override
   void initState() {
     super.initState();
-
-    // ดึง category label จาก schema
-    categories = dummyCategories.map((c) => c['label'] as String).toList();
-
-    // กำหนดค่าเริ่มต้นจาก initialFilters
     if (widget.initialFilters != null) {
-      final cat = widget.initialFilters!['category']?.toString() ?? '';
-      selectedCategory = categories.contains(cat) ? cat : null;
-
+      selectedCategoryId = widget.initialFilters!['category_id'] as int?;
       final loc = widget.initialFilters!['location']?.toString() ?? '';
       selectedLocation = locations.contains(loc) ? loc : null;
-
       minPriceController.text = widget.initialFilters!['minPrice'] ?? '';
       maxPriceController.text = widget.initialFilters!['maxPrice'] ?? '';
     }
@@ -48,7 +40,7 @@ class _FilterScreenState extends State<FilterScreen> {
 
   void _applyFilters() {
     Navigator.pop(context, {
-      "category": selectedCategory ?? "",
+      "category_id": selectedCategoryId,
       "location": selectedLocation ?? "",
       "minPrice": minPriceController.text,
       "maxPrice": maxPriceController.text,
@@ -57,7 +49,7 @@ class _FilterScreenState extends State<FilterScreen> {
 
   void _clearFilters() {
     setState(() {
-      selectedCategory = null;
+      selectedCategoryId = null;
       selectedLocation = null;
       minPriceController.clear();
       maxPriceController.clear();
@@ -67,6 +59,12 @@ class _FilterScreenState extends State<FilterScreen> {
   @override
   Widget build(BuildContext context) {
     const mainColor = Color(0xFF315EB2);
+
+    final categoryState = ref.watch(categoryListProvider);
+    final categories = categoryState.maybeWhen(
+      data: (data) => data,
+      orElse: () => <Map<String, dynamic>>[],
+    );
 
     return Scaffold(
       backgroundColor: const Color(0xFFE0F3F7),
@@ -93,10 +91,23 @@ class _FilterScreenState extends State<FilterScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             CustomDropdown(
-              value: selectedCategory,
-              items: categories,
+              value: selectedCategoryId != null
+                  ? categories.firstWhere(
+                      (c) => c['id'] == selectedCategoryId,
+                      orElse: () => {'name': ''},
+                    )['name'] as String
+                  : null,
+              items: categories.map((c) => c['name'] as String).toList(),
               label: "หมวดหมู่",
-              onChanged: (val) => setState(() => selectedCategory = val),
+              onChanged: (val) {
+                final selected = categories.firstWhere(
+                  (c) => c['name'] == val,
+                  orElse: () => {},
+                );
+                setState(() {
+                  selectedCategoryId = selected['id'] as int?;
+                });
+              },
             ),
             const SizedBox(height: 16),
             CustomDropdown(

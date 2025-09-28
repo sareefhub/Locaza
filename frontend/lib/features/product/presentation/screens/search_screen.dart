@@ -1,21 +1,21 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:frontend/data/dummy_products.dart';
-import 'package:frontend/data/dummy_categories.dart';
-import 'package:frontend/data/dummy_users.dart';
 import '../../../../core/widgets/product_card.dart';
 import 'filter_screen.dart';
 import '../../../../core/widgets/search_bar_all.dart';
 import 'package:responsive_builder/responsive_builder.dart';
+import 'package:frontend/features/product/application/product_provider.dart';
+import 'package:frontend/features/product/application/category_provider.dart';
 
-class SearchScreen extends StatefulWidget {
+class SearchScreen extends ConsumerStatefulWidget {
   const SearchScreen({super.key});
 
   @override
-  State<SearchScreen> createState() => _SearchScreenState();
+  ConsumerState<SearchScreen> createState() => _SearchScreenState();
 }
 
-class _SearchScreenState extends State<SearchScreen> {
+class _SearchScreenState extends ConsumerState<SearchScreen> {
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
   Map<String, dynamic> _filters = {};
@@ -57,37 +57,8 @@ class _SearchScreenState extends State<SearchScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final filtered = dummyProducts.where((product) {
-      final title = product['title']?.toString().toLowerCase() ?? '';
-      final categoryId = product['category_id'];
-      final location = product['location']?.toString() ?? '';
-      final price = product['price'] as double? ?? 0;
-
-      if (product['status'] != 'available') return false;
-      if (!title.contains(_searchQuery.toLowerCase())) return false;
-      if (_filters['category'] != null &&
-          _filters['category'].toString().isNotEmpty) {
-        final category = dummyCategories.firstWhere(
-          (c) => c['label'] == _filters['category'],
-          orElse: () => {},
-        );
-        if (category['id'] != categoryId) return false;
-      }
-      if (_filters['location'] != null &&
-          _filters['location'].toString().isNotEmpty) {
-        if (location != _filters['location']) return false;
-      }
-      double? minPrice = double.tryParse(
-        _filters['minPrice']?.toString().trim() ?? '',
-      );
-      double? maxPrice = double.tryParse(
-        _filters['maxPrice']?.toString().trim() ?? '',
-      );
-      if (minPrice != null && price < minPrice) return false;
-      if (maxPrice != null && price > maxPrice) return false;
-
-      return true;
-    }).toList();
+    final productsState = ref.watch(productListProvider);
+    final categoriesState = ref.watch(categoryListProvider);
 
     return Scaffold(
       backgroundColor: const Color(0xFFE0F3F7),
@@ -103,56 +74,96 @@ class _SearchScreenState extends State<SearchScreen> {
         ),
       ),
       body: SafeArea(
-        child: filtered.isEmpty
-            ? Center(
+        child: productsState.when(
+          data: (products) {
+            final categories = categoriesState.maybeWhen(
+              data: (data) => data,
+              orElse: () => [],
+            );
+
+            final filtered = products.where((product) {
+              final title = product['title']?.toString().toLowerCase() ?? '';
+              final categoryId = product['category_id'];
+              final location = product['location']?.toString() ?? '';
+              final price = double.tryParse(product['price'].toString()) ?? 0;
+
+              if (product['status'] != 'available') return false;
+              if (!title.contains(_searchQuery.toLowerCase())) return false;
+              if (_filters['category_id'] != null) {
+                if (_filters['category_id'] != categoryId) return false;
+              }
+              if (_filters['location'] != null &&
+                  _filters['location'].toString().isNotEmpty) {
+                if (location != _filters['location']) return false;
+              }
+              double? minPrice = double.tryParse(
+                _filters['minPrice']?.toString().trim() ?? '',
+              );
+              double? maxPrice = double.tryParse(
+                _filters['maxPrice']?.toString().trim() ?? '',
+              );
+              if (minPrice != null && price < minPrice) return false;
+              if (maxPrice != null && price > maxPrice) return false;
+
+              return true;
+            }).toList();
+
+            if (filtered.isEmpty) {
+              return Center(
                 child: Text(
                   "ไม่พบสินค้าที่ค้นหา",
                   style: GoogleFonts.sarabun(fontSize: 16),
                 ),
-              )
-            : ResponsiveBuilder(
-                builder: (context, sizingInfo) {
-                  final screenWidth = sizingInfo.screenSize.width;
-                  final crossAxisCount = _getCrossAxisCount(screenWidth);
-                  final childAspectRatio = _getChildAspectRatio(
-                    screenWidth,
-                    crossAxisCount,
-                  );
+              );
+            }
 
-                  return CustomScrollView(
-                    slivers: [
-                      SliverPadding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        sliver: SliverGrid(
-                          delegate: SliverChildBuilderDelegate((
-                            context,
-                            index,
-                          ) {
+            return ResponsiveBuilder(
+              builder: (context, sizingInfo) {
+                final screenWidth = sizingInfo.screenSize.width;
+                final crossAxisCount = _getCrossAxisCount(screenWidth);
+                final childAspectRatio =
+                    _getChildAspectRatio(screenWidth, crossAxisCount);
+
+                return CustomScrollView(
+                  slivers: [
+                    SliverPadding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      sliver: SliverGrid(
+                        delegate: SliverChildBuilderDelegate(
+                          (context, index) {
                             final product = filtered[index];
-                            final seller = dummyUsers.firstWhere(
-                              (u) => u['id'] == product['seller_id'],
-                              orElse: () => {},
+                            final category = categories.firstWhere(
+                              (c) => c['id'] == product['category_id'],
+                              orElse: () => {'name': ''},
                             );
-                            product['sellerName'] =
-                                seller['name'] ?? 'ไม่ทราบชื่อผู้ขาย';
-                            product['sellerImage'] = seller['avatar_url'] ?? '';
-
-                            return ProductCard(product: product);
-                          }, childCount: filtered.length),
-                          gridDelegate:
-                              SliverGridDelegateWithFixedCrossAxisCount(
-                                crossAxisCount: crossAxisCount,
-                                crossAxisSpacing: 12,
-                                mainAxisSpacing: 12,
-                                childAspectRatio: childAspectRatio,
-                              ),
+                            final categoryName = category['name'].toString();
+                            final productWithCategory = {
+                              ...product,
+                              'categoryName': categoryName,
+                            };
+                            return ProductCard(product: productWithCategory);
+                          },
+                          childCount: filtered.length,
+                        ),
+                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: crossAxisCount,
+                          crossAxisSpacing: 12,
+                          mainAxisSpacing: 12,
+                          childAspectRatio: childAspectRatio,
                         ),
                       ),
-                      const SliverToBoxAdapter(child: SizedBox(height: 80)),
-                    ],
-                  );
-                },
-              ),
+                    ),
+                    const SliverToBoxAdapter(child: SizedBox(height: 80)),
+                  ],
+                );
+              },
+            );
+          },
+          loading: () =>
+              const Center(child: CircularProgressIndicator(strokeWidth: 2)),
+          error: (err, _) =>
+              Center(child: Text("โหลดสินค้าไม่ได้: $err")),
+        ),
       ),
     );
   }

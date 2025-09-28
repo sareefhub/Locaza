@@ -79,7 +79,7 @@ class _SoldProductDetailsPageState
                                     fit: BoxFit.cover,
                                   )
                                 : Image.asset(
-                                    'assets/images/placeholder.png',
+                                    'assets/products-image/placeholder_product.png',
                                     height: 310,
                                     width: double.infinity,
                                     fit: BoxFit.cover,
