@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from typing import List
 from app.db.session import get_db
-from app.schemas.user_schema import UserCreate, UserUpdate, UserResponse
+from app.schemas.user_schema import UserCreate, UserUpdate, UserResponse, UserBulkCreate
 from app.schemas.product_schema import ProductResponse
 from app.services.user_service import UserService
 from app.services.product_service import ProductService
@@ -12,6 +12,10 @@ router = APIRouter(prefix="/users", tags=["Users"])
 @router.post("/", response_model=UserResponse)
 def create_user(user: UserCreate, db: Session = Depends(get_db)):
     return UserService.create_user(db, user)
+
+@router.post("/bulk", response_model=List[UserResponse])
+def create_users_bulk(payload: UserBulkCreate, db: Session = Depends(get_db)):
+    return UserService.create_users_bulk(db, payload.users)
 
 @router.get("/{user_id}", response_model=UserResponse)
 def get_user(user_id: int, db: Session = Depends(get_db)):

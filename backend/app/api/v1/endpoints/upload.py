@@ -13,3 +13,8 @@ async def upload_avatar(file: UploadFile = File(...)):
 async def upload_product(file: UploadFile = File(...)):
     file_url = await UploadService.save_product(file)
     return JSONResponse(content={"image_url": file_url})
+
+@router.post("/chat/{chatroom_id}")
+async def upload_chat_image(chatroom_id: int, file: UploadFile = File(...)):
+    file_url = await UploadService.save_chat_image(chatroom_id, file)
+    return JSONResponse(content={"image_url": file_url})

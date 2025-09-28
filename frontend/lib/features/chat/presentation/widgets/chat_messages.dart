@@ -1,8 +1,7 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
-import 'package:image_picker/image_picker.dart';
+import '../../../../config/api_config.dart';
 
 class ChatMessages extends StatelessWidget {
   final ScrollController scrollController;
@@ -17,36 +16,28 @@ class ChatMessages extends StatelessWidget {
   });
 
   String formatDateHeader(DateTime date) =>
-      DateFormat('d MMM yyyy', 'th').format(date);
+      DateFormat('d MMM yyyy', 'th').format(date.toLocal());
 
-  String formatTime(DateTime time) => DateFormat('HH:mm').format(time);
+  String formatTime(DateTime time) =>
+      DateFormat('HH:mm').format(time.toLocal());
 
   bool _isLastMessageFromSender(int index) {
     if (index == messages.length - 1) return true;
-    final currentSender = messages[index]['senderId'] as String;
-    final nextSender = messages[index + 1]['senderId'] as String;
+    final currentSender = messages[index]['sender_id'].toString();
+    final nextSender = messages[index + 1]['sender_id'].toString();
     return currentSender != nextSender;
-  }
-
-  void _openImageViewer(
-    BuildContext context,
-    List<XFile> images,
-    int initialIndex,
-  ) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) =>
-            ImageViewerScreen(images: images, initialIndex: initialIndex),
-      ),
-    );
   }
 
   int _calculateCrossAxisCount(int length) {
     if (length == 1) return 1;
     if (length == 2) return 2;
     if (length == 4) return 2;
-    return 3; // 3,5,6+
+    return 3;
+  }
+
+  String _resolveImageUrl(String path) {
+    if (path.startsWith('http')) return path;
+    return "${ApiConfig.baseUrl.replaceAll('/api/v1', '')}$path";
   }
 
   @override
@@ -57,19 +48,20 @@ class ChatMessages extends StatelessWidget {
       itemCount: messages.length,
       itemBuilder: (context, index) {
         final msg = messages[index];
-        final text = msg['text'] as String?;
-        final images = msg['images'] as List<XFile>?;
-        final senderId = msg['senderId'] as String;
-        final dateTime = msg['createdAt'] as DateTime;
-        final isMe = senderId == currentUserId;
+        final text = msg['content'] as String?;
+        final images = msg['image_urls'] as List<dynamic>?;
+        final senderId = msg['sender_id'].toString();
+        final dateTime = DateTime.parse(msg['created_at']).toLocal();
+        final isMe = senderId == currentUserId.toString();
         final showAvatar = !isMe && _isLastMessageFromSender(index);
 
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Date Header
             if (index == 0 ||
-                (messages[index - 1]['createdAt'] as DateTime).day !=
+                DateTime.parse(messages[index - 1]['created_at'])
+                        .toLocal()
+                        .day !=
                     dateTime.day)
               Center(
                 child: Container(
@@ -91,15 +83,11 @@ class ChatMessages extends StatelessWidget {
                   ),
                 ),
               ),
-
-            // Message Block
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: isMe
-                  ? MainAxisAlignment.end
-                  : MainAxisAlignment.start,
+              mainAxisAlignment:
+                  isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
               children: [
-                // Avatar
                 if (!isMe && showAvatar)
                   Padding(
                     padding: const EdgeInsets.only(right: 8),
@@ -113,15 +101,11 @@ class ChatMessages extends StatelessWidget {
                   )
                 else if (!isMe)
                   const SizedBox(width: 36),
-
-                // Message Content
                 Flexible(
                   child: Column(
-                    crossAxisAlignment: isMe
-                        ? CrossAxisAlignment.start
-                        : CrossAxisAlignment.end,
+                    crossAxisAlignment:
+                        isMe ? CrossAxisAlignment.start : CrossAxisAlignment.end,
                     children: [
-                      // Text Message
                       if (text != null && text.isNotEmpty)
                         Row(
                           mainAxisSize: MainAxisSize.min,
@@ -179,8 +163,6 @@ class ChatMessages extends StatelessWidget {
                               ),
                           ],
                         ),
-
-                      // Image Grid
                       if (images != null && images.isNotEmpty)
                         Padding(
                           padding: const EdgeInsets.only(top: 6),
@@ -190,7 +172,6 @@ class ChatMessages extends StatelessWidget {
                                 : MainAxisAlignment.start,
                             crossAxisAlignment: CrossAxisAlignment.end,
                             children: [
-                              // สำหรับ isMe อยู่ซ้ายของ Grid
                               if (isMe)
                                 Padding(
                                   padding: const EdgeInsets.only(right: 4),
@@ -202,8 +183,6 @@ class ChatMessages extends StatelessWidget {
                                     ),
                                   ),
                                 ),
-
-                              // Grid รูปภาพ
                               Flexible(
                                 child: LayoutBuilder(
                                   builder: (context, constraints) {
@@ -215,12 +194,11 @@ class ChatMessages extends StatelessWidget {
                                     double gridWidth =
                                         constraints.maxWidth * 2 / 3;
                                     double itemWidth =
-                                        (gridWidth -
-                                            spacing * (crossAxisCount - 1)) /
-                                        crossAxisCount;
+                                        (gridWidth - spacing * (crossAxisCount - 1)) /
+                                            crossAxisCount;
                                     double gridHeight =
                                         itemWidth * rowCount +
-                                        spacing * (rowCount - 1);
+                                            spacing * (rowCount - 1);
 
                                     return SizedBox(
                                       width: gridWidth,
@@ -232,25 +210,19 @@ class ChatMessages extends StatelessWidget {
                                         itemCount: images.length,
                                         gridDelegate:
                                             SliverGridDelegateWithFixedCrossAxisCount(
-                                              crossAxisCount: crossAxisCount,
-                                              mainAxisSpacing: spacing,
-                                              crossAxisSpacing: spacing,
-                                              childAspectRatio: 1,
-                                            ),
+                                          crossAxisCount: crossAxisCount,
+                                          mainAxisSpacing: spacing,
+                                          crossAxisSpacing: spacing,
+                                          childAspectRatio: 1,
+                                        ),
                                         itemBuilder: (context, imgIndex) {
-                                          return GestureDetector(
-                                            onTap: () => _openImageViewer(
-                                              context,
-                                              images,
-                                              imgIndex,
-                                            ),
-                                            child: ClipRRect(
-                                              borderRadius:
-                                                  BorderRadius.circular(12),
-                                              child: Image.file(
-                                                File(images[imgIndex].path),
-                                                fit: BoxFit.cover,
-                                              ),
+                                          final resolvedUrl = _resolveImageUrl(images[imgIndex] as String);
+                                          return ClipRRect(
+                                            borderRadius:
+                                                BorderRadius.circular(12),
+                                            child: Image.network(
+                                              resolvedUrl,
+                                              fit: BoxFit.cover,
                                             ),
                                           );
                                         },
@@ -259,8 +231,6 @@ class ChatMessages extends StatelessWidget {
                                   },
                                 ),
                               ),
-
-                              // สำหรับผู้ใช้คนอื่น เวลาอยู่ขวาของ Grid
                               if (!isMe)
                                 Padding(
                                   padding: const EdgeInsets.only(left: 4),
@@ -275,7 +245,6 @@ class ChatMessages extends StatelessWidget {
                             ],
                           ),
                         ),
-
                       const SizedBox(height: 2),
                     ],
                   ),
@@ -286,71 +255,6 @@ class ChatMessages extends StatelessWidget {
           ],
         );
       },
-    );
-  }
-}
-
-// Fullscreen Image Viewer with swipe & pinch-zoom
-class ImageViewerScreen extends StatefulWidget {
-  final List<XFile> images;
-  final int initialIndex;
-
-  const ImageViewerScreen({
-    super.key,
-    required this.images,
-    required this.initialIndex,
-  });
-
-  @override
-  State<ImageViewerScreen> createState() => _ImageViewerScreenState();
-}
-
-class _ImageViewerScreenState extends State<ImageViewerScreen> {
-  late PageController _pageController;
-  late int currentIndex;
-
-  @override
-  void initState() {
-    super.initState();
-    currentIndex = widget.initialIndex;
-    _pageController = PageController(initialPage: currentIndex);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.black,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        title: Text(
-          '${currentIndex + 1}/${widget.images.length}',
-          style: const TextStyle(color: Colors.white),
-        ),
-        leading: IconButton(
-          icon: const Icon(Icons.close, color: Colors.white),
-          onPressed: () => Navigator.pop(context),
-        ),
-      ),
-      body: PageView.builder(
-        controller: _pageController,
-        itemCount: widget.images.length,
-        onPageChanged: (index) {
-          setState(() {
-            currentIndex = index;
-          });
-        },
-        itemBuilder: (context, index) {
-          return InteractiveViewer(
-            child: Center(
-              child: Image.file(
-                File(widget.images[index].path),
-                fit: BoxFit.contain,
-              ),
-            ),
-          );
-        },
-      ),
     );
   }
 }

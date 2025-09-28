@@ -13,8 +13,7 @@ class AppRoutes {
   static const String favorite = '/favorite';
   static const String choosePhoto = '/choose_photo';
   static const String chat = '/chat';
-  static const String chatDetail =
-      '/chat_detail/:chatId/:currentUserId/:otherUserId';
+  static const String chatDetail = '/chat_detail';
   static const String notification = '/notification';
   static const String postEdit = '/postedit/:id';
   static const String productDetails = '/product_details';

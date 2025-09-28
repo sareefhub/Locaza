@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-
+import 'package:frontend/features/chat/infrastructure/chat_api.dart';
 import '../widgets/chat_header.dart';
 import '../widgets/chat_messages.dart';
 import '../widgets/chat_input.dart';
@@ -8,6 +8,7 @@ class ChatDetailScreen extends StatefulWidget {
   final String chatId;
   final String currentUserId;
   final String otherUserId;
+  final String otherUserName;
   final Map<String, dynamic> product;
   final bool fromProductDetail;
 
@@ -16,6 +17,7 @@ class ChatDetailScreen extends StatefulWidget {
     required this.chatId,
     required this.currentUserId,
     required this.otherUserId,
+    required this.otherUserName,
     required this.product,
     required this.fromProductDetail,
   });
@@ -30,8 +32,9 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
 
   final TextEditingController _messageController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
+  final ChatApi _chatApi = ChatApi();
 
-  List<Map<String, dynamic>> mockMessages = [];
+  List<Map<String, dynamic>> messages = [];
 
   void _scrollToBottom() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -45,10 +48,40 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
     });
   }
 
+  Future<void> _loadMessages() async {
+    try {
+      final data = await _chatApi.getMessages(int.parse(widget.chatId));
+      setState(() {
+        messages = data;
+      });
+      _scrollToBottom();
+    } catch (e) {
+      debugPrint("Error loading messages: $e");
+    }
+  }
+
+  Future<void> _sendMessage(String text, List<String> images) async {
+    try {
+      final newMessage = await _chatApi.sendMessage(
+        chatroomId: int.parse(widget.chatId),
+        senderId: int.parse(widget.currentUserId),
+        content: text,
+        messageType: images.isNotEmpty ? "image" : "text",
+        imageUrls: images,
+      );
+      setState(() {
+        messages.add(newMessage);
+      });
+      _scrollToBottom();
+    } catch (e) {
+      debugPrint("Error sending message: $e");
+    }
+  }
+
   @override
   void initState() {
     super.initState();
-    _scrollToBottom();
+    _loadMessages();
   }
 
   @override
@@ -60,6 +93,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
         child: ChatHeader(
           product: widget.product,
           currentUserId: widget.currentUserId,
+          otherUserName: widget.otherUserName,
           isSold: isSold,
           isPurchased: isPurchased,
           onSoldChanged: (val) => setState(() => isSold = val),
@@ -71,24 +105,15 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
           Expanded(
             child: ChatMessages(
               scrollController: _scrollController,
-              messages: mockMessages,
+              messages: messages,
               currentUserId: widget.currentUserId,
             ),
           ),
           ChatInput(
             messageController: _messageController,
             onSend: (text, images) {
-              setState(() {
-                mockMessages.add({
-                  "id": "m${mockMessages.length + 1}",
-                  "text": text,
-                  "images": images,
-                  "senderId": widget.currentUserId,
-                  "receiverId": widget.otherUserId,
-                  "createdAt": DateTime.now(),
-                });
-              });
-              _scrollToBottom();
+              final imagePaths = images.map((img) => img["path"] as String).toList();
+              _sendMessage(text, imagePaths);
             },
           ),
         ],

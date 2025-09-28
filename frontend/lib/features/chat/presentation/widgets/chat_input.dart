@@ -3,7 +3,7 @@ import 'package:image_picker/image_picker.dart';
 
 class ChatInput extends StatefulWidget {
   final TextEditingController messageController;
-  final Function(String text, List<XFile> images) onSend;
+  final Function(String text, List<Map<String, dynamic>> images) onSend;
 
   const ChatInput({
     super.key,
@@ -31,9 +31,8 @@ class _ChatInputState extends State<ChatInput> {
   void _sendMessage() {
     final text = widget.messageController.text.trim();
     if (text.isEmpty && _selectedImages.isEmpty) return;
-
-    widget.onSend(text, _selectedImages);
-
+    final imagePaths = _selectedImages.map((img) => {"path": img.path}).toList();
+    widget.onSend(text, imagePaths);
     widget.messageController.clear();
     setState(() => _selectedImages = []);
   }
@@ -46,7 +45,7 @@ class _ChatInputState extends State<ChatInput> {
         child: Row(
           children: [
             IconButton(
-              icon: ImageIcon(AssetImage('assets/icons/picture.png'), size: 30),
+              icon: const ImageIcon(AssetImage('assets/icons/picture.png'), size: 30),
               onPressed: _pickImages,
             ),
             Expanded(
