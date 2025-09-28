@@ -31,12 +31,30 @@ class ChatHeader extends StatelessWidget {
             ? ApiConfig.fixUrl(product['image_urls'][0])
             : null;
 
+    final sellerId = product['seller_id']?.toString();
+    final isOwner = sellerId == currentUserId;
+
     String actionButtonText() {
-      final sellerId = product['seller_id']?.toString();
-      final isOwner = sellerId == currentUserId;
       if (isOwner) return "ขาย";
       if (!isSold) return "ซื้อ";
-      return isPurchased ? "รีวิว" : "ซื้อ";
+      return isPurchased ? "รีวิวแล้ว" : "รีวิว";
+    }
+
+    void onActionPressed() {
+      if (isOwner) {
+        onSoldChanged(true);
+      } else {
+        if (!isSold) {
+          return;
+        }
+        if (!isPurchased) {
+          onPurchasedChanged(true);
+          context.push('/review', extra: {
+            "productId": product['id'],
+            "buyerId": currentUserId,
+          });
+        }
+      }
     }
 
     return AppBar(
@@ -113,16 +131,19 @@ class ChatHeader extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(width: 8),
-                  if (product['seller_id']?.toString() != currentUserId)
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 4,
-                      ),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF62B9E8),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: (isOwner || isSold)
+                          ? const Color(0xFF62B9E8)
+                          : Colors.grey,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: GestureDetector(
+                      onTap: onActionPressed,
                       child: Text(
                         actionButtonText(),
                         style: GoogleFonts.sarabun(
@@ -132,6 +153,7 @@ class ChatHeader extends StatelessWidget {
                         ),
                       ),
                     ),
+                  ),
                 ],
               ),
             ),

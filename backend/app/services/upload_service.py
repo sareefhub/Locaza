@@ -23,8 +23,10 @@ class UploadService:
         return await UploadService._save_file(file, UPLOAD_DIR_PRODUCT, prefix="product")
 
     @staticmethod
-    async def save_chat_image(file: UploadFile) -> str:
-        return await UploadService._save_file(file, UPLOAD_DIR_CHAT, prefix="chat")
+    async def save_chat_image(chatroom_id: int, file: UploadFile) -> str:
+        folder = os.path.join(UPLOAD_DIR_CHAT, str(chatroom_id))
+        os.makedirs(folder, exist_ok=True)
+        return await UploadService._save_file(file, folder, prefix=f"chat_{chatroom_id}")
 
     @staticmethod
     async def _save_file(file: UploadFile, folder: str, prefix: str = "file") -> str:

@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:frontend/features/chat/infrastructure/chat_api.dart';
 import '../widgets/chat_header.dart';
@@ -60,14 +61,20 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
     }
   }
 
-  Future<void> _sendMessage(String text, List<String> images) async {
+  Future<void> _sendMessage(String text, List<Map<String, dynamic>> images) async {
     try {
+      List<String> uploadedUrls = [];
+      for (var img in images) {
+        final file = File(img["path"]);
+        final url = await _chatApi.uploadChatImage(int.parse(widget.chatId), file);
+        if (url != null) uploadedUrls.add(url);
+      }
       final newMessage = await _chatApi.sendMessage(
         chatroomId: int.parse(widget.chatId),
         senderId: int.parse(widget.currentUserId),
         content: text,
-        messageType: images.isNotEmpty ? "image" : "text",
-        imageUrls: images,
+        messageType: uploadedUrls.isNotEmpty ? "image" : "text",
+        imageUrls: uploadedUrls,
       );
       setState(() {
         messages.add(newMessage);
@@ -112,8 +119,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
           ChatInput(
             messageController: _messageController,
             onSend: (text, images) {
-              final imagePaths = images.map((img) => img["path"] as String).toList();
-              _sendMessage(text, imagePaths);
+              _sendMessage(text, images);
             },
           ),
         ],
