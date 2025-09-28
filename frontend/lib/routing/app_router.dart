@@ -126,7 +126,7 @@ final GoRouter appRouter = GoRouter(
       },
     ),
     GoRoute(
-      path: '/sold_products',
+      path: AppRoutes.soldProducts,
       builder: (context, state) {
         final product = state.extra as Map<String, dynamic>;
         return SoldProductDetailsPage(product: product);

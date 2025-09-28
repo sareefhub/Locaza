@@ -9,7 +9,7 @@ class PurchaseCard extends StatelessWidget {
   final String price;
   final String status;
   final String imageUrl;
-  final Map<String, dynamic> product; // เพิ่ม field สำหรับส่งไปหน้า detail
+  final Map<String, dynamic> product;
 
   const PurchaseCard({
     super.key,
@@ -22,13 +22,20 @@ class PurchaseCard extends StatelessWidget {
     required this.product,
   });
 
+  String get displayStatus {
+    if (status.toLowerCase() == "completed") {
+      return "ซื้อเรียบร้อยแล้ว";
+    }
+    return status;
+  }
+
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () {
         context.push(
           '/sold_products',
-          extra: product, // ส่งข้อมูล product ไปหน้า SoldProductDetailsPage
+          extra: product,
         );
       },
       child: SizedBox(
@@ -42,7 +49,6 @@ class PurchaseCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // ร้านและสถานะ
                 Row(
                   children: [
                     const Icon(Icons.store, size: 16, color: Colors.grey),
@@ -59,7 +65,7 @@ class PurchaseCard extends StatelessWidget {
                     ),
                     const SizedBox(width: 8),
                     Text(
-                      status,
+                      displayStatus,
                       style: GoogleFonts.sarabun(
                         color: Colors.blue,
                         fontWeight: FontWeight.bold,
@@ -69,11 +75,9 @@ class PurchaseCard extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 6),
-                // รูปสินค้า, ชื่อ, เวลา, ราคา
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // รูปสินค้า
                     Container(
                       width: 70,
                       height: 70,
@@ -84,7 +88,7 @@ class PurchaseCard extends StatelessWidget {
                       child: imageUrl.isNotEmpty
                           ? ClipRRect(
                               borderRadius: BorderRadius.circular(8),
-                              child: Image.asset(imageUrl, fit: BoxFit.cover),
+                              child: Image.network(imageUrl, fit: BoxFit.cover),
                             )
                           : const Icon(
                               Icons.image,
@@ -93,7 +97,6 @@ class PurchaseCard extends StatelessWidget {
                             ),
                     ),
                     const SizedBox(width: 10),
-                    // ชื่อสินค้า + เวลา
                     SizedBox(
                       height: 70,
                       child: Column(
@@ -118,7 +121,6 @@ class PurchaseCard extends StatelessWidget {
                       ),
                     ),
                     const Spacer(),
-                    // ราคา
                     SizedBox(
                       height: 70,
                       child: Align(

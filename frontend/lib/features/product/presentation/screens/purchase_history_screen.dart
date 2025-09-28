@@ -1,34 +1,35 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:frontend/data/dummy_products.dart';
-import 'package:frontend/data/dummy_users.dart';
 import 'package:go_router/go_router.dart';
 import 'package:frontend/core/widgets/purchase_card.dart';
 import 'package:frontend/core/widgets/custom_search_bar.dart';
+import '../../application/purchase_provider.dart';
+import '../../../../utils/user_session.dart';
+import '../../../../config/api_config.dart';
 
-class MyPurchasePage extends StatefulWidget {
+class MyPurchasePage extends ConsumerStatefulWidget {
   const MyPurchasePage({super.key});
 
   @override
-  State<MyPurchasePage> createState() => _MyPurchasePageState();
+  ConsumerState<MyPurchasePage> createState() => _MyPurchasePageState();
 }
 
-class _MyPurchasePageState extends State<MyPurchasePage> {
+class _MyPurchasePageState extends ConsumerState<MyPurchasePage> {
   String searchQuery = "";
   final TextEditingController _searchController = TextEditingController();
 
+  String _buildImageUrl(dynamic raw) {
+    if (raw == null) return "";
+    if (raw is List && raw.isNotEmpty) return ApiConfig.fixUrl(raw.first.toString());
+    if (raw is String) return ApiConfig.fixUrl(raw);
+    return "";
+  }
+
   @override
   Widget build(BuildContext context) {
-    // กรองสินค้าตาม search
-    final soldProducts = dummyProducts
-        .where(
-          (p) =>
-              p['status'] == 'sold' &&
-              (p['title'] as String).toLowerCase().contains(
-                searchQuery.toLowerCase(),
-              ),
-        )
-        .toList();
+    final userId = int.tryParse(UserSession.id ?? "0") ?? 0;
+    final purchasesAsync = ref.watch(purchaseListProvider(userId));
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -42,7 +43,7 @@ class _MyPurchasePageState extends State<MyPurchasePage> {
             height: 24,
           ),
           onPressed: () {
-            context.go('/profile'); // ไปหน้า Profile ใหม่
+            context.go('/profile');
           },
         ),
         centerTitle: true,
@@ -71,38 +72,44 @@ class _MyPurchasePageState extends State<MyPurchasePage> {
             ),
           ),
           const SizedBox(height: 16),
-
-          // List สินค้า
           Expanded(
-            child: ListView.builder(
-              padding: const EdgeInsets.symmetric(horizontal: 12),
-              itemCount: soldProducts.length,
-              itemBuilder: (context, index) {
-                final product = soldProducts[index];
+            child: purchasesAsync.when(
+              data: (purchases) {
+                final filtered = purchases.where((p) {
+                  final title = (p['product_title'] ?? "").toString().toLowerCase();
+                  return title.contains(searchQuery.toLowerCase());
+                }).toList();
 
-                // หาผู้ขาย
-                final seller = dummyUsers.firstWhere(
-                  (user) => user['id'] == product['seller_id'],
-                  orElse: () => {'name': 'ไม่ทราบผู้ขาย'},
-                );
+                if (filtered.isEmpty) {
+                  return const Center(child: Text("ยังไม่มีประวัติการซื้อ"));
+                }
 
-                return Column(
-                  children: [
-                    PurchaseCard(
-                      seller: seller['name'],
-                      productName: product['title'],
-                      time: "วันนี้ 10:45 น.",
-                      price: "฿${product['price'].toStringAsFixed(0)}",
-                      status: "สั่งซื้อสำเร็จ",
-                      imageUrl: product['image_urls'].isNotEmpty
-                          ? product['image_urls'][0]
-                          : '',
-                      product: product,
-                    ),
-                    const SizedBox(height: 2),
-                  ],
+                return ListView.builder(
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  itemCount: filtered.length,
+                  itemBuilder: (context, index) {
+                    final item = filtered[index];
+                    final imageUrl = _buildImageUrl(item['image_url']);
+
+                    return Column(
+                      children: [
+                        PurchaseCard(
+                          seller: item['seller_name'] ?? 'ไม่ทราบผู้ขาย',
+                          productName: item['product_title'] ?? '',
+                          time: (item['created_at'] ?? '').toString(),
+                          price: "฿${item['price'] ?? ''}",
+                          status: item['status'] ?? '',
+                          imageUrl: imageUrl,
+                          product: item,
+                        ),
+                        const SizedBox(height: 2),
+                      ],
+                    );
+                  },
                 );
               },
+              loading: () => const Center(child: CircularProgressIndicator()),
+              error: (err, _) => Center(child: Text("Error: $err")),
             ),
           ),
         ],

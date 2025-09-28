@@ -15,6 +15,23 @@ class SaleTransactionService:
     def list_transactions(db: Session, skip: int = 0, limit: int = 100):
         return SaleTransactionRepository.get_all(db, skip, limit)
 
+    @staticmethod
+    def get_purchases_by_user(db: Session, user_id: int):
+        purchases = SaleTransactionRepository.get_purchases_by_user(db, user_id)
+        return [
+            {
+                "id": p.id,
+                "status": p.status,
+                "created_at": p.created_at,
+                "product_id": p.product_id,
+                "product_title": p.product_title,
+                "price": p.price,
+                "image_url": (p.image_urls[0] if p.image_urls else None),
+                "seller_id": p.seller_id,
+                "seller_name": p.seller_name,
+            }
+            for p in purchases
+        ]
 
 class ReviewService:
     @staticmethod

@@ -37,3 +37,15 @@ class ReviewResponse(ReviewBase):
 
     class Config:
         from_attributes = True
+
+
+class PurchaseResponse(BaseModel):
+    id: int
+    status: str
+    created_at: Optional[datetime]
+    product_id: int
+    product_title: str
+    price: float
+    image_url: Optional[str]
+    seller_id: int
+    seller_name: str

@@ -25,6 +25,9 @@ def list_transactions(db: Session = Depends(get_db)):
 def get_transaction(transaction_id: int, db: Session = Depends(get_db)):
     return SaleTransactionService.get_transaction(db, transaction_id)
 
+@router.get("/users/{user_id}/transactions/purchases")
+def get_user_purchases(user_id: int, db: Session = Depends(get_db)):
+    return SaleTransactionService.get_purchases_by_user(db, user_id)
 
 @review_router.post("/", response_model=ReviewResponse)
 def create_review(review: ReviewCreate, db: Session = Depends(get_db)):
