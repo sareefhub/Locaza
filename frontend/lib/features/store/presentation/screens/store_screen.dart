@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:frontend/routing/routes.dart';
 import '../../../review/view_reviews_screen.dart';
+import 'package:frontend/features/product/application/product_provider.dart';
+import '../../../../utils/user_session.dart';
+import '../../../../core/widgets/my_product_card.dart';
 
 // Dummy store provider
 final storeProvider = Provider<Map<String, dynamic>>((ref) {
@@ -48,7 +52,7 @@ class _StoreScreenState extends ConsumerState<StoreScreen>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
+    _tabController = TabController(length: widget.isOwner ? 3 : 2, vsync: this);
   }
 
   @override
@@ -186,7 +190,7 @@ class _StoreScreenState extends ConsumerState<StoreScreen>
                   ),
                 ),
 
-                // 💬 รีวิว
+                // รีวิว
                 Container(
                   width: double.infinity,
                   color: Colors.white,
@@ -264,7 +268,7 @@ class _StoreScreenState extends ConsumerState<StoreScreen>
             ),
           ),
 
-          // 📑 TabBar fixed
+          // TabBar fixed
           SliverPersistentHeader(
             pinned: true,
             delegate: _SliverAppBarDelegate(
@@ -273,6 +277,7 @@ class _StoreScreenState extends ConsumerState<StoreScreen>
                 labelColor: Colors.black,
                 tabs: const [
                   Tab(text: "รายการสินค้า"),
+                  Tab(text: "ขายแล้ว"),
                   Tab(text: "หมวดหมู่"),
                 ],
               ),
@@ -282,29 +287,71 @@ class _StoreScreenState extends ConsumerState<StoreScreen>
         body: TabBarView(
           controller: _tabController,
           children: [
-            // ✅ GridView
-            GridView.builder(
-              padding: const EdgeInsets.all(12),
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
-                childAspectRatio: 1,
-                crossAxisSpacing: 12,
-                mainAxisSpacing: 12,
-              ),
-              itemCount: (store?["products"] as List?)?.length ?? 0,
-              itemBuilder: (context, index) {
-                final product = (store?["products"] as List)[index];
-                return Container(
-                  decoration: BoxDecoration(
-                    color: Colors.grey[300],
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Center(child: Text(product["title"] ?? "สินค้า")),
+            // Tab 1: รายการสินค้า (Available / Posted)
+            Consumer(
+              builder: (context, ref, _) {
+                final userId = int.tryParse(UserSession.id ?? "0") ?? 0;
+                final productsAsync = ref.watch(
+                  productListByUserProvider(userId),
+                );
+
+                return productsAsync.when(
+                  data: (products) {
+                    final filteredProducts = products.where((p) {
+                      final status = (p['status'] ?? '')
+                          .toString()
+                          .toLowerCase();
+                      return status == 'available' || status == 'posted';
+                    }).toList();
+
+                    if (filteredProducts.isEmpty) {
+                      return const Center(
+                        child: Text("ยังไม่มีสินค้าที่โพสต์"),
+                      );
+                    }
+
+                    return _buildProductGrid(filteredProducts, context);
+                  },
+                  loading: () =>
+                      const Center(child: CircularProgressIndicator()),
+                  error: (err, _) => Center(child: Text("Error: $err")),
                 );
               },
             ),
 
-            // ✅ ListView
+            // Tab 2: ขายแล้ว (Sold)
+            Consumer(
+              builder: (context, ref, _) {
+                final userId = int.tryParse(UserSession.id ?? "0") ?? 0;
+                final productsAsync = ref.watch(
+                  productListByUserProvider(userId),
+                );
+
+                return productsAsync.when(
+                  data: (products) {
+                    final soldProducts = products.where((p) {
+                      final status = (p['status'] ?? '')
+                          .toString()
+                          .toLowerCase();
+                      return status == 'sold';
+                    }).toList();
+
+                    if (soldProducts.isEmpty) {
+                      return const Center(
+                        child: Text("ยังไม่มีสินค้าที่ขายแล้ว"),
+                      );
+                    }
+
+                    return _buildProductGrid(soldProducts, context);
+                  },
+                  loading: () =>
+                      const Center(child: CircularProgressIndicator()),
+                  error: (err, _) => Center(child: Text("Error: $err")),
+                );
+              },
+            ),
+
+            // Tab 3: หมวดหมู่ (เหมือนเดิม)
             ListView.builder(
               padding: const EdgeInsets.all(12),
               itemCount: (store?["categories"] as List?)?.length ?? 0,
@@ -323,6 +370,51 @@ class _StoreScreenState extends ConsumerState<StoreScreen>
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildProductGrid(List products, BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    int crossAxisCount;
+    if (screenWidth >= 1600)
+      crossAxisCount = 6;
+    else if (screenWidth >= 1300)
+      crossAxisCount = 5;
+    else if (screenWidth >= 1000)
+      crossAxisCount = 4;
+    else if (screenWidth >= 600)
+      crossAxisCount = 3;
+    else
+      crossAxisCount = 2;
+
+    double padding = 12 * 2;
+    double spacing = 12 * (crossAxisCount - 1);
+    double cardWidth = (screenWidth - padding - spacing) / crossAxisCount;
+    double cardHeight = cardWidth * 0.8 + 120;
+    double childAspectRatio = cardWidth / cardHeight;
+
+    return GridView.builder(
+      padding: const EdgeInsets.all(12),
+      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: crossAxisCount,
+        childAspectRatio: childAspectRatio,
+        crossAxisSpacing: 12,
+        mainAxisSpacing: 12,
+      ),
+      itemCount: products.length,
+      itemBuilder: (context, index) {
+        final product = products[index];
+        return GestureDetector(
+          onTap: () {
+            final productId = int.parse(product['id'].toString());
+            context.push(
+              AppRoutes.myProductDetails,
+              extra: {'productId': productId},
+            );
+          },
+          child: MyProductCard(product: product),
+        );
+      },
     );
   }
 }

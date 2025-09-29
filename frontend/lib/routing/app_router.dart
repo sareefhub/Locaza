@@ -21,6 +21,7 @@ import '../features/product/presentation/screens/search_screen.dart';
 import '../features/product/presentation/screens/filter_screen.dart';
 import '../features/product/presentation/screens/purchase_history_screen.dart';
 import '../features/store/presentation/screens/store_screen.dart';
+import '../features/product/presentation/screens/my_product_details.dart';
 import '../features/product/presentation/screens/sold_product_details.dart';
 import '../features/review/review_screen.dart';
 
@@ -126,6 +127,13 @@ final GoRouter appRouter = GoRouter(
           isOwner: extra?['isOwner'] ?? false,
           seller: extra?['seller'],
         );
+      },
+    ),
+    GoRoute(
+      path: '${AppRoutes.myProductDetails}/:id',
+      builder: (_, state) {
+        final productId = int.parse(state.pathParameters['id']!);
+        return MyProductDetailsPage(productId: productId);
       },
     ),
     GoRoute(

@@ -22,4 +22,5 @@ class AppRoutes {
   static const String store = '/store/:storeId';
   static const String soldProducts = '/sold_products';
   static const String review = '/review';
+  static const String myProductDetails = '/my_product_details';
 }
