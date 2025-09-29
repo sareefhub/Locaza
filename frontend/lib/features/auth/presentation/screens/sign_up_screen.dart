@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../application/auth_provider.dart';
 
 class SignUpScreen extends ConsumerStatefulWidget {
@@ -37,11 +38,12 @@ class SignUpScreenState extends ConsumerState<SignUpScreen> {
         ),
       );
 
-  Widget buildInputField(
-      {required String hint,
-      required TextEditingController controller,
-      bool obscure = false,
-      TextInputType type = TextInputType.text}) {
+  Widget buildInputField({
+    required String hint,
+    required TextEditingController controller,
+    bool obscure = false,
+    TextInputType type = TextInputType.text,
+  }) {
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
@@ -55,11 +57,14 @@ class SignUpScreenState extends ConsumerState<SignUpScreen> {
         obscureText: obscure,
         decoration: InputDecoration(
           hintText: hint,
-          hintStyle: const TextStyle(color: Colors.grey),
+          hintStyle: GoogleFonts.sarabun(color: Colors.grey),
           border: InputBorder.none,
-          contentPadding:
-              const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
+          contentPadding: const EdgeInsets.symmetric(
+            vertical: 16,
+            horizontal: 20,
+          ),
         ),
+        style: GoogleFonts.sarabun(),
       ),
     );
   }
@@ -82,30 +87,35 @@ class SignUpScreenState extends ConsumerState<SignUpScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        const Text(
-                          'Sign Up',
+                        Text(
+                          'สมัครสมาชิก',
                           textAlign: TextAlign.center,
-                          style: TextStyle(
+                          style: GoogleFonts.sarabun(
                             fontSize: 28,
                             fontWeight: FontWeight.bold,
-                            color: Color(0xFF001A72),
+                            color: const Color(0xFF001A72),
                           ),
                         ),
                         const SizedBox(height: 30),
                         buildInputField(
-                            hint: "Username", controller: usernameController),
+                          hint: "ชื่อผู้ใช้",
+                          controller: usernameController,
+                        ),
                         buildInputField(
-                            hint: "Password",
-                            controller: passwordController,
-                            obscure: true),
+                          hint: "รหัสผ่าน",
+                          controller: passwordController,
+                          obscure: true,
+                        ),
                         buildInputField(
-                            hint: "Email",
-                            controller: emailController,
-                            type: TextInputType.emailAddress),
+                          hint: "อีเมล",
+                          controller: emailController,
+                          type: TextInputType.emailAddress,
+                        ),
                         buildInputField(
-                            hint: "Phone",
-                            controller: phoneController,
-                            type: TextInputType.phone),
+                          hint: "เบอร์โทรศัพท์",
+                          controller: phoneController,
+                          type: TextInputType.phone,
+                        ),
                         const SizedBox(height: 20),
                         Center(
                           child: ElevatedButton(
@@ -123,17 +133,22 @@ class SignUpScreenState extends ConsumerState<SignUpScreen> {
                                     if (success && mounted) {
                                       context.go('/home');
                                     } else {
-                                      ScaffoldMessenger.of(context)
-                                          .showSnackBar(
-                                        const SnackBar(
-                                          content:
-                                              Text('สมัครสมาชิกไม่สำเร็จ'),
+                                      ScaffoldMessenger.of(
+                                        context,
+                                      ).showSnackBar(
+                                        SnackBar(
+                                          content: Text(
+                                            'สมัครสมาชิกไม่สำเร็จ',
+                                            style: GoogleFonts.sarabun(),
+                                          ),
                                         ),
                                       );
                                     }
                                   },
                             style: buttonStyle(
-                                bg: const Color(0xFFD0E7F9), fg: Colors.black),
+                              bg: const Color(0xFFD0E7F9),
+                              fg: Colors.black,
+                            ),
                             child: authState.isLoading
                                 ? const SizedBox(
                                     width: 22,
@@ -142,28 +157,39 @@ class SignUpScreenState extends ConsumerState<SignUpScreen> {
                                       strokeWidth: 2,
                                     ),
                                   )
-                                : const Text(
-                                    'Sign Up',
-                                    style: TextStyle(fontSize: 16),
+                                : Text(
+                                    'สมัครสมาชิก',
+                                    style: GoogleFonts.sarabun(fontSize: 16),
                                   ),
                           ),
                         ),
-                        // ส่วนอื่นๆ ไม่เปลี่ยน
                         const SizedBox(height: 30),
-                        const Row(
+                        Row(
                           children: [
-                            Expanded(
-                                child: Divider(
-                                    thickness: 1.5, color: Colors.grey)),
-                            Padding(
-                              padding: EdgeInsets.symmetric(horizontal: 12),
-                              child: Text('or',
-                                  style: TextStyle(
-                                      color: Colors.grey, fontSize: 14)),
+                            const Expanded(
+                              child: Divider(
+                                thickness: 1.5,
+                                color: Colors.grey,
+                              ),
                             ),
-                            Expanded(
-                                child: Divider(
-                                    thickness: 1.5, color: Colors.grey)),
+                            Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                              ),
+                              child: Text(
+                                'หรือ',
+                                style: GoogleFonts.sarabun(
+                                  color: Colors.grey,
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ),
+                            const Expanded(
+                              child: Divider(
+                                thickness: 1.5,
+                                color: Colors.grey,
+                              ),
+                            ),
                           ],
                         ),
                         const SizedBox(height: 30),
@@ -173,12 +199,18 @@ class SignUpScreenState extends ConsumerState<SignUpScreen> {
                             bg: Colors.white,
                             fg: Colors.black,
                             border: BorderSide(
-                                color: Colors.grey.shade300, width: 1.5),
+                              color: Colors.grey.shade300,
+                              width: 1.5,
+                            ),
                           ),
-                          icon: Image.asset('assets/icons/search.png',
-                              height: 24),
-                          label: const Text("Continue with Google",
-                              style: TextStyle(fontSize: 16)),
+                          icon: Image.asset(
+                            'assets/icons/search.png',
+                            height: 24,
+                          ),
+                          label: Text(
+                            "สมัครด้วย Google",
+                            style: GoogleFonts.sarabun(fontSize: 16),
+                          ),
                         ),
                         const SizedBox(height: 16),
                         GestureDetector(
@@ -188,15 +220,18 @@ class SignUpScreenState extends ConsumerState<SignUpScreen> {
                           child: RichText(
                             textAlign: TextAlign.center,
                             text: TextSpan(
-                              text: 'Have an account? ',
-                              style: TextStyle(
-                                  color: Colors.grey.shade700, fontSize: 16),
-                              children: const [
+                              text: 'มีบัญชีอยู่แล้ว? ',
+                              style: GoogleFonts.sarabun(
+                                color: Colors.grey.shade700,
+                                fontSize: 16,
+                              ),
+                              children: [
                                 TextSpan(
-                                  text: 'Log In',
-                                  style: TextStyle(
-                                      color: Colors.red,
-                                      fontWeight: FontWeight.bold),
+                                  text: 'เข้าสู่ระบบ',
+                                  style: GoogleFonts.sarabun(
+                                    color: Colors.red,
+                                    fontWeight: FontWeight.bold,
+                                  ),
                                 ),
                               ],
                             ),
@@ -206,8 +241,8 @@ class SignUpScreenState extends ConsumerState<SignUpScreen> {
                         Padding(
                           padding: const EdgeInsets.only(bottom: 24),
                           child: Center(
-                              child:
-                                  Image.asset('assets/logo.png', height: 40)),
+                            child: Image.asset('assets/logo.png', height: 40),
+                          ),
                         ),
                       ],
                     ),

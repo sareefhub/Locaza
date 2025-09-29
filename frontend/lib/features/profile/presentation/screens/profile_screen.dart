@@ -34,7 +34,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         final profile = await ProfileApi().getProfile();
         if (profile != null) {
           setState(() {
-            username = profile['username'] ?? "Guest";
+            username = profile['username'] ?? "ผู้ใช้ทั่วไป";
             userId = profile['id']?.toString() ?? "-";
             phone = profile['phone'] ?? "-";
             avatarUrl = profile['avatar_url'];
@@ -58,7 +58,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   void _setGuest() {
-    username = "Guest";
+    username = "ผู้ใช้ทั่วไป";
     userId = "-";
     phone = "-";
     avatarUrl = null;
@@ -136,7 +136,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             backgroundImage: avatarUrl != null
                                 ? NetworkImage(ApiConfig.fixUrl(avatarUrl))
                                 : const AssetImage('assets/icons/user.png')
-                                    as ImageProvider,
+                                      as ImageProvider,
                           ),
                           const SizedBox(width: 16),
                           Expanded(
@@ -292,8 +292,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 ),
                                 child: Text(
                                   UserSession.isLoggedIn
-                                      ? 'Log Out'
-                                      : 'Log In',
+                                      ? 'ออกจากระบบ'
+                                      : 'เข้าสู่ระบบ',
                                   style: Theme.of(context).textTheme.bodyMedium,
                                 ),
                               ),

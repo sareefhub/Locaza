@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class LoginScreen extends StatelessWidget {
   const LoginScreen({super.key});
@@ -23,7 +24,7 @@ class LoginScreen extends StatelessWidget {
         ElevatedButton.icon(
           onPressed: onTap,
           icon: Image.asset(asset, height: 24),
-          label: Text(label, style: const TextStyle(fontSize: 16)),
+          label: Text(label, style: GoogleFonts.sarabun(fontSize: 16)),
           style: buttonStyle(),
         );
 
@@ -38,37 +39,50 @@ class LoginScreen extends StatelessWidget {
                 Image.asset('assets/logo-splash.png', height: 120),
                 const SizedBox(height: 48),
                 buildIconButton(
-                  'Continue with Google',
+                  'เข้าสู่ระบบด้วย Google',
                   'assets/icons/search.png',
                   () {},
                 ),
                 const SizedBox(height: 24),
-                const Row(
+                Row(
                   children: [
-                    Expanded(child: Divider(color: Colors.grey, height: 1)),
-                    Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 10),
-                      child: Text('or', style: TextStyle(color: Colors.grey)),
+                    const Expanded(
+                      child: Divider(color: Colors.grey, height: 1),
                     ),
-                    Expanded(child: Divider(color: Colors.grey, height: 1)),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 10),
+                      child: Text(
+                        'หรือ',
+                        style: GoogleFonts.sarabun(color: Colors.grey),
+                      ),
+                    ),
+                    const Expanded(
+                      child: Divider(color: Colors.grey, height: 1),
+                    ),
                   ],
                 ),
                 const SizedBox(height: 24),
                 ElevatedButton(
                   onPressed: () => GoRouter.of(context).push('/loginusername'),
                   style: buttonStyle(bg: Colors.blue.shade100),
-                  child: const Text("Login with Username"),
+                  child: Text(
+                    "เข้าสู่ระบบด้วยชื่อผู้ใช้",
+                    style: GoogleFonts.sarabun(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
                 ),
                 const SizedBox(height: 32),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Text("Don’t have an account? "),
+                    Text("ยังไม่มีบัญชี? ", style: GoogleFonts.sarabun()),
                     GestureDetector(
                       onTap: () => GoRouter.of(context).push('/signup'),
-                      child: const Text(
-                        "Sign Up",
-                        style: TextStyle(
+                      child: Text(
+                        "สมัครสมาชิก",
+                        style: GoogleFonts.sarabun(
                           color: Colors.red,
                           fontWeight: FontWeight.bold,
                         ),
