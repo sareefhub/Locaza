@@ -10,6 +10,7 @@ class ChatDetailScreen extends StatefulWidget {
   final String currentUserId;
   final String otherUserId;
   final String otherUserName;
+  final String? otherUserAvatar;
   final Map<String, dynamic> product;
   final bool fromProductDetail;
 
@@ -19,6 +20,7 @@ class ChatDetailScreen extends StatefulWidget {
     required this.currentUserId,
     required this.otherUserId,
     required this.otherUserName,
+    required this.otherUserAvatar,
     required this.product,
     required this.fromProductDetail,
   });
@@ -61,12 +63,18 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
     }
   }
 
-  Future<void> _sendMessage(String text, List<Map<String, dynamic>> images) async {
+  Future<void> _sendMessage(
+    String text,
+    List<Map<String, dynamic>> images,
+  ) async {
     try {
       List<String> uploadedUrls = [];
       for (var img in images) {
         final file = File(img["path"]);
-        final url = await _chatApi.uploadChatImage(int.parse(widget.chatId), file);
+        final url = await _chatApi.uploadChatImage(
+          int.parse(widget.chatId),
+          file,
+        );
         if (url != null) uploadedUrls.add(url);
       }
       final newMessage = await _chatApi.sendMessage(
@@ -101,6 +109,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
           product: widget.product,
           currentUserId: widget.currentUserId,
           otherUserName: widget.otherUserName,
+          otherUserAvatar: widget.otherUserAvatar,
           isSold: isSold,
           isPurchased: isPurchased,
           onSoldChanged: (val) => setState(() => isSold = val),
@@ -120,6 +129,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
             messageController: _messageController,
             onSend: (text, images) {
               _sendMessage(text, images);
+              _messageController.clear();
             },
           ),
         ],

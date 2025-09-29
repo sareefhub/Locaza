@@ -72,14 +72,17 @@ final GoRouter appRouter = GoRouter(
     GoRoute(
       path: AppRoutes.chatDetail,
       builder: (_, state) {
-        final extra = Map<String, dynamic>.from(state.extra as Map? ?? {});
+        final extra = state.extra as Map<String, dynamic>? ?? {};
         return ChatDetailScreen(
-          chatId: extra['chatId'] ?? "tempChatId",
-          currentUserId: extra['currentUserId'] ?? UserSession.id ?? '1',
-          otherUserId: extra['otherUserId'] ??
+          chatId: extra['chatId']?.toString() ?? "0",
+          currentUserId:
+              extra['currentUserId']?.toString() ?? UserSession.id ?? '0',
+          otherUserId:
+              extra['otherUserId']?.toString() ??
               extra['product']?['seller_id']?.toString() ??
-              '2',
-          otherUserName: extra['otherUserName'] ?? '',
+              '0',
+          otherUserName: extra['otherUserName']?.toString() ?? '',
+          otherUserAvatar: extra['otherUserAvatar']?.toString(),
           product: Map<String, dynamic>.from(extra['product'] ?? {}),
           fromProductDetail: extra['fromProductDetail'] ?? false,
         );

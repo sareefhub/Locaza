@@ -7,6 +7,7 @@ class ChatHeader extends StatelessWidget {
   final Map<String, dynamic> product;
   final String currentUserId;
   final String otherUserName;
+  final String? otherUserAvatar;
   final bool isSold;
   final bool isPurchased;
   final ValueChanged<bool> onSoldChanged;
@@ -17,6 +18,7 @@ class ChatHeader extends StatelessWidget {
     required this.product,
     required this.currentUserId,
     required this.otherUserName,
+    required this.otherUserAvatar,
     required this.isSold,
     required this.isPurchased,
     required this.onSoldChanged,
@@ -27,9 +29,10 @@ class ChatHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     final productTitle = product['title'] ?? 'ชื่อสินค้า';
     final productImageUrl =
-        (product['image_urls'] != null && (product['image_urls'] as List).isNotEmpty)
-            ? ApiConfig.fixUrl(product['image_urls'][0])
-            : null;
+        (product['image_urls'] != null &&
+            (product['image_urls'] as List).isNotEmpty)
+        ? ApiConfig.fixUrl(product['image_urls'][0])
+        : null;
 
     final sellerId = product['seller_id']?.toString();
     final isOwner = sellerId == currentUserId;
@@ -49,10 +52,10 @@ class ChatHeader extends StatelessWidget {
         }
         if (!isPurchased) {
           onPurchasedChanged(true);
-          context.push('/review', extra: {
-            "productId": product['id'],
-            "buyerId": currentUserId,
-          });
+          context.push(
+            '/review',
+            extra: {"productId": product['id'], "buyerId": currentUserId},
+          );
         }
       }
     }
@@ -76,13 +79,26 @@ class ChatHeader extends StatelessWidget {
                     ),
                     onPressed: () => context.pop(),
                   ),
-                  const CircleAvatar(
+                  CircleAvatar(
                     radius: 14,
-                    child: Icon(Icons.person),
+                    backgroundColor: Colors.grey[300],
+                    backgroundImage:
+                        (otherUserAvatar != null && otherUserAvatar!.isNotEmpty)
+                        ? NetworkImage(ApiConfig.fixUrl(otherUserAvatar!))
+                        : null,
+                    child: (otherUserAvatar == null || otherUserAvatar!.isEmpty)
+                        ? const Icon(
+                            Icons.person,
+                            size: 16,
+                            color: Colors.white,
+                          )
+                        : null,
                   ),
                   const SizedBox(width: 12),
                   Text(
-                    otherUserName.isNotEmpty ? otherUserName : 'ผู้ใช้ไม่ทราบชื่อ',
+                    otherUserName.isNotEmpty
+                        ? otherUserName
+                        : 'ผู้ใช้ไม่ทราบชื่อ',
                     style: GoogleFonts.sarabun(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,

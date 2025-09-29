@@ -63,18 +63,68 @@ class ChatApi {
   Future<String?> uploadChatImage(int chatroomId, File file) async {
     final url = Uri.parse("$uploadChatUrl$chatroomId");
     final request = http.MultipartRequest("POST", url);
-    request.files.add(await http.MultipartFile.fromPath(
-      "file",
-      file.path,
-      contentType: MediaType("image", "jpeg"),
-    ));
+    request.files.add(
+      await http.MultipartFile.fromPath(
+        "file",
+        file.path,
+        contentType: MediaType("image", "jpeg"),
+      ),
+    );
     final streamedResponse = await request.send();
     final response = await http.Response.fromStream(streamedResponse);
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
       return data["image_url"] as String?;
     } else {
-      throw Exception("Upload chat image failed: ${response.statusCode} ${response.body}");
+      throw Exception(
+        "Upload chat image failed: ${response.statusCode} ${response.body}",
+      );
+    }
+  }
+}
+
+Future<String> createOrGetChatroom({
+  required int currentUserId,
+  required int sellerId,
+  required int productId,
+}) async {
+  final api = ChatApi();
+
+  // เรียก API เพื่อเช็คว่ามี chatroom ระหว่าง user กับ seller สำหรับ product นี้หรือยัง
+  final chatrooms = await api.getChatrooms();
+
+  // หา chatroom ที่ตรงกับ user, seller และ product
+  final existing = chatrooms.firstWhere(
+    (chat) =>
+        (chat['buyer_id'] == currentUserId &&
+            chat['seller_id'] == sellerId &&
+            chat['product_id'] == productId) ||
+        (chat['buyer_id'] == sellerId &&
+            chat['seller_id'] == currentUserId &&
+            chat['product_id'] == productId),
+    orElse: () => {},
+  );
+
+  if (existing.isNotEmpty) {
+    // มี chatroom อยู่แล้ว → return chatroomId
+    return existing['id'].toString();
+  } else {
+    // ยังไม่มี → สร้าง chatroom ใหม่ผ่าน API
+    final url = Uri.parse("${ApiConfig.baseUrl}/chatrooms/");
+    final response = await http.post(
+      url,
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode({
+        "buyer_id": currentUserId,
+        "seller_id": sellerId,
+        "product_id": productId,
+      }),
+    );
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      final data = jsonDecode(response.body);
+      return data['id'].toString();
+    } else {
+      throw Exception("Failed to create chatroom: ${response.statusCode}");
     }
   }
 }
