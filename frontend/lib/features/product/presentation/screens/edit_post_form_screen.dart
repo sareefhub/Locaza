@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:go_router/go_router.dart';
+import 'package:frontend/core/widgets/province_picker.dart';
 import '../../../../utils/user_session.dart';
 import '../../../../config/api_config.dart';
 import '../../application/product_provider.dart';
@@ -100,6 +101,8 @@ class _EditPostFormScreenState extends ConsumerState<EditPostFormScreen> {
       "image_urls": uploaded
     };
     await ref.read(productApiProvider).updateProduct(widget.postId, product);
+    final userId = int.tryParse(UserSession.id ?? "0") ?? 0;
+    ref.invalidate(productListByUserProvider(userId));
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(state == 'post' ? '✅ เผยแพร่โพสต์เรียบร้อย' : '✅ บันทึกการแก้ไขเรียบร้อย', style: GoogleFonts.sarabun())),
@@ -190,7 +193,16 @@ class _EditPostFormScreenState extends ConsumerState<EditPostFormScreen> {
               _field('ราคา', 'เช่น 120', priceCtrl, keyboardType: TextInputType.number, inputFormatters: [FilteringTextInputFormatter.digitsOnly], trailingHint: 'บาท'),
               _field('รายละเอียดสินค้า', 'บอกรายละเอียด จุดเด่น วิธีเก็บรักษา ฯลฯ', detailCtrl, maxLines: 6, underline: 1.5),
               _section('สถานที่'),
-              _select('จังหวัด', _province, () => setState(() => _province = "Bangkok")),
+              _select('จังหวัด', _province, () async {
+                final sel = await showModalBottomSheet<String>(
+                  context: context,
+                  isScrollControlled: true,
+                  builder: (ctx) => const SizedBox(height: 500, child: ProvincePicker()),
+                );
+                if (sel != null) {
+                  setState(() => _province = sel);
+                }
+              }),
               _section('สถานะ'),
               _select('สถานะ', _status, () => setState(() => _status = "reserved")),
               Padding(

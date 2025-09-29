@@ -3,10 +3,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'routing/app_router.dart';
+import 'utils/user_session.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await initializeDateFormatting('th', null);
+  await UserSession.loadFromStorage();
   runApp(const ProviderScope(child: MyApp()));
 }
 

@@ -118,9 +118,20 @@ class _PostScreenState extends ConsumerState<PostScreen> {
               icon: const Icon(Icons.more_vert, color: Colors.black54),
               onSelected: (v) async {
                 if (v == 'edit') {
-                  context.push('/postedit/$id');
-                } else if (v == 'delete' && await _confirmDelete() == true) {
+                  await context.push('/postedit/$id');
                   ref.invalidate(productListByUserProvider(int.tryParse(UserSession.id ?? "0") ?? 0));
+                } else if (v == 'delete' && await _confirmDelete() == true) {
+                  final success = await ref.read(productApiProvider).deleteProduct(int.parse(id));
+                  if (success) {
+                    ref.invalidate(productListByUserProvider(int.tryParse(UserSession.id ?? "0") ?? 0));
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('✅ ลบโพสต์เรียบร้อย', style: GoogleFonts.sarabun())));
+                    }
+                  } else {
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('❌ ลบโพสต์ไม่สำเร็จ', style: GoogleFonts.sarabun())));
+                    }
+                  }
                 }
               },
               itemBuilder: (_) => [

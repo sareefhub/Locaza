@@ -5,6 +5,7 @@ import 'package:frontend/core/widgets/navigation.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import '../../../../config/api_config.dart';
+import '../../../../utils/user_session.dart';
 import '../../application/chat_provider.dart';
 
 class ChatScreen extends ConsumerStatefulWidget {
@@ -40,6 +41,23 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
   @override
   Widget build(BuildContext context) {
+    if (!UserSession.isLoggedIn) {
+      return Scaffold(
+        appBar: AppBar(
+          backgroundColor: const Color(0xFFE0F3F7),
+          centerTitle: true,
+          title: Text('ข้อความ', style: GoogleFonts.sarabun(fontWeight: FontWeight.bold, fontSize: 20, color: Colors.black)),
+        ),
+        body: Center(
+          child: ElevatedButton(
+            onPressed: () => context.go('/login'),
+            child: Text("กรุณาเข้าสู่ระบบก่อน", style: GoogleFonts.sarabun()),
+          ),
+        ),
+        bottomNavigationBar: const BottomNavBar(currentIndex: 3),
+      );
+    }
+
     final chatroomsAsync = ref.watch(chatroomsProvider);
 
     return Scaffold(

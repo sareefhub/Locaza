@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:go_router/go_router.dart';
+import 'package:frontend/core/widgets/province_picker.dart';
 import '../../../../utils/user_session.dart';
 import '../../application/product_provider.dart';
 import '../../application/category_provider.dart';
@@ -44,6 +45,8 @@ class _PostFormScreenState extends ConsumerState<PostFormScreen> {
       "image_urls": uploaded
     };
     await ref.read(productApiProvider).createProduct(product);
+    final userId = int.tryParse(UserSession.id ?? "0") ?? 0;
+    ref.invalidate(productListByUserProvider(userId));
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(state == 'post' ? '✅ เผยแพร่โพสต์เรียบร้อย' : '✅ บันทึกแบบร่างเรียบร้อย', style: GoogleFonts.sarabun())));
     context.go('/post');
@@ -128,7 +131,16 @@ class _PostFormScreenState extends ConsumerState<PostFormScreen> {
               _field('ราคา', 'เช่น 120', priceCtrl, keyboardType: TextInputType.number, inputFormatters: [FilteringTextInputFormatter.digitsOnly], trailingHint: 'บาท'),
               _field('รายละเอียดสินค้า', 'บอกรายละเอียด จุดเด่น วิธีเก็บรักษา ฯลฯ', detailCtrl, maxLines: 6, underline: 1.5),
               _section('สถานที่'),
-              _select('จังหวัด', _province, () => setState(() => _province = "สงขลา")),
+              _select('จังหวัด', _province, () async {
+                final sel = await showModalBottomSheet<String>(
+                  context: context,
+                  isScrollControlled: true,
+                  builder: (ctx) => const SizedBox(height: 500, child: ProvincePicker()),
+                );
+                if (sel != null) {
+                  setState(() => _province = sel);
+                }
+              }),
               Padding(
                 padding: const EdgeInsets.all(24),
                 child: Text(
