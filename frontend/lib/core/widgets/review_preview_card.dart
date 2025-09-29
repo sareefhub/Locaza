@@ -1,14 +1,16 @@
 import 'package:flutter/material.dart';
-import 'package:frontend/features/review/view_reviews_screen.dart';
+import '../../features/review/presentation/screens/view_reviews_screen.dart';
 
 class ReviewPreviewCard extends StatelessWidget {
   final String storeName;
+  final String revieweeId;
   final List reviews;
   final bool isOwner;
 
   const ReviewPreviewCard({
     super.key,
     required this.storeName,
+    required this.revieweeId,
     required this.reviews,
     this.isOwner = false,
   });
@@ -33,7 +35,7 @@ class ReviewPreviewCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    reviews[0]["user"] ?? '',
+                    "User ${reviews[0]["reviewer_id"] ?? ''}",
                     style: const TextStyle(fontWeight: FontWeight.bold),
                   ),
                   Text(reviews[0]["comment"] ?? ''),
@@ -53,7 +55,7 @@ class ReviewPreviewCard extends StatelessWidget {
                   ),
                   builder: (_) => ViewReviewScreen(
                     storeName: storeName,
-                    reviews: reviews,
+                    revieweeId: revieweeId,
                     isOwner: isOwner,
                   ),
                 );

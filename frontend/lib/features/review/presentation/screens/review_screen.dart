@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import '../../../../config/api_config.dart';
 
 class ReviewScreen extends StatefulWidget {
   final String storeName;
@@ -72,18 +73,16 @@ class _ReviewScreenState extends State<ReviewScreen> {
     });
 
     try {
-      const String apiUrl = 'https://your-backend.com/api/reviews';
-
+      final url = Uri.parse("${ApiConfig.baseUrl}/reviews/");
       final response = await http.post(
-        Uri.parse(apiUrl),
+        url,
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
-          'storeId': widget.product['store_id'] ?? 0,
-          'productId': widget.product['id'] ?? 0,
+          'product_id': widget.product['id'] ?? 0,
+          'reviewer_id': widget.reviewerId,
+          'reviewee_id': widget.revieweeId,
           'rating': _rating,
-          'review': _reviewController.text,
-          'reviewerId': widget.reviewerId,
-          'revieweeId': widget.revieweeId,
+          'comment': _reviewController.text,
         }),
       );
 
@@ -116,9 +115,9 @@ class _ReviewScreenState extends State<ReviewScreen> {
     final productTitle = widget.product['title'] ?? 'ชื่อสินค้า';
     final productImageUrl =
         (widget.product['image_urls'] != null &&
-            (widget.product['image_urls'] as List).isNotEmpty)
-        ? widget.product['image_urls'][0]
-        : null;
+                (widget.product['image_urls'] as List).isNotEmpty)
+            ? widget.product['image_urls'][0]
+            : null;
 
     return Scaffold(
       appBar: AppBar(
@@ -138,9 +137,8 @@ class _ReviewScreenState extends State<ReviewScreen> {
             const SizedBox(height: 20),
             CircleAvatar(
               radius: 40,
-              backgroundImage: productImageUrl != null
-                  ? AssetImage(productImageUrl)
-                  : null,
+              backgroundImage:
+                  productImageUrl != null ? NetworkImage(productImageUrl) : null,
               child: productImageUrl == null
                   ? const Icon(Icons.store, size: 50)
                   : null,

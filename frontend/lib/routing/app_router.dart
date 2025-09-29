@@ -23,7 +23,7 @@ import '../features/product/presentation/screens/purchase_history_screen.dart';
 import '../features/store/presentation/screens/store_screen.dart';
 import '../features/product/presentation/screens/my_product_details.dart';
 import '../features/product/presentation/screens/sold_product_details.dart';
-import '../features/review/review_screen.dart';
+import '../features/review/presentation/screens/review_screen.dart';
 
 import '../utils/user_session.dart';
 import 'routes.dart';
