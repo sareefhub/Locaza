@@ -125,5 +125,6 @@ class Notification(Base):
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     type = Column(String)
     content = Column(Text)
+    product_id = Column(Integer, ForeignKey("products.id"), nullable=True)
     is_read = Column(Boolean, default=False)
     created_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), nullable=False)

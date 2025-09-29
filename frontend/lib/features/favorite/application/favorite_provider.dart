@@ -1,72 +1,66 @@
-// favorite_provider.dart
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:flutter/foundation.dart'; // debugPrint
-import 'package:frontend/data/dummy_favorites.dart';
-import 'package:frontend/data/dummy_products.dart';
+import '../infrastructure/favorite_api.dart';
 import 'package:frontend/utils/user_session.dart';
 
 final favoriteProvider =
     StateNotifierProvider<FavoriteNotifier, List<Map<String, dynamic>>>((ref) {
-      final notifier = FavoriteNotifier();
-      // โหลด favorites ของ user ปัจจุบันทันทีที่ provider ถูกสร้าง
-      final userId = int.tryParse(UserSession.id ?? '');
-      if (userId != null) {
-        notifier.loadFavoritesFromPrefs(userId);
-      }
-      return notifier;
-    });
+  final notifier = FavoriteNotifier();
+  final userId = int.tryParse(UserSession.id ?? '');
+  if (userId != null) {
+    notifier.loadFavoritesFromApi(userId);
+  }
+  return notifier;
+});
 
 class FavoriteNotifier extends StateNotifier<List<Map<String, dynamic>>> {
+  final FavoriteApi _api = FavoriteApi();
+
   FavoriteNotifier() : super([]);
 
   // ------------------ ADD / REMOVE FAVORITE ------------------
   Future<void> addFavorite(Map<String, dynamic> product, int userId) async {
-    final wishlistId = mockWishlists.first['id'];
-
     final exists = state.any(
-      (item) =>
-          item['product_id'] == product['id'] && item['user_id'] == userId,
+      (item) => item['product_id'] == product['id'] && item['user_id'] == userId,
     );
 
     if (!exists) {
-      final newItem = {
-        'id': DateTime.now().millisecondsSinceEpoch, // ไม่ซ้ำ
-        'wishlist_id': wishlistId,
-        'product_id': product['id'],
-        'user_id': userId,
-        'created_at': DateTime.now().toIso8601String(),
-        'product': product,
-      };
-      state = [...state, newItem];
-
-      debugPrint(
-        "✅ INSERT INTO wishlist_items (id, wishlist_id, product_id, created_at) "
-        "VALUES (${newItem['id']}, $wishlistId, ${product['id']}, '${newItem['created_at']}');",
-      );
-
-      await _saveFavoritesToPrefs(userId);
+      try {
+        final newItem = await _api.addFavorite(userId, product['id']);
+        if (newItem != null) {
+          state = [...state, {...newItem, "product": product}];
+          debugPrint(
+            "✅ INSERT INTO wishlist_items (id, wishlist_id, product_id, created_at) "
+            "VALUES (${newItem['id']}, ${newItem['wishlist_id']}, ${product['id']}, '${newItem['created_at']}');",
+          );
+        }
+      } catch (e) {
+        debugPrint("❌ addFavorite error: $e");
+      }
     }
   }
 
   Future<void> removeFavorite(int productId, int userId) async {
-    final removedItems = state
-        .where((item) => item['product_id'] == productId)
-        .toList();
-
-    state = state
-        .where(
-          (item) =>
-              !(item['product_id'] == productId && item['user_id'] == userId),
-        )
-        .toList();
+    final removedItems = state.where((item) => item['product_id'] == productId).toList();
 
     if (removedItems.isNotEmpty) {
       final removed = removedItems.first;
-      debugPrint(
-        "🗑 DELETE FROM wishlist_items WHERE id=${removed['id']} AND product_id=$productId;",
-      );
-      await _saveFavoritesToPrefs(userId);
+      try {
+        await _api.removeFavorite(removed['id']);
+        state = state
+            .where(
+              (item) =>
+                  !(item['product_id'] == productId &&
+                      item['user_id'] == userId),
+            )
+            .toList();
+
+        debugPrint(
+          "🗑 DELETE FROM wishlist_items WHERE id=${removed['id']} AND product_id=$productId;",
+        );
+      } catch (e) {
+        debugPrint("❌ removeFavorite error: $e");
+      }
     }
   }
 
@@ -76,42 +70,15 @@ class FavoriteNotifier extends StateNotifier<List<Map<String, dynamic>>> {
     );
   }
 
-  // ------------------ LOCAL STORAGE ------------------
-  Future<void> _saveFavoritesToPrefs(int userId) async {
-    final prefs = await SharedPreferences.getInstance();
-    // เก็บเฉพาะรายการของ userId ปัจจุบัน
-    final userFavorites = state
-        .where((item) => item['user_id'] == userId)
-        .map((item) => item['product_id'].toString())
-        .toList();
-    await prefs.setStringList('favorite_$userId', userFavorites);
-  }
-
-  Future<void> loadFavoritesFromPrefs(int userId) async {
-    final prefs = await SharedPreferences.getInstance();
-    final productIds = prefs.getStringList('favorite_$userId') ?? [];
-
-    // โหลดรายการโปรดของ userId ปัจจุบัน
-    final loadedItems = dummyProducts
-        .where((p) => productIds.contains(p['id'].toString()))
-        .map(
-          (p) => {
-            'id': DateTime.now().millisecondsSinceEpoch,
-            'wishlist_id': mockWishlists.first['id'],
-            'product_id': p['id'],
-            'user_id': userId,
-            'created_at': DateTime.now().toIso8601String(),
-            'product': p,
-          },
-        )
-        .toList();
-
-    // คง state ของ user อื่น ๆ ไว้
-    final otherUsers = state
-        .where((item) => item['user_id'] != userId)
-        .toList();
-
-    state = [...otherUsers, ...loadedItems];
+  // ------------------ LOAD FAVORITES FROM API ------------------
+  Future<void> loadFavoritesFromApi(int userId) async {
+    try {
+      final data = await _api.getFavorites(userId);
+      state = data;
+      debugPrint("✅ Loaded favorites for user $userId (${state.length} items)");
+    } catch (e) {
+      debugPrint("❌ loadFavorites error: $e");
+    }
   }
 
   // ------------------ GET FAVORITE PRODUCTS ------------------

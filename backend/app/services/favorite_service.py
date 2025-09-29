@@ -16,6 +16,10 @@ class FavoriteService:
         return FavoriteRepository.get_all(db, skip, limit)
 
     @staticmethod
+    def get_user_favorites(db: Session, user_id: int):
+        return FavoriteRepository.get_by_user(db, user_id)
+
+    @staticmethod
     def update_favorite(db: Session, favorite_id: int, favorite: FavoriteUpdate):
         return FavoriteRepository.update(db, favorite_id, favorite)
 

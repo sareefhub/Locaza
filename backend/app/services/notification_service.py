@@ -14,3 +14,11 @@ class NotificationService:
     @staticmethod
     def list_notifications(db: Session, skip: int = 0, limit: int = 100):
         return NotificationRepository.get_all(db, skip, limit)
+
+    @staticmethod
+    def get_user_notifications(db: Session, user_id: int, skip: int = 0, limit: int = 100):
+        return NotificationRepository.get_by_user(db, user_id, skip, limit)
+
+    @staticmethod
+    def mark_as_read(db: Session, notification_id: int):
+        return NotificationRepository.mark_as_read(db, notification_id)

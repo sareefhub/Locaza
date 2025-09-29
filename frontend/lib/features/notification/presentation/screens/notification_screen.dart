@@ -1,51 +1,114 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:intl/intl.dart';
+import 'package:go_router/go_router.dart';
 import '../../../../core/widgets/navigation.dart';
+import '../../application/notification_provider.dart';
+import '../../../../config/api_config.dart';
 
-class NotificationScreen extends StatelessWidget {
+class NotificationScreen extends ConsumerWidget {
   const NotificationScreen({super.key});
 
+  String _mapTypeToText(String type) {
+    switch (type) {
+      case "new_product":
+        return "สินค้าใหม่";
+      case "product_sold":
+        return "สินค้าขายแล้ว";
+      case "price_update":
+        return "อัพเดตราคา";
+      case "message":
+        return "ข้อความใหม่";
+      default:
+        return "แจ้งเตือน";
+    }
+  }
+
+  IconData _mapTypeToIcon(String type) {
+    switch (type) {
+      case "new_product":
+        return Icons.new_releases_outlined;
+      case "product_sold":
+        return Icons.shopping_bag_outlined;
+      case "price_update":
+        return Icons.attach_money_outlined;
+      case "message":
+        return Icons.chat_bubble_outline;
+      default:
+        return Icons.notifications_outlined;
+    }
+  }
+
+  String _formatDate(String isoString) {
+    try {
+      final date = DateTime.parse(isoString).toLocal();
+      return DateFormat('dd/MM/yyyy HH:mm', 'th').format(date);
+    } catch (_) {
+      return isoString;
+    }
+  }
+
   @override
-  Widget build(BuildContext context) {
-    final notifications = [
-      {
-        "title": "สินค้าใหม่มาแล้ว!",
-        "body": "ลองดูสินค้าใหม่ที่คุณอาจสนใจ",
-        "time": "10 นาทีที่แล้ว",
-        "imageUrl": null,
-      },
-      {
-        "title": "ส่วนลดพิเศษ",
-        "body": "รับส่วนลด 20% วันนี้เท่านั้น",
-        "time": "2 ชั่วโมงที่แล้ว",
-        "imageUrl": null,
-      },
-    ];
+  Widget build(BuildContext context, WidgetRef ref) {
+    final notificationsState = ref.watch(notificationProvider);
 
     return Scaffold(
       appBar: _buildAppBar(),
-      body: notifications.isEmpty
-          ? Center(
+      body: notificationsState.when(
+        data: (notifications) {
+          if (notifications.isEmpty) {
+            return Center(
               child: Text(
                 'ยังไม่มีการแจ้งเตือน',
-                style: GoogleFonts.sarabun(),
+                style: GoogleFonts.sarabun(fontSize: 16, color: Colors.black54),
               ),
-            )
-          : ListView.separated(
+            );
+          }
+          return RefreshIndicator(
+            onRefresh: () async {
+              await ref.read(notificationProvider.notifier).fetchNotifications();
+            },
+            child: ListView.separated(
               padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
               itemCount: notifications.length,
               separatorBuilder: (_, __) => const SizedBox(height: 8),
               itemBuilder: (context, index) {
                 final n = notifications[index];
                 return _NotificationCard(
-                  title: n["title"]!,
-                  subtitle: n["body"]!,
-                  timeText: n["time"]!,
-                  imageUrl: n["imageUrl"],
-                  onTap: () {},
+                  title: n["content"] ?? "-",
+                  subtitle: _mapTypeToText(n["type"] ?? "-"),
+                  timeText: n["created_at"] != null
+                      ? _formatDate(n["created_at"])
+                      : "",
+                  imageUrl: (n["product"]?["image_urls"] != null &&
+                          (n["product"]["image_urls"] as List).isNotEmpty)
+                      ? ApiConfig.fixUrl(n["product"]["image_urls"][0])
+                      : null,
+                  isRead: n["is_read"] ?? false,
+                  icon: _mapTypeToIcon(n["type"] ?? ""),
+                  onTap: () {
+                    ref.read(notificationProvider.notifier).markAsRead(n["id"]);
+                    if (n["product"] != null) {
+                      final productId = n["product"]["id"];
+                      if (productId != null) {
+                        context.push('/product_details/$productId');
+                      }
+                    }
+                  },
                 );
               },
             ),
+          );
+        },
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (err, _) => Center(
+          child: Text(
+            "เกิดข้อผิดพลาด: $err",
+            style: const TextStyle(color: Colors.red),
+          ),
+        ),
+      ),
       bottomNavigationBar: const BottomNavBar(currentIndex: 1),
     );
   }
@@ -79,6 +142,8 @@ class _NotificationCard extends StatelessWidget {
     required this.subtitle,
     required this.timeText,
     this.imageUrl,
+    required this.isRead,
+    required this.icon,
     this.onTap,
   });
 
@@ -86,12 +151,14 @@ class _NotificationCard extends StatelessWidget {
   final String subtitle;
   final String timeText;
   final String? imageUrl;
+  final bool isRead;
+  final IconData icon;
   final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: const Color(0xFFE6E6E6),
+      color: isRead ? const Color(0xFFE6E6E6) : const Color(0xFFD1E9F2),
       borderRadius: BorderRadius.circular(12),
       child: InkWell(
         borderRadius: BorderRadius.circular(12),
@@ -101,14 +168,21 @@ class _NotificationCard extends StatelessWidget {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _ImagePlaceholder(imageUrl: imageUrl),
+              _ImagePlaceholder(imageUrl: imageUrl, icon: icon),
               const SizedBox(width: 12),
               Expanded(
                 child: _Texts(
                   title: title,
                   subtitle: subtitle,
                   timeText: timeText,
+                  isRead: isRead,
                 ),
+              ),
+              const SizedBox(width: 8),
+              Icon(
+                isRead ? Icons.check_circle : Icons.radio_button_unchecked,
+                color: isRead ? Colors.green : Colors.grey,
+                size: 20,
               ),
             ],
           ),
@@ -119,8 +193,9 @@ class _NotificationCard extends StatelessWidget {
 }
 
 class _ImagePlaceholder extends StatelessWidget {
-  const _ImagePlaceholder({this.imageUrl});
+  const _ImagePlaceholder({this.imageUrl, required this.icon});
   final String? imageUrl;
+  final IconData icon;
 
   @override
   Widget build(BuildContext context) {
@@ -128,7 +203,7 @@ class _ImagePlaceholder extends StatelessWidget {
     if (imageUrl != null && imageUrl!.isNotEmpty) {
       return ClipRRect(
         borderRadius: border,
-        child: Image.asset(
+        child: Image.network(
           imageUrl!,
           width: 52,
           height: 52,
@@ -140,10 +215,10 @@ class _ImagePlaceholder extends StatelessWidget {
       width: 52,
       height: 52,
       decoration: BoxDecoration(
-        color: Colors.grey[400],
+        color: Colors.white,
         borderRadius: border,
       ),
-      child: const Icon(Icons.image_outlined, color: Colors.black54),
+      child: Icon(icon, color: Colors.blueGrey, size: 28),
     );
   }
 }
@@ -153,11 +228,13 @@ class _Texts extends StatelessWidget {
     required this.title,
     required this.subtitle,
     required this.timeText,
+    required this.isRead,
   });
 
   final String title;
   final String subtitle;
   final String timeText;
+  final bool isRead;
 
   @override
   Widget build(BuildContext context) {
@@ -177,14 +254,19 @@ class _Texts extends StatelessWidget {
         const SizedBox(height: 4),
         Text(
           subtitle,
-          maxLines: 2,
-          overflow: TextOverflow.ellipsis,
-          style: GoogleFonts.sarabun(fontSize: 13, color: Colors.black87),
+          style: GoogleFonts.sarabun(
+            fontSize: 13,
+            color: Colors.blueAccent,
+            fontWeight: FontWeight.w500,
+          ),
         ),
         const SizedBox(height: 4),
         Text(
           timeText,
-          style: GoogleFonts.sarabun(fontSize: 12, color: Colors.black54),
+          style: GoogleFonts.sarabun(
+            fontSize: 12,
+            color: isRead ? Colors.black38 : Colors.black54,
+          ),
         ),
       ],
     );
