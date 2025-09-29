@@ -2,10 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:frontend/routing/routes.dart';
-import '../../../review/view_reviews_screen.dart';
 import 'package:frontend/features/product/application/product_provider.dart';
 import '../../../../utils/user_session.dart';
 import '../../../../core/widgets/my_product_card.dart';
+import '../../../../core/widgets/review_preview_card.dart';
+import '../../../../core/widgets/store_header.dart';
 
 // Dummy store provider
 final storeProvider = Provider<Map<String, dynamic>>((ref) {
@@ -112,85 +113,11 @@ class _StoreScreenState extends ConsumerState<StoreScreen>
       ),
       body: NestedScrollView(
         headerSliverBuilder: (context, innerBoxIsScrolled) => [
-          // 🏪 ส่วนหัวของร้าน + รีวิว
+          // ส่วนหัวของร้าน + รีวิว
           SliverToBoxAdapter(
             child: Column(
               children: [
-                // 🏪 ส่วนหัวร้าน
-                Container(
-                  color: const Color(0xFFE0F3F7),
-                  padding: const EdgeInsets.all(20),
-                  child: Row(
-                    children: [
-                      CircleAvatar(
-                        radius: 30,
-                        backgroundImage:
-                            (store?["avatar_url"] != null &&
-                                (store?["avatar_url"] as String).isNotEmpty)
-                            ? NetworkImage(store!["avatar_url"])
-                            : null,
-                        child:
-                            (store?["avatar_url"] == null ||
-                                (store?["avatar_url"] as String).isEmpty)
-                            ? const Icon(Icons.person, size: 32)
-                            : null,
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              store?["name"] ?? "ร้านค้า",
-                              style: const TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Row(
-                              children: [
-                                const Icon(
-                                  Icons.star,
-                                  size: 16,
-                                  color: Colors.amber,
-                                ),
-                                const SizedBox(width: 4),
-                                Text("${store?["rating"] ?? 0}"),
-                              ],
-                            ),
-                            Text(
-                              "${store?["followers"] ?? 0} ผู้ติดตาม",
-                              style: const TextStyle(fontSize: 12),
-                            ),
-                          ],
-                        ),
-                      ),
-                      if (!widget.isOwner)
-                        Column(
-                          children: [
-                            OutlinedButton(
-                              style: OutlinedButton.styleFrom(
-                                minimumSize: const Size(70, 30),
-                              ),
-                              onPressed: () {},
-                              child: const Text("ติดตาม"),
-                            ),
-                            const SizedBox(height: 4),
-                            OutlinedButton(
-                              style: OutlinedButton.styleFrom(
-                                minimumSize: const Size(70, 30),
-                              ),
-                              onPressed: () {},
-                              child: const Text("แชท"),
-                            ),
-                          ],
-                        ),
-                    ],
-                  ),
-                ),
-
-                // รีวิว
+                StoreHeader(store: store!, isOwner: widget.isOwner),
                 Container(
                   width: double.infinity,
                   color: Colors.white,
@@ -198,71 +125,11 @@ class _StoreScreenState extends ConsumerState<StoreScreen>
                     horizontal: 16,
                     vertical: 16,
                   ),
-                  child:
-                      (store?["reviews"] != null &&
-                          (store?["reviews"] as List).isNotEmpty)
-                      ? Card(
-                          color: Colors.grey[200],
-                          child: Padding(
-                            padding: const EdgeInsets.all(12),
-                            child: Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        (store?["reviews"][0]["user"] ?? '')
-                                            as String,
-                                        style: const TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                      Text(
-                                        (store?["reviews"][0]["comment"] ?? '')
-                                            as String,
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                GestureDetector(
-                                  onTap: () {
-                                    showModalBottomSheet(
-                                      context: context,
-                                      isScrollControlled: true,
-                                      backgroundColor: Colors.white,
-                                      shape: const RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.vertical(
-                                          top: Radius.circular(16),
-                                        ),
-                                      ),
-                                      builder: (_) => ViewReviewScreen(
-                                        storeName: store?["name"] ?? "ร้านค้า",
-                                        reviews: store?["reviews"] ?? [],
-                                        isOwner: widget.isOwner,
-                                      ),
-                                    );
-                                  },
-                                  child: const Text(
-                                    "ดูทั้งหมด",
-                                    style: TextStyle(
-                                      color: Colors.blue,
-                                      decoration: TextDecoration.underline,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        )
-                      : const Center(
-                          child: Text(
-                            "ยังไม่มีรีวิว",
-                            style: TextStyle(color: Colors.grey),
-                          ),
-                        ),
+                  child: ReviewPreviewCard(
+                    storeName: store["name"] ?? "ร้านค้า",
+                    reviews: store["reviews"] ?? [],
+                    isOwner: widget.isOwner,
+                  ),
                 ),
               ],
             ),
