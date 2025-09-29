@@ -75,27 +75,43 @@ class NotificationScreen extends ConsumerWidget {
               separatorBuilder: (_, __) => const SizedBox(height: 8),
               itemBuilder: (context, index) {
                 final n = notifications[index];
-                return _NotificationCard(
-                  title: n["content"] ?? "-",
-                  subtitle: _mapTypeToText(n["type"] ?? "-"),
-                  timeText: n["created_at"] != null
-                      ? _formatDate(n["created_at"])
-                      : "",
-                  imageUrl: (n["product"]?["image_urls"] != null &&
-                          (n["product"]["image_urls"] as List).isNotEmpty)
-                      ? ApiConfig.fixUrl(n["product"]["image_urls"][0])
-                      : null,
-                  isRead: n["is_read"] ?? false,
-                  icon: _mapTypeToIcon(n["type"] ?? ""),
-                  onTap: () {
-                    ref.read(notificationProvider.notifier).markAsRead(n["id"]);
-                    if (n["product"] != null) {
-                      final productId = n["product"]["id"];
-                      if (productId != null) {
-                        context.push('/product_details/$productId');
-                      }
-                    }
+                return Dismissible(
+                  key: ValueKey(n["id"]),
+                  direction: DismissDirection.endToStart,
+                  background: Container(
+                    alignment: Alignment.centerRight,
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    decoration: BoxDecoration(
+                      color: Colors.red,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Icon(Icons.delete, color: Colors.white),
+                  ),
+                  onDismissed: (_) {
+                    ref.read(notificationProvider.notifier).deleteNotification(n["id"]);
                   },
+                  child: _NotificationCard(
+                    title: n["content"] ?? "-",
+                    subtitle: _mapTypeToText(n["type"] ?? "-"),
+                    timeText: n["created_at"] != null
+                        ? _formatDate(n["created_at"])
+                        : "",
+                    imageUrl: (n["product"]?["image_urls"] != null &&
+                            (n["product"]["image_urls"] as List).isNotEmpty)
+                        ? ApiConfig.fixUrl(n["product"]["image_urls"][0])
+                        : null,
+                    isRead: n["is_read"] ?? false,
+                    icon: _mapTypeToIcon(n["type"] ?? ""),
+                    onTap: () {
+                      ref.read(notificationProvider.notifier).markAsRead(n["id"]);
+                      if (n["product"] != null) {
+                        final productId = n["product"]["id"];
+                        if (productId != null) {
+                          context.push('/product_details/$productId');
+                        }
+                      }
+                    },
+                  ),
                 );
               },
             ),

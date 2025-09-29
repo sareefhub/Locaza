@@ -33,3 +33,10 @@ def mark_as_read(notification_id: int, db: Session = Depends(get_db)):
     if not notif:
         raise HTTPException(status_code=404, detail="Notification not found")
     return notif
+
+@router.delete("/{notification_id}", response_model=dict)
+def delete_notification(notification_id: int, db: Session = Depends(get_db)):
+    notif = NotificationService.delete_notification(db, notification_id)
+    if not notif:
+        raise HTTPException(status_code=404, detail="Notification not found")
+    return {"message": "Notification deleted successfully"}

@@ -22,3 +22,7 @@ class NotificationService:
     @staticmethod
     def mark_as_read(db: Session, notification_id: int):
         return NotificationRepository.mark_as_read(db, notification_id)
+
+    @staticmethod
+    def delete_notification(db: Session, notification_id: int):
+        return NotificationRepository.delete(db, notification_id)

@@ -36,4 +36,15 @@ class NotificationNotifier extends StateNotifier<AsyncValue<List<Map<String, dyn
       state = AsyncValue.error(e, st);
     }
   }
+
+  Future<void> deleteNotification(int id) async {
+    try {
+      await ref.read(notificationApiProvider).deleteNotification(id);
+      final updatedList =
+          state.value?.where((n) => n["id"] != id).toList();
+      state = AsyncValue.data(updatedList ?? []);
+    } catch (e, st) {
+      state = AsyncValue.error(e, st);
+    }
+  }
 }

@@ -31,4 +31,12 @@ class NotificationApi {
       throw Exception("Failed to mark notification as read");
     }
   }
+
+  Future<void> deleteNotification(int id) async {
+    final url = Uri.parse("$baseUrl/$id");
+    final res = await http.delete(url);
+    if (res.statusCode != 200) {
+      throw Exception("Failed to delete notification");
+    }
+  }
 }
