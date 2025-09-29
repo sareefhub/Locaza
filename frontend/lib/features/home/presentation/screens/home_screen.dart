@@ -87,21 +87,33 @@ class HomeScreen extends ConsumerWidget {
                   ),
                 ),
                 const SliverToBoxAdapter(child: SizedBox(height: 16)),
-                const SliverToBoxAdapter(
-                  child: CategoryList(),
-                ),
+                const SliverToBoxAdapter(child: CategoryList()),
                 const SliverToBoxAdapter(child: SizedBox(height: 16)),
                 productState.when(
                   data: (products) {
-                    final allProducts = products; // เอามาทั้งหมด
+                    // กรองเฉพาะสินค้าที่ status เป็น Available / Posted
+                    final filteredProducts = products.where((p) {
+                      final rawStatus = (p['status'] ?? '')
+                          .toString()
+                          .toLowerCase();
+                      return rawStatus == 'available' ||
+                          rawStatus == 'posted' ||
+                          rawStatus == 'published';
+                    }).toList();
+
+                    if (filteredProducts.isEmpty) {
+                      return const SliverToBoxAdapter(
+                        child: Center(child: Text('ยังไม่มีสินค้าที่พร้อมขาย')),
+                      );
+                    }
 
                     return SliverPadding(
                       padding: const EdgeInsets.symmetric(horizontal: 16),
                       sliver: SliverGrid(
                         delegate: SliverChildBuilderDelegate(
                           (context, index) =>
-                              ProductCard(product: allProducts[index]),
-                          childCount: allProducts.length,
+                              ProductCard(product: filteredProducts[index]),
+                          childCount: filteredProducts.length,
                         ),
                         gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                           crossAxisCount: crossAxisCount,
@@ -122,6 +134,7 @@ class HomeScreen extends ConsumerWidget {
                     child: Center(child: Text("Error: $err")),
                   ),
                 ),
+
                 const SliverToBoxAdapter(child: SizedBox(height: 80)),
               ],
             );
