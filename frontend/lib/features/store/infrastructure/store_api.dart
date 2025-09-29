@@ -16,7 +16,7 @@ class StoreApi {
         : [];
 
     final reviewUrl =
-        Uri.parse("${ApiConfig.baseUrl}/reviews/?seller_id=$userId");
+        Uri.parse("${ApiConfig.baseUrl}/reviews?seller_id=$userId");
     final reviewRes = await http.get(reviewUrl);
     final reviews = reviewRes.statusCode == 200
         ? List<Map<String, dynamic>>.from(jsonDecode(reviewRes.body))

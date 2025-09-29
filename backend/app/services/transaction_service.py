@@ -43,5 +43,7 @@ class ReviewService:
         return ReviewRepository.get(db, review_id)
 
     @staticmethod
-    def list_reviews(db: Session, skip: int = 0, limit: int = 100):
+    def list_reviews(db: Session, seller_id: int = None, skip: int = 0, limit: int = 100):
+        if seller_id:
+            return ReviewRepository.get_by_seller(db, seller_id, skip, limit)
         return ReviewRepository.get_all(db, skip, limit)

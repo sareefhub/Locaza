@@ -6,5 +6,5 @@ final storeApiProvider = Provider<StoreApi>((ref) => StoreApi());
 final storeProvider =
     FutureProvider.family<Map<String, dynamic>, String>((ref, userId) async {
   final api = ref.watch(storeApiProvider);
-  return await api.getStoreByUserId(userId);
+  return api.getStoreByUserId(userId);
 });

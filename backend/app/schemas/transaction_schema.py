@@ -19,7 +19,6 @@ class SaleTransactionResponse(SaleTransactionBase):
     class Config:
         from_attributes = True
 
-
 class ReviewBase(BaseModel):
     sale_transaction_id: int
     product_id: int
@@ -37,7 +36,6 @@ class ReviewResponse(ReviewBase):
 
     class Config:
         from_attributes = True
-
 
 class PurchaseResponse(BaseModel):
     id: int

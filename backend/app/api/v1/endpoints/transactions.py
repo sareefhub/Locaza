@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
-from typing import List
+from typing import List, Optional
 from app.db.session import get_db
 from app.schemas.transaction_schema import (
     SaleTransactionCreate, SaleTransactionResponse,
@@ -34,8 +34,8 @@ def create_review(review: ReviewCreate, db: Session = Depends(get_db)):
     return ReviewService.create_review(db, review)
 
 @review_router.get("/", response_model=List[ReviewResponse])
-def list_reviews(db: Session = Depends(get_db)):
-    return ReviewService.list_reviews(db)
+def list_reviews(seller_id: Optional[int] = None, db: Session = Depends(get_db)):
+    return ReviewService.list_reviews(db, seller_id)
 
 @review_router.get("/{review_id}", response_model=ReviewResponse)
 def get_review(review_id: int, db: Session = Depends(get_db)):

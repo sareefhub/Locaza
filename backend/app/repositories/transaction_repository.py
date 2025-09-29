@@ -55,3 +55,13 @@ class ReviewRepository:
     @staticmethod
     def get_all(db: Session, skip: int = 0, limit: int = 100):
         return db.query(Review).offset(skip).limit(limit).all()
+
+    @staticmethod
+    def get_by_seller(db: Session, seller_id: int, skip: int = 0, limit: int = 100):
+        return (
+            db.query(Review)
+            .filter(Review.reviewee_id == seller_id)
+            .offset(skip)
+            .limit(limit)
+            .all()
+        )
