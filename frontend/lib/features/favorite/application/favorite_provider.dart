@@ -4,11 +4,18 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/foundation.dart'; // debugPrint
 import 'package:frontend/data/dummy_favorites.dart';
 import 'package:frontend/data/dummy_products.dart';
+import 'package:frontend/utils/user_session.dart';
 
 final favoriteProvider =
-    StateNotifierProvider<FavoriteNotifier, List<Map<String, dynamic>>>(
-      (ref) => FavoriteNotifier(),
-    );
+    StateNotifierProvider<FavoriteNotifier, List<Map<String, dynamic>>>((ref) {
+      final notifier = FavoriteNotifier();
+      // โหลด favorites ของ user ปัจจุบันทันทีที่ provider ถูกสร้าง
+      final userId = int.tryParse(UserSession.id ?? '');
+      if (userId != null) {
+        notifier.loadFavoritesFromPrefs(userId);
+      }
+      return notifier;
+    });
 
 class FavoriteNotifier extends StateNotifier<List<Map<String, dynamic>>> {
   FavoriteNotifier() : super([]);
