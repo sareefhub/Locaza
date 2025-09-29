@@ -77,7 +77,7 @@ class _ProductDetailsPageState extends ConsumerState<ProductDetailsPage> {
               data: (seller) => SingleChildScrollView(
                 child: Column(
                   children: [
-                    _buildProductImageSection(image, seller),
+                    _buildProductImageSection(image, seller, product),
                     Padding(
                       padding: const EdgeInsets.all(16),
                       child: Column(
@@ -113,7 +113,11 @@ class _ProductDetailsPageState extends ConsumerState<ProductDetailsPage> {
     );
   }
 
-  Widget _buildProductImageSection(String image, Map<String, dynamic>? seller) {
+  Widget _buildProductImageSection(
+    String image,
+    Map<String, dynamic>? seller,
+    Map<String, dynamic> product,
+  ) {
     return Stack(
       children: [
         ClipRRect(
@@ -154,7 +158,7 @@ class _ProductDetailsPageState extends ConsumerState<ProductDetailsPage> {
               final isFavorite = userId != null
                   ? favoriteState.any(
                       (item) =>
-                          item['product_id'] == widget.productId &&
+                          item['product_id'] == product['id'] &&
                           item['user_id'] == userId,
                     )
                   : false;
@@ -174,9 +178,9 @@ class _ProductDetailsPageState extends ConsumerState<ProductDetailsPage> {
                   onPressed: () {
                     if (userId == null) return;
                     if (isFavorite) {
-                      notifier.removeFavorite(widget.productId, userId);
+                      notifier.removeFavorite(product['id'], userId);
                     } else {
-                      notifier.addFavorite({}, userId);
+                      notifier.addFavorite(product, userId);
                     }
                   },
                 ),
@@ -431,7 +435,13 @@ class _ProductDetailsPageState extends ConsumerState<ProductDetailsPage> {
                 .where(
                   (p) =>
                       p['category_id'] == product['category_id'] &&
-                      p['id'] != product['id'],
+                      p['id'] != product['id'] &&
+                      ((p['status'] ?? '').toString().toLowerCase() ==
+                              'available' ||
+                          (p['status'] ?? '').toString().toLowerCase() ==
+                              'posted' ||
+                          (p['status'] ?? '').toString().toLowerCase() ==
+                              'published'),
                 )
                 .take(4)
                 .toList();
