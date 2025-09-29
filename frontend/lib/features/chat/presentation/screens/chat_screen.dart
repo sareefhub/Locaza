@@ -10,7 +10,6 @@ import '../../application/chat_provider.dart';
 
 class ChatScreen extends ConsumerStatefulWidget {
   final String currentUserId;
-
   const ChatScreen({super.key, required this.currentUserId});
 
   @override
@@ -46,7 +45,14 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         appBar: AppBar(
           backgroundColor: const Color(0xFFE0F3F7),
           centerTitle: true,
-          title: Text('ข้อความ', style: GoogleFonts.sarabun(fontWeight: FontWeight.bold, fontSize: 20, color: Colors.black)),
+          title: Text(
+            'ข้อความ',
+            style: GoogleFonts.sarabun(
+              fontWeight: FontWeight.bold,
+              fontSize: 20,
+              color: Colors.black,
+            ),
+          ),
         ),
         body: Center(
           child: ElevatedButton(
@@ -112,21 +118,66 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             Expanded(
               child: chatroomsAsync.when(
                 data: (chatrooms) {
+                  // **กรองเฉพาะห้องแชตของผู้ใช้**
+                  final userChats = chatrooms
+                      .where((chat) {
+                        return chat['buyer_id'].toString() ==
+                                widget.currentUserId ||
+                            chat['seller_id'].toString() ==
+                                widget.currentUserId;
+                      })
+                      .map((chat) {
+                        final isCurrentUserBuyer =
+                            chat['buyer_id'].toString() == widget.currentUserId;
+
+                        final otherUserId = isCurrentUserBuyer
+                            ? chat['seller_id']
+                            : chat['buyer_id'];
+                        final otherUserName = isCurrentUserBuyer
+                            ? chat['seller_name']
+                            : chat['buyer_name'];
+                        final otherUserAvatar = isCurrentUserBuyer
+                            ? chat['seller_avatar']
+                            : chat['buyer_avatar'];
+
+                        final lastMessageTime =
+                            chat['last_message_time'] ?? chat['updated_at'];
+                        final lastMessage = chat['last_message'] ?? '';
+
+                        return {
+                          ...chat,
+                          'other_user_id': otherUserId,
+                          'other_user_name': otherUserName,
+                          'other_user_avatar': otherUserAvatar,
+                          'last_message': lastMessage,
+                          'last_message_time': lastMessageTime,
+                        };
+                      })
+                      .toList();
+
+                  // จัดเรียงข้อความล่าสุดอยู่บนสุด
+                  userChats.sort((a, b) {
+                    final aTime =
+                        DateTime.tryParse(a['last_message_time'] ?? '') ??
+                        DateTime.fromMillisecondsSinceEpoch(0);
+                    final bTime =
+                        DateTime.tryParse(b['last_message_time'] ?? '') ??
+                        DateTime.fromMillisecondsSinceEpoch(0);
+                    return bTime.compareTo(aTime);
+                  });
+
+                  // กรองด้วย searchText
                   final filteredChats = searchText.isEmpty
-                      ? chatrooms
-                      : chatrooms
-                          .where(
-                            (chat) =>
-                                (chat['buyer_name'] ?? '')
-                                    .toString()
-                                    .toLowerCase()
-                                    .contains(searchText) ||
-                                (chat['seller_name'] ?? '')
-                                    .toString()
-                                    .toLowerCase()
-                                    .contains(searchText),
-                          )
-                          .toList();
+                      ? userChats
+                      : userChats.where((chat) {
+                          final otherUserName =
+                              chat['other_user_name']
+                                  ?.toString()
+                                  .toLowerCase() ??
+                              '';
+                          return otherUserName.contains(searchText);
+                        }).toList();
+
                   if (filteredChats.isEmpty) {
                     return Center(
                       child: Text(
@@ -138,38 +189,36 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                       ),
                     );
                   }
+
                   return ListView.builder(
                     padding: const EdgeInsets.all(12.0),
                     itemCount: filteredChats.length,
                     itemBuilder: (context, index) {
                       final chat = filteredChats[index];
-                      final otherUserName =
-                          chat['buyer_id'].toString() == widget.currentUserId
-                              ? chat['seller_name']
-                              : chat['buyer_name'];
-                      final lastMessage = chat['last_message'];
-                      final lastMessageTime = chat['last_message_time'];
+
                       return InkWell(
                         onTap: () async {
-                          await context.push('/chat_detail', extra: {
-                            'chatId': chat['id'].toString(),
-                            'currentUserId': widget.currentUserId,
-                            'otherUserId':
-                                chat['buyer_id'].toString() == widget.currentUserId
-                                    ? chat['seller_id'].toString()
-                                    : chat['buyer_id'].toString(),
-                            'otherUserName': otherUserName,
-                            'product': {
-                              "seller_id": chat['seller_id'],
-                              "title": chat['product_title'],
-                              "image_urls": (chat['product_images'] as List<dynamic>?)
-                                      ?.map((img) => ApiConfig.fixUrl(img))
-                                      .toList() ??
-                                  [],
-                              "price": chat['product_price']
+                          await context.push(
+                            '/chat_detail',
+                            extra: {
+                              'chatId': chat['id'].toString(),
+                              'currentUserId': widget.currentUserId,
+                              'otherUserId': chat['other_user_id'].toString(),
+                              'otherUserName': chat['other_user_name'],
+                              'otherUserAvatar': chat['other_user_avatar'],
+                              'product': {
+                                "seller_id": chat['seller_id'],
+                                "title": chat['product_title'],
+                                "image_urls":
+                                    (chat['product_images'] as List<dynamic>?)
+                                        ?.map((img) => ApiConfig.fixUrl(img))
+                                        .toList() ??
+                                    [],
+                                "price": chat['product_price'],
+                              },
+                              'fromProductDetail': false,
                             },
-                            'fromProductDetail': false,
-                          });
+                          );
                           ref.invalidate(chatroomsProvider);
                         },
                         child: Container(
@@ -183,11 +232,21 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                             children: [
                               CircleAvatar(
                                 radius: 24,
+                                backgroundImage:
+                                    chat['other_user_avatar'] != null
+                                    ? NetworkImage(
+                                        ApiConfig.fixUrl(
+                                          chat['other_user_avatar'],
+                                        ),
+                                      )
+                                    : null,
                                 backgroundColor: Colors.grey.shade400,
-                                child: const Icon(
-                                  Icons.person,
-                                  color: Colors.white,
-                                ),
+                                child: chat['other_user_avatar'] == null
+                                    ? const Icon(
+                                        Icons.person,
+                                        color: Colors.white,
+                                      )
+                                    : null,
                               ),
                               const SizedBox(width: 12),
                               Expanded(
@@ -200,7 +259,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                                       children: [
                                         Expanded(
                                           child: Text(
-                                            otherUserName ?? '',
+                                            chat['other_user_name'] ?? '',
                                             style: GoogleFonts.sarabun(
                                               fontSize: 15,
                                               fontWeight: FontWeight.bold,
@@ -208,9 +267,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                                           ),
                                         ),
                                         Text(
-                                          formatDate(
-                                            lastMessageTime ?? chat['created_at'],
-                                          ),
+                                          formatDate(chat['last_message_time']),
                                           style: GoogleFonts.sarabun(
                                             fontSize: 12,
                                             color: Colors.grey[600],
@@ -220,10 +277,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                                     ),
                                     const SizedBox(height: 3),
                                     Text(
-                                      (lastMessage == null ||
-                                              lastMessage.isEmpty)
-                                          ? 'เริ่มการสนทนา...'
-                                          : lastMessage,
+                                      chat['last_message']?.isNotEmpty == true
+                                          ? chat['last_message']
+                                          : 'เริ่มการสนทนา...',
                                       style: GoogleFonts.sarabun(
                                         fontSize: 14,
                                         color: Colors.black54,
@@ -240,9 +296,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                     },
                   );
                 },
-                loading: () => const Center(
-                  child: CircularProgressIndicator(),
-                ),
+                loading: () => const Center(child: CircularProgressIndicator()),
                 error: (err, _) => Center(
                   child: Text(
                     'Error: $err',
