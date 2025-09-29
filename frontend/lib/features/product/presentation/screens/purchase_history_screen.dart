@@ -7,6 +7,7 @@ import 'package:frontend/core/widgets/custom_search_bar.dart';
 import '../../application/purchase_provider.dart';
 import '../../../../utils/user_session.dart';
 import '../../../../config/api_config.dart';
+import 'package:intl/intl.dart';
 
 class MyPurchasePage extends ConsumerStatefulWidget {
   const MyPurchasePage({super.key});
@@ -24,6 +25,16 @@ class _MyPurchasePageState extends ConsumerState<MyPurchasePage> {
     if (raw is List && raw.isNotEmpty) return ApiConfig.fixUrl(raw.first.toString());
     if (raw is String) return ApiConfig.fixUrl(raw);
     return "";
+  }
+
+  String _formatThaiTime(String isoString) {
+    try {
+      final dateTime = DateTime.parse(isoString).toLocal();
+      final formatter = DateFormat('yyyy-MM-dd HH:mm:ss', 'th_TH');
+      return formatter.format(dateTime);
+    } catch (e) {
+      return isoString;
+    }
   }
 
   @override
@@ -90,13 +101,16 @@ class _MyPurchasePageState extends ConsumerState<MyPurchasePage> {
                   itemBuilder: (context, index) {
                     final item = filtered[index];
                     final imageUrl = _buildImageUrl(item['image_url']);
+                    final time = item['created_at'] != null
+                        ? _formatThaiTime(item['created_at'].toString())
+                        : '';
 
                     return Column(
                       children: [
                         PurchaseCard(
                           seller: item['seller_name'] ?? 'ไม่ทราบผู้ขาย',
                           productName: item['product_title'] ?? '',
-                          time: (item['created_at'] ?? '').toString(),
+                          time: time,
                           price: "฿${item['price'] ?? ''}",
                           status: item['status'] ?? '',
                           imageUrl: imageUrl,
