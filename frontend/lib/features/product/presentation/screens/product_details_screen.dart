@@ -177,7 +177,13 @@ class _ProductDetailsPageState extends ConsumerState<ProductDetailsPage> {
                     color: isFavorite ? Colors.red : Colors.white,
                   ),
                   onPressed: () {
-                    if (userId == null) return;
+                    final userId = int.tryParse(UserSession.id ?? '');
+                    if (userId == null) {
+                      // ยังไม่ได้ล็อกอิน → ไปหน้า login
+                      GoRouter.of(context).go('/login');
+                      return;
+                    }
+
                     if (isFavorite) {
                       notifier.removeFavorite(product['id'], userId);
                     } else {
@@ -328,6 +334,10 @@ class _ProductDetailsPageState extends ConsumerState<ProductDetailsPage> {
         children: [
           GestureDetector(
             onTap: () {
+              if (UserSession.id == null) {
+                GoRouter.of(context).go('/login');
+                return;
+              }
               context.push(
                 AppRoutes.store.replaceFirst(
                   ':storeId',
@@ -358,7 +368,10 @@ class _ProductDetailsPageState extends ConsumerState<ProductDetailsPage> {
               children: [
                 GestureDetector(
                   onTap: () {
-                    // ไปหน้า store ของ seller
+                    if (UserSession.id == null) {
+                      GoRouter.of(context).go('/login');
+                      return;
+                    }
                     context.push(
                       AppRoutes.store.replaceFirst(
                         ':storeId',
@@ -380,6 +393,11 @@ class _ProductDetailsPageState extends ConsumerState<ProductDetailsPage> {
                   width: double.infinity,
                   child: OutlinedButton.icon(
                     onPressed: () async {
+                      if (UserSession.id == null) {
+                        GoRouter.of(context).go('/login');
+                        return;
+                      }
+
                       final productData = {
                         "seller_id": seller['id'],
                         "title": product['title'],
@@ -392,7 +410,7 @@ class _ProductDetailsPageState extends ConsumerState<ProductDetailsPage> {
                       };
 
                       String chatroomId = await createOrGetChatroom(
-                        currentUserId: int.parse(UserSession.id ?? '0'),
+                        currentUserId: int.parse(UserSession.id!),
                         sellerId: seller['id'],
                         productId: product['id'],
                       );

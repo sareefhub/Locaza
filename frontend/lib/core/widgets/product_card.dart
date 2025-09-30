@@ -37,7 +37,7 @@ class ProductCard extends ConsumerWidget {
         )['name']
         .toString();
 
-    // ✅ เลือกรูปภาพแรกเสมอ
+    // เลือกรูปภาพแรกเสมอ
     String image = '';
     final rawImage = product['image_urls'];
     if (rawImage is List && rawImage.isNotEmpty) {
@@ -129,8 +129,13 @@ class ProductCard extends ConsumerWidget {
                               color: isFavorite ? Colors.red : Colors.white,
                             ),
                             onPressed: () {
-                              if (userId == null) return;
+                              if (userId == null) {
+                                // ยังไม่ได้ล็อกอิน → ไปหน้า Login
+                                GoRouter.of(context).go('/login');
+                                return;
+                              }
 
+                              // ถ้าล็อกอินแล้ว → ทำงานปกติ
                               if (isFavorite) {
                                 notifier.removeFavorite(product['id'], userId);
                               } else {

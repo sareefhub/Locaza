@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../../utils/user_session.dart';
+import '../../routing/routes.dart';
 
 class BottomNavBar extends StatelessWidget {
   final int currentIndex;
@@ -9,31 +11,40 @@ class BottomNavBar extends StatelessWidget {
   void _onItemTapped(BuildContext context, int index) {
     if (index == currentIndex) return;
 
-    switch (index) {
-      case 0:
-        context.go('/home');
-        break;
-      case 1:
-        context.go('/notification');
-        break;
-      case 2:
-        context.go('/post');
-        break;
-      case 3:
-        context.go('/chat');
-        break;
-      case 4:
-        context.go('/profile');
-        break;
+    if (index == 0) {
+      // ปุ่มหน้าแรก
+      context.go(AppRoutes.home);
+    } else {
+      // ตรวจสอบการล็อกอิน
+      if (UserSession.id == null) {
+        // ยังไม่ได้ล็อกอิน
+        context.go(AppRoutes.login);
+      } else {
+        // ล็อกอินแล้ว ไปหน้าที่ปุ่มกำหนด
+        switch (index) {
+          case 1:
+            context.go(AppRoutes.notification);
+            break;
+          case 2:
+            context.go(AppRoutes.post);
+            break;
+          case 3:
+            context.go(AppRoutes.chat);
+            break;
+          case 4:
+            context.go(AppRoutes.profile);
+            break;
+        }
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Theme(
-      data: Theme.of(context).copyWith(
-        textTheme: GoogleFonts.sarabunTextTheme(),
-      ),
+      data: Theme.of(
+        context,
+      ).copyWith(textTheme: GoogleFonts.sarabunTextTheme()),
       child: BottomNavigationBar(
         currentIndex: currentIndex,
         onTap: (index) => _onItemTapped(context, index),
