@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:frontend/routing/routes.dart';
 import '../../../review/presentation/screens/view_reviews_screen.dart';
 import 'package:frontend/features/product/application/product_provider.dart';
 import '../../../../utils/user_session.dart';
 import '../../../../core/widgets/my_product_card.dart';
+import '../../../../core/widgets/product_card.dart';
 import '../../application/store_provider.dart';
 
 class StoreScreen extends ConsumerStatefulWidget {
@@ -33,7 +33,7 @@ class _StoreScreenState extends ConsumerState<StoreScreen>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: widget.isOwner ? 3 : 2, vsync: this);
+    _tabController = TabController(length: widget.isOwner ? 2 : 1, vsync: this);
   }
 
   @override
@@ -54,6 +54,7 @@ class _StoreScreenState extends ConsumerState<StoreScreen>
           appBar: AppBar(
             backgroundColor: const Color(0xFFE0F3F7),
             elevation: 0,
+            automaticallyImplyLeading: true,
             leading: IconButton(
               icon: Image.asset(
                 'assets/icons/angle-small-left.png',
@@ -105,11 +106,13 @@ class _StoreScreenState extends ConsumerState<StoreScreen>
                         children: [
                           CircleAvatar(
                             radius: 30,
-                            backgroundImage: (store["avatar_url"] != null &&
+                            backgroundImage:
+                                (store["avatar_url"] != null &&
                                     (store["avatar_url"] as String).isNotEmpty)
                                 ? NetworkImage(store["avatar_url"])
                                 : null,
-                            child: (store["avatar_url"] == null ||
+                            child:
+                                (store["avatar_url"] == null ||
                                     (store["avatar_url"] as String).isEmpty)
                                 ? const Icon(Icons.person, size: 32)
                                 : null,
@@ -153,14 +156,6 @@ class _StoreScreenState extends ConsumerState<StoreScreen>
                                     minimumSize: const Size(70, 30),
                                   ),
                                   onPressed: () {},
-                                  child: const Text("ติดตาม"),
-                                ),
-                                const SizedBox(height: 4),
-                                OutlinedButton(
-                                  style: OutlinedButton.styleFrom(
-                                    minimumSize: const Size(70, 30),
-                                  ),
-                                  onPressed: () {},
                                   child: const Text("แชท"),
                                 ),
                               ],
@@ -175,7 +170,8 @@ class _StoreScreenState extends ConsumerState<StoreScreen>
                         horizontal: 16,
                         vertical: 16,
                       ),
-                      child: (store["reviews"] != null &&
+                      child:
+                          (store["reviews"] != null &&
                               (store["reviews"] as List).isNotEmpty)
                           ? Card(
                               color: Colors.grey[200],
@@ -197,7 +193,8 @@ class _StoreScreenState extends ConsumerState<StoreScreen>
                                           ),
                                           Text(
                                             (store["reviews"][0]["comment"] ??
-                                                '') as String,
+                                                    '')
+                                                as String,
                                           ),
                                         ],
                                       ),
@@ -253,12 +250,8 @@ class _StoreScreenState extends ConsumerState<StoreScreen>
                         ? const [
                             Tab(text: "รายการสินค้า"),
                             Tab(text: "ขายแล้ว"),
-                            Tab(text: "หมวดหมู่"),
                           ]
-                        : const [
-                            Tab(text: "รายการสินค้า"),
-                            Tab(text: "หมวดหมู่"),
-                          ],
+                        : const [Tab(text: "รายการสินค้า")],
                   ),
                 ),
               ),
@@ -267,12 +260,14 @@ class _StoreScreenState extends ConsumerState<StoreScreen>
               controller: _tabController,
               children: widget.isOwner
                   ? [
+                      // Owner: ใช้ _buildProductGrid + MyProductCard
                       Consumer(
                         builder: (context, ref, _) {
                           final userId =
                               int.tryParse(UserSession.id ?? "0") ?? 0;
-                          final productsAsync =
-                              ref.watch(productListByUserProvider(userId));
+                          final productsAsync = ref.watch(
+                            productListByUserProvider(userId),
+                          );
 
                           return productsAsync.when(
                             data: (products) {
@@ -291,10 +286,14 @@ class _StoreScreenState extends ConsumerState<StoreScreen>
                               }
 
                               return _buildProductGrid(
-                                  filteredProducts, context);
+                                filteredProducts,
+                                context,
+                                isOwner: true,
+                              );
                             },
                             loading: () => const Center(
-                                child: CircularProgressIndicator()),
+                              child: CircularProgressIndicator(),
+                            ),
                             error: (err, _) =>
                                 Center(child: Text("Error: $err")),
                           );
@@ -304,8 +303,9 @@ class _StoreScreenState extends ConsumerState<StoreScreen>
                         builder: (context, ref, _) {
                           final userId =
                               int.tryParse(UserSession.id ?? "0") ?? 0;
-                          final productsAsync =
-                              ref.watch(productListByUserProvider(userId));
+                          final productsAsync = ref.watch(
+                            productListByUserProvider(userId),
+                          );
 
                           return productsAsync.when(
                             data: (products) {
@@ -322,10 +322,15 @@ class _StoreScreenState extends ConsumerState<StoreScreen>
                                 );
                               }
 
-                              return _buildProductGrid(soldProducts, context);
+                              return _buildProductGrid(
+                                soldProducts,
+                                context,
+                                isOwner: true,
+                              );
                             },
                             loading: () => const Center(
-                                child: CircularProgressIndicator()),
+                              child: CircularProgressIndicator(),
+                            ),
                             error: (err, _) =>
                                 Center(child: Text("Error: $err")),
                           );
@@ -335,8 +340,7 @@ class _StoreScreenState extends ConsumerState<StoreScreen>
                         padding: const EdgeInsets.all(12),
                         itemCount: (store["categories"] as List?)?.length ?? 0,
                         itemBuilder: (context, index) {
-                          final category =
-                              (store["categories"] as List)[index];
+                          final category = (store["categories"] as List)[index];
                           return Card(
                             child: ListTile(
                               title: Text(category ?? ''),
@@ -347,29 +351,35 @@ class _StoreScreenState extends ConsumerState<StoreScreen>
                       ),
                     ]
                   : [
-                      GridView.builder(
-                        padding: const EdgeInsets.all(12),
-                        gridDelegate:
-                            const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 2,
-                          childAspectRatio: 0.62,
-                          crossAxisSpacing: 12,
-                          mainAxisSpacing: 12,
-                        ),
-                        itemCount: (store["products"] as List?)?.length ?? 0,
-                        itemBuilder: (context, index) {
-                          final product =
-                              (store["products"] as List)[index];
-                          return MyProductCard(
-                              product: Map<String, dynamic>.from(product));
+                      // Visitor: ใช้ _buildProductGrid + ProductCard
+                      Builder(
+                        builder: (context) {
+                          final products = (store["products"] as List? ?? [])
+                              .where((p) {
+                                final status = (p['status'] ?? '')
+                                    .toString()
+                                    .toLowerCase();
+                                return status == 'available' ||
+                                    status == 'posted';
+                              })
+                              .toList();
+
+                          if (products.isEmpty) {
+                            return const Center(child: Text("ยังไม่มีสินค้า"));
+                          }
+
+                          return _buildProductGrid(
+                            products,
+                            context,
+                            isOwner: false,
+                          );
                         },
                       ),
                       ListView.builder(
                         padding: const EdgeInsets.all(12),
                         itemCount: (store["categories"] as List?)?.length ?? 0,
                         itemBuilder: (context, index) {
-                          final category =
-                              (store["categories"] as List)[index];
+                          final category = (store["categories"] as List)[index];
                           return Card(
                             child: ListTile(
                               title: Text(category ?? ''),
@@ -383,16 +393,17 @@ class _StoreScreenState extends ConsumerState<StoreScreen>
           ),
         );
       },
-      loading: () => const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      ),
-      error: (err, st) => Scaffold(
-        body: Center(child: Text("Error: $err")),
-      ),
+      loading: () =>
+          const Scaffold(body: Center(child: CircularProgressIndicator())),
+      error: (err, st) => Scaffold(body: Center(child: Text("Error: $err"))),
     );
   }
 
-  Widget _buildProductGrid(List products, BuildContext context) {
+  Widget _buildProductGrid(
+    List products,
+    BuildContext context, {
+    bool isOwner = false,
+  }) {
     final screenWidth = MediaQuery.of(context).size.width;
     int crossAxisCount;
     if (screenWidth >= 1600)
@@ -426,12 +437,15 @@ class _StoreScreenState extends ConsumerState<StoreScreen>
         return GestureDetector(
           onTap: () {
             final productId = int.parse(product['id'].toString());
-            context.push(
-              AppRoutes.myProductDetails,
-              extra: {'productId': productId},
-            );
+            if (isOwner) {
+              context.push('/my_product_details/$productId');
+            } else {
+              context.push('/product_details/$productId');
+            }
           },
-          child: MyProductCard(product: product),
+          child: isOwner
+              ? MyProductCard(product: Map<String, dynamic>.from(product))
+              : ProductCard(product: Map<String, dynamic>.from(product)),
         );
       },
     );

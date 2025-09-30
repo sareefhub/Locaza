@@ -11,6 +11,7 @@ import 'package:frontend/utils/user_session.dart';
 import 'package:frontend/features/favorite/application/favorite_provider.dart';
 import 'package:go_router/go_router.dart';
 import 'package:frontend/features/chat/infrastructure/chat_api.dart';
+import 'package:frontend/routing/routes.dart';
 
 class ProductDetailsPage extends ConsumerStatefulWidget {
   final int productId;
@@ -315,6 +316,8 @@ class _ProductDetailsPageState extends ConsumerState<ProductDetailsPage> {
     Map<String, dynamic> product,
     Map<String, dynamic>? seller,
   ) {
+    if (seller == null) return const SizedBox();
+
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
@@ -323,32 +326,53 @@ class _ProductDetailsPageState extends ConsumerState<ProductDetailsPage> {
       ),
       child: Row(
         children: [
-          CircleAvatar(
-            radius: 24,
-            backgroundColor: Colors.grey[300],
-            backgroundImage:
-                seller != null &&
-                    seller['avatar_url'] != null &&
-                    seller['avatar_url'].toString().isNotEmpty
-                ? NetworkImage(ApiConfig.fixUrl(seller['avatar_url']))
-                : null,
-            child:
-                (seller == null ||
-                    seller['avatar_url'] == null ||
-                    seller['avatar_url'].toString().isEmpty)
-                ? const Icon(Icons.person, color: Colors.white)
-                : null,
+          GestureDetector(
+            onTap: () {
+              context.push(
+                AppRoutes.store.replaceFirst(
+                  ':storeId',
+                  seller['id'].toString(),
+                ),
+                extra: {'isOwner': false, 'seller': seller},
+              );
+            },
+            child: CircleAvatar(
+              radius: 24,
+              backgroundColor: Colors.grey[300],
+              backgroundImage:
+                  seller['avatar_url'] != null &&
+                      seller['avatar_url'].toString().isNotEmpty
+                  ? NetworkImage(ApiConfig.fixUrl(seller['avatar_url']))
+                  : null,
+              child:
+                  (seller['avatar_url'] == null ||
+                      seller['avatar_url'].toString().isEmpty)
+                  ? const Icon(Icons.person, color: Colors.white)
+                  : null,
+            ),
           ),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  seller != null ? seller['name'] ?? '' : '',
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
+                GestureDetector(
+                  onTap: () {
+                    // ไปหน้า store ของ seller
+                    context.push(
+                      AppRoutes.store.replaceFirst(
+                        ':storeId',
+                        seller['id'].toString(),
+                      ),
+                      extra: {'isOwner': false, 'seller': seller},
+                    );
+                  },
+                  child: Text(
+                    seller['name'] ?? '',
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
                   ),
                 ),
                 const SizedBox(height: 12),
@@ -356,8 +380,6 @@ class _ProductDetailsPageState extends ConsumerState<ProductDetailsPage> {
                   width: double.infinity,
                   child: OutlinedButton.icon(
                     onPressed: () async {
-                      if (seller == null) return;
-
                       final productData = {
                         "seller_id": seller['id'],
                         "title": product['title'],
