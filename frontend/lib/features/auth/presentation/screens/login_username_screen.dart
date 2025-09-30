@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../application/auth_provider.dart';
+import '../../../../routing/routes.dart';
 
 class LoginUsernameScreen extends ConsumerStatefulWidget {
   const LoginUsernameScreen({super.key});
@@ -78,6 +79,23 @@ class _LoginUsernameScreenState extends ConsumerState<LoginUsernameScreen> {
       body: SafeArea(
         child: Column(
           children: [
+            Padding(
+              padding: const EdgeInsets.only(top: 16, left: 8),
+              child: Align(
+                alignment: Alignment.topLeft,
+                child: IconButton(
+                  icon: Image.asset(
+                    'assets/icons/angle-small-left.png',
+                    width: 24,
+                    height: 24,
+                  ),
+                  onPressed: () {
+                    // กลับไปหน้า login
+                    context.go(AppRoutes.login);
+                  },
+                ),
+              ),
+            ),
             Padding(
               padding: const EdgeInsets.only(top: 80),
               child: Text(
