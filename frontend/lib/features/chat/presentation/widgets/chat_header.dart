@@ -43,18 +43,101 @@ class ChatHeader extends StatelessWidget {
       return isPurchased ? "รีวิวแล้ว" : "รีวิว";
     }
 
-    void onActionPressed() {
+    void onActionPressed(BuildContext context) async {
       if (isOwner) {
-        onSoldChanged(true);
+        // ผู้ขายกด "ขาย"
+        final confirm = await showDialog<bool>(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text("ยืนยันการขาย"),
+            content: const Text("คุณแน่ใจหรือไม่ว่าขายสินค้านี้แล้ว?"),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: const Text("ยกเลิก"),
+              ),
+              ElevatedButton(
+                onPressed: () => Navigator.pop(context, true),
+                child: const Text("ยืนยัน"),
+              ),
+            ],
+          ),
+        );
+
+        if (confirm == true) {
+          onSoldChanged(true);
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text("ทำการขายสินค้าเรียบร้อย")),
+          );
+        }
       } else {
+        // ผู้ซื้อ
         if (!isSold) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text("รอผู้ขายทำการขายสินค้าก่อน")),
+          );
           return;
         }
+
         if (!isPurchased) {
-          onPurchasedChanged(true);
-          context.push(
-            '/review',
-            extra: {"productId": product['id'], "buyerId": currentUserId},
+          final confirm = await showDialog<bool>(
+            context: context,
+            builder: (context) => AlertDialog(
+              title: const Text("ยืนยันการซื้อ"),
+              content: const Text("คุณแน่ใจหรือไม่ว่าซื้อสินค้านี้แล้ว?"),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context, false),
+                  child: const Text("ยกเลิก"),
+                ),
+                ElevatedButton(
+                  onPressed: () => Navigator.pop(context, true),
+                  child: const Text("ยืนยัน"),
+                ),
+              ],
+            ),
+          );
+
+          if (confirm == true) {
+            onPurchasedChanged(true);
+
+            // แสดง dialog แจ้งรีวิว
+            await showDialog(
+              context: context,
+              builder: (context) => AlertDialog(
+                title: const Text("สำเร็จ"),
+                content: const Text(
+                  "คุณซื้อสินค้าเรียบร้อยแล้ว สามารถไปรีวิวสินค้าได้",
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: const Text("ตกลง"),
+                  ),
+                ],
+              ),
+            );
+
+            // ไปหน้ารีวิว
+            context.push(
+              '/review',
+              extra: {"productId": product['id'], "buyerId": currentUserId},
+            );
+          }
+        } else {
+          // รีวิวแล้ว
+          await showDialog(
+            context: context,
+            builder: (context) => AlertDialog(
+              title: const Text("แจ้งเตือน"),
+              content: const Text("คุณได้รีวิวสินค้านี้แล้ว"),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text("ตกลง"),
+                ),
+              ],
+            ),
           );
         }
       }
@@ -64,11 +147,16 @@ class ChatHeader extends StatelessWidget {
       backgroundColor: const Color(0xFFC9E1E6),
       elevation: 0,
       automaticallyImplyLeading: false,
+      toolbarHeight: 120, // ✅ เพิ่มความสูงให้พอ
       flexibleSpace: SafeArea(
         child: Column(
+          mainAxisSize: MainAxisSize.min, // ✅ ป้องกัน Column ขยายเกิน
           children: [
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4),
+              padding: const EdgeInsets.symmetric(
+                horizontal: 8.0,
+                vertical: 2,
+              ), // ✅ ลด vertical
               child: Row(
                 children: [
                   IconButton(
@@ -109,8 +197,14 @@ class ChatHeader extends StatelessWidget {
               ),
             ),
             Container(
-              margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+              margin: const EdgeInsets.symmetric(
+                horizontal: 12,
+                vertical: 2,
+              ), // ✅ ลด vertical
+              padding: const EdgeInsets.symmetric(
+                horizontal: 8,
+                vertical: 4,
+              ), // ✅ ลด vertical
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(12),
@@ -147,26 +241,29 @@ class ChatHeader extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(width: 8),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 4,
+                  ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: isOwner
+                          ? (isSold ? Colors.grey : const Color(0xFF62B9E8))
+                          : (!isSold ? Colors.grey : const Color(0xFF62B9E8)),
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 6,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
                     ),
-                    decoration: BoxDecoration(
-                      color: (isOwner || isSold)
-                          ? const Color(0xFF62B9E8)
-                          : Colors.grey,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: GestureDetector(
-                      onTap: onActionPressed,
-                      child: Text(
-                        actionButtonText(),
-                        style: GoogleFonts.sarabun(
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
+                    onPressed: () {
+                      if ((isOwner && isSold) || (!isOwner && !isSold)) return;
+                      onActionPressed(context);
+                    },
+                    child: Text(
+                      actionButtonText(),
+                      style: GoogleFonts.sarabun(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
                   ),
