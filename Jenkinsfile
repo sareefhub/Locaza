@@ -180,6 +180,7 @@ EOF
         '''
       }
     }
+  }
 
   post { always { echo "Pipeline finished" } }
 }
