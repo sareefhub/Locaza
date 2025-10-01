@@ -7,6 +7,7 @@ import '../../../../utils/user_session.dart';
 import '../../../../core/widgets/my_product_card.dart';
 import '../../../../core/widgets/product_card.dart';
 import '../../application/store_provider.dart';
+import '../../../../config/api_config.dart';
 
 class StoreScreen extends ConsumerStatefulWidget {
   final String storeId;
@@ -80,8 +81,12 @@ class _StoreScreenState extends ConsumerState<StoreScreen>
                   contentPadding: EdgeInsets.symmetric(vertical: 10),
                 ),
                 onChanged: (value) {
-                  setState(() {
-                    searchQuery = value;
+                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                    if (mounted) {
+                      setState(() {
+                        searchQuery = value;
+                      });
+                    }
                   });
                 },
               ),
@@ -109,7 +114,7 @@ class _StoreScreenState extends ConsumerState<StoreScreen>
                             backgroundImage:
                                 (store["avatar_url"] != null &&
                                     (store["avatar_url"] as String).isNotEmpty)
-                                ? NetworkImage(store["avatar_url"])
+                                ? NetworkImage(ApiConfig.fixUrl(store["avatar_url"]))
                                 : null,
                             child:
                                 (store["avatar_url"] == null ||
@@ -192,8 +197,7 @@ class _StoreScreenState extends ConsumerState<StoreScreen>
                                             ),
                                           ),
                                           Text(
-                                            (store["reviews"][0]["comment"] ??
-                                                    '')
+                                            (store["reviews"][0]["comment"] ?? '')
                                                 as String,
                                           ),
                                         ],
@@ -251,7 +255,9 @@ class _StoreScreenState extends ConsumerState<StoreScreen>
                             Tab(text: "รายการสินค้า"),
                             Tab(text: "ขายแล้ว"),
                           ]
-                        : const [Tab(text: "รายการสินค้า")],
+                        : const [
+                            Tab(text: "รายการสินค้า"),
+                          ],
                   ),
                 ),
               ),
@@ -260,7 +266,6 @@ class _StoreScreenState extends ConsumerState<StoreScreen>
               controller: _tabController,
               children: widget.isOwner
                   ? [
-                      // Owner: ใช้ _buildProductGrid + MyProductCard
                       Consumer(
                         builder: (context, ref, _) {
                           final userId =
@@ -336,22 +341,8 @@ class _StoreScreenState extends ConsumerState<StoreScreen>
                           );
                         },
                       ),
-                      ListView.builder(
-                        padding: const EdgeInsets.all(12),
-                        itemCount: (store["categories"] as List?)?.length ?? 0,
-                        itemBuilder: (context, index) {
-                          final category = (store["categories"] as List)[index];
-                          return Card(
-                            child: ListTile(
-                              title: Text(category ?? ''),
-                              onTap: () {},
-                            ),
-                          );
-                        },
-                      ),
                     ]
                   : [
-                      // Visitor: ใช้ _buildProductGrid + ProductCard
                       Builder(
                         builder: (context) {
                           final products = (store["products"] as List? ?? [])
@@ -372,19 +363,6 @@ class _StoreScreenState extends ConsumerState<StoreScreen>
                             products,
                             context,
                             isOwner: false,
-                          );
-                        },
-                      ),
-                      ListView.builder(
-                        padding: const EdgeInsets.all(12),
-                        itemCount: (store["categories"] as List?)?.length ?? 0,
-                        itemBuilder: (context, index) {
-                          final category = (store["categories"] as List)[index];
-                          return Card(
-                            child: ListTile(
-                              title: Text(category ?? ''),
-                              onTap: () {},
-                            ),
                           );
                         },
                       ),
