@@ -81,7 +81,7 @@ class ChatHeader extends StatelessWidget implements PreferredSizeWidget {
     String actionButtonText() {
       if (isOwner) {
         if (status == "available") return "ขาย";
-        if (status == "reserved") return "ขายแล้ว";
+        if (status == "reserved") return "กำลังขาย";
         return "ขายแล้ว";
       } else {
         if (status == "reserved") return "ซื้อ";

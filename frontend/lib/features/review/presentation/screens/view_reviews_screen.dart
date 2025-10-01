@@ -23,7 +23,7 @@ class _ViewReviewScreenState extends State<ViewReviewScreen> {
   late Future<List<dynamic>> _reviewsFuture;
 
   Future<List<dynamic>> _fetchReviews() async {
-    final url = Uri.parse("${ApiConfig.baseUrl}/reviews?reviewee_id=${widget.revieweeId}");
+    final url = Uri.parse("${ApiConfig.baseUrl}/reviews/?reviewee_id=${widget.revieweeId}");
     final res = await http.get(url);
     if (res.statusCode == 200) {
       return jsonDecode(res.body);

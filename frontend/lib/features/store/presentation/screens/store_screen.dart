@@ -135,17 +135,6 @@ class _StoreScreenState extends ConsumerState<StoreScreen>
                                   ),
                                 ),
                                 const SizedBox(height: 4),
-                                Row(
-                                  children: [
-                                    const Icon(
-                                      Icons.star,
-                                      size: 16,
-                                      color: Colors.amber,
-                                    ),
-                                    const SizedBox(width: 4),
-                                    Text("${store["rating"] ?? 0}"),
-                                  ],
-                                ),
                               ],
                             ),
                           ),
