@@ -174,11 +174,12 @@ EOF
         sh '''
           set -eux
           docker rm -f locaza-backend || true
-          docker run -d --name locaza-backend -p 8000:8000 locaza-backend:latest
+          docker run -d --name locaza-backend \
+            --env-file locaza-backend-env \
+            -p 8000:8000 locaza-backend:latest
         '''
       }
     }
-  }
 
   post { always { echo "Pipeline finished" } }
 }
