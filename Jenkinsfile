@@ -16,18 +16,14 @@ pipeline {
         sh '''
           set -eux
           apt-get update
-          apt-get install -y --no-install-recommends \
-            git wget unzip ca-certificates docker-cli curl
+          DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+            git wget unzip ca-certificates docker-cli default-jre-headless
 
-          # Install docker-compose
-          curl -L "https://github.com/docker/compose/releases/download/v2.20.2/docker-compose-linux-x86_64" \
-            -o /usr/local/bin/docker-compose
-          chmod +x /usr/local/bin/docker-compose
-          docker-compose --version
-
+          command -v git
+          command -v docker
           docker --version
+          java -version || true
 
-          # Install SonarScanner (check multiple candidates)
           SCAN_VER=7.2.0.5079
           BASE_URL="https://binaries.sonarsource.com/Distribution/sonar-scanner-cli"
 
@@ -41,7 +37,7 @@ pipeline {
           rm -f /tmp/sonar.zip || true
           for f in $CANDIDATES; do
             URL="${BASE_URL}/${f}"
-            echo "Trying $URL ..."
+            echo "Trying: $URL"
             if wget -q --spider "$URL"; then
               wget -qO /tmp/sonar.zip "$URL"
               break
@@ -55,7 +51,7 @@ pipeline {
           ln -sf "$SCAN_HOME/bin/sonar-scanner" /usr/local/bin/sonar-scanner
           sonar-scanner --version
 
-          test -S /var/run/docker.sock
+          test -S /var/run/docker.sock || { echo "ERROR: /var/run/docker.sock not mounted"; exit 1; }
         '''
       }
     }
