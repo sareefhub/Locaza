@@ -61,7 +61,21 @@ class ProductApi {
     if (response.statusCode == 200) {
       return jsonDecode(response.body) as Map<String, dynamic>;
     } else {
-      return null;
+      throw Exception("Failed to update product: ${response.body}");
+    }
+  }
+
+  Future<Map<String, dynamic>?> updateProductStatus(int id, String newStatus) async {
+    final url = Uri.parse("${ApiConfig.baseUrl}/products/$id/status");
+    final response = await http.patch(
+      url,
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode({"status": newStatus}),
+    );
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body) as Map<String, dynamic>;
+    } else {
+      throw Exception("Failed to update product status: ${response.body}");
     }
   }
 
@@ -74,7 +88,11 @@ class ProductApi {
   Future<String?> uploadProductImage(File file) async {
     final url = Uri.parse("${ApiConfig.baseUrl}/upload/product/");
     final request = http.MultipartRequest("POST", url);
-    request.files.add(await http.MultipartFile.fromPath("file", file.path, contentType: MediaType("image", "jpeg")));
+    request.files.add(await http.MultipartFile.fromPath(
+      "file",
+      file.path,
+      contentType: MediaType("image", "jpeg"),
+    ));
     final streamedResponse = await request.send();
     final response = await http.Response.fromStream(streamedResponse);
     if (response.statusCode == 200) {

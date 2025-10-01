@@ -1,5 +1,4 @@
 from sqlalchemy.orm import Session
-from app.schemas.product_schema import ProductCreate, ProductUpdate
 from app.repositories.product_repository import ProductRepository
 from app.services.upload_service import UploadService
 from app.services.notification_service import NotificationService
@@ -8,9 +7,8 @@ from app.schemas.notification_schema import NotificationCreate
 
 class ProductService:
     @staticmethod
-    def create_product(db: Session, product: ProductCreate):
+    def create_product(db: Session, product):
         new_product = ProductRepository.create(db, product)
-
         favorites = FavoriteRepository.get_users_by_category(db, product.category_id)
         for user_id in favorites:
             NotificationService.create_notification(
@@ -22,11 +20,10 @@ class ProductService:
                     product_id=new_product["id"]
                 )
             )
-
         return new_product
 
     @staticmethod
-    def create_products(db: Session, products: list[ProductCreate]):
+    def create_products(db: Session, products):
         return ProductRepository.create_bulk(db, products)
 
     @staticmethod
@@ -42,12 +39,11 @@ class ProductService:
         return ProductRepository.get_by_user(db, user_id)
 
     @staticmethod
-    def update_product(db: Session, product_id: int, product: ProductUpdate):
+    def update_product(db: Session, product_id: int, product):
         old_product = ProductRepository.get(db, product_id)
         if not old_product:
             return None
         updated_product = ProductRepository.update(db, product_id, product)
-
         if old_product.get("status") != "sold" and updated_product.get("status") == "sold":
             favorites = FavoriteRepository.get_by_product(db, product_id)
             for fav in favorites:
@@ -60,7 +56,6 @@ class ProductService:
                         product_id=updated_product["id"]
                     )
                 )
-
         old_images = set(old_product.get("image_urls") or [])
         new_images = set(updated_product.get("image_urls") or [])
         unused_images = old_images - new_images

@@ -89,11 +89,8 @@ Future<String> createOrGetChatroom({
   required int productId,
 }) async {
   final api = ChatApi();
-
-  // เรียก API เพื่อเช็คว่ามี chatroom ระหว่าง user กับ seller สำหรับ product นี้หรือยัง
   final chatrooms = await api.getChatrooms();
 
-  // หา chatroom ที่ตรงกับ user, seller และ product
   final existing = chatrooms.firstWhere(
     (chat) =>
         (chat['buyer_id'] == currentUserId &&
@@ -106,10 +103,8 @@ Future<String> createOrGetChatroom({
   );
 
   if (existing.isNotEmpty) {
-    // มี chatroom อยู่แล้ว → return chatroomId
     return existing['id'].toString();
   } else {
-    // ยังไม่มี → สร้าง chatroom ใหม่ผ่าน API
     final url = Uri.parse("${ApiConfig.baseUrl}/chatrooms/");
     final response = await http.post(
       url,

@@ -1,4 +1,5 @@
 from sqlalchemy.orm import Session
+from app.models.models import Product
 from app.schemas.transaction_schema import SaleTransactionCreate, ReviewCreate
 from app.repositories.transaction_repository import SaleTransactionRepository, ReviewRepository
 
@@ -36,7 +37,12 @@ class SaleTransactionService:
 class ReviewService:
     @staticmethod
     def create_review(db: Session, review: ReviewCreate):
-        return ReviewRepository.create(db, review)
+        db_review = ReviewRepository.create(db, review)
+        product = db.query(Product).filter(Product.id == review.product_id).first()
+        if product:
+            product.status = "sold"
+            db.commit()
+        return db_review
 
     @staticmethod
     def get_review(db: Session, review_id: int):

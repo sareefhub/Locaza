@@ -20,6 +20,7 @@ class ChatroomResponse(ChatroomBase):
     product_title: Optional[str]
     product_images: Optional[List[str]]
     product_price: Optional[float]
+    product_status: Optional[str]
 
     class Config:
         from_attributes = True

@@ -26,6 +26,10 @@ def get_product(product_id: int, db: Session = Depends(get_db)):
 def update_product(product_id: int, product: ProductUpdate, db: Session = Depends(get_db)):
     return ProductService.update_product(db, product_id, product)
 
+@router.patch("/{product_id}/status", response_model=ProductResponse)
+def update_product_status(product_id: int, product: ProductUpdate, db: Session = Depends(get_db)):
+    return ProductService.update_product(db, product_id, product)
+
 @router.delete("/{product_id}")
 def delete_product(product_id: int, db: Session = Depends(get_db)):
     return ProductService.delete_product(db, product_id)

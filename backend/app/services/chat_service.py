@@ -20,6 +20,7 @@ class ChatService:
             product_title=row.product_title,
             product_images=row.product_images,
             product_price=row.product_price,
+            product_status=row.product_status,
         )
 
     @staticmethod
@@ -39,6 +40,7 @@ class ChatService:
                 product_title=row.product_title,
                 product_images=row.product_images,
                 product_price=row.product_price,
+                product_status=row.product_status,
             )
             for row, last_msg in rows
         ]

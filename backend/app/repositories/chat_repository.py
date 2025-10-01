@@ -35,6 +35,7 @@ class ChatRepository:
                 Product.title.label("product_title"),
                 Product.image_urls.label("product_images"),
                 Product.price.label("product_price"),
+                Product.status.label("product_status"),
             )
             .join(Buyer, Buyer.id == Chatroom.buyer_id)
             .join(Seller, Seller.id == Chatroom.seller_id)
@@ -66,6 +67,7 @@ class ChatRepository:
                 Product.title.label("product_title"),
                 Product.image_urls.label("product_images"),
                 Product.price.label("product_price"),
+                Product.status.label("product_status"),
             )
             .join(Buyer, Buyer.id == Chatroom.buyer_id)
             .join(Seller, Seller.id == Chatroom.seller_id)

@@ -75,125 +75,137 @@ class _LoginUsernameScreenState extends ConsumerState<LoginUsernameScreen> {
     final state = ref.watch(authProviderNotifier);
 
     return Scaffold(
+      resizeToAvoidBottomInset: true,
       backgroundColor: const Color(0xFFE6F5F9),
       body: SafeArea(
-        child: Column(
-          children: [
-            Padding(
-              padding: const EdgeInsets.only(top: 16, left: 8),
-              child: Align(
-                alignment: Alignment.topLeft,
-                child: IconButton(
-                  icon: Image.asset(
-                    'assets/icons/angle-small-left.png',
-                    width: 24,
-                    height: 24,
-                  ),
-                  onPressed: () {
-                    // กลับไปหน้า login
-                    context.go(AppRoutes.login);
-                  },
-                ),
-              ),
+        child: SingleChildScrollView(
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              minHeight: MediaQuery.of(context).size.height -
+                  MediaQuery.of(context).padding.top -
+                  MediaQuery.of(context).padding.bottom,
             ),
-            Padding(
-              padding: const EdgeInsets.only(top: 80),
-              child: Text(
-                'เข้าสู่ระบบ',
-                style: GoogleFonts.sarabun(
-                  fontSize: 28,
-                  fontWeight: FontWeight.bold,
-                  color: const Color(0xFF001A72),
-                ),
-              ),
-            ),
-            const SizedBox(height: 50),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 40),
-              child: Container(
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.grey),
-                ),
-                child: TextField(
-                  controller: usernameController,
-                  decoration: InputDecoration(
-                    hintText: 'ชื่อผู้ใช้หรืออีเมล',
-                    hintStyle: GoogleFonts.sarabun(color: Colors.grey),
-                    border: InputBorder.none,
-                    contentPadding: const EdgeInsets.symmetric(
-                      vertical: 16,
-                      horizontal: 20,
+            child: IntrinsicHeight(
+              child: Column(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.only(top: 16, left: 8),
+                    child: Align(
+                      alignment: Alignment.topLeft,
+                      child: IconButton(
+                        icon: Image.asset(
+                          'assets/icons/angle-small-left.png',
+                          width: 24,
+                          height: 24,
+                        ),
+                        onPressed: () {
+                          context.go(AppRoutes.login);
+                        },
+                      ),
                     ),
                   ),
-                  style: GoogleFonts.sarabun(),
-                ),
-              ),
-            ),
-            const SizedBox(height: 20),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 40),
-              child: Container(
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.grey),
-                ),
-                child: TextField(
-                  controller: passwordController,
-                  obscureText: true,
-                  decoration: InputDecoration(
-                    hintText: 'รหัสผ่าน',
-                    hintStyle: GoogleFonts.sarabun(color: Colors.grey),
-                    border: InputBorder.none,
-                    contentPadding: const EdgeInsets.symmetric(
-                      vertical: 16,
-                      horizontal: 20,
+                  Padding(
+                    padding: const EdgeInsets.only(top: 80),
+                    child: Text(
+                      'เข้าสู่ระบบ',
+                      style: GoogleFonts.sarabun(
+                        fontSize: 28,
+                        fontWeight: FontWeight.bold,
+                        color: const Color(0xFF001A72),
+                      ),
                     ),
                   ),
-                  style: GoogleFonts.sarabun(),
-                ),
-              ),
-            ),
-            const SizedBox(height: 20),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 40),
-              child: ElevatedButton(
-                onPressed: state.isLoading ? null : _handleLogin,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFFD0E7F9),
-                  foregroundColor: Colors.black,
-                  elevation: 0,
-                  padding: const EdgeInsets.symmetric(
-                    vertical: 14,
-                    horizontal: 24,
+                  const SizedBox(height: 50),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 40),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: Colors.grey),
+                      ),
+                      child: TextField(
+                        controller: usernameController,
+                        decoration: InputDecoration(
+                          hintText: 'ชื่อผู้ใช้',
+                          hintStyle: GoogleFonts.sarabun(color: Colors.grey),
+                          border: InputBorder.none,
+                          contentPadding: const EdgeInsets.symmetric(
+                            vertical: 16,
+                            horizontal: 20,
+                          ),
+                        ),
+                        style: GoogleFonts.sarabun(),
+                      ),
+                    ),
                   ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    side: BorderSide(color: Colors.grey.shade300, width: 1.5),
+                  const SizedBox(height: 20),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 40),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: Colors.grey),
+                      ),
+                      child: TextField(
+                        controller: passwordController,
+                        obscureText: true,
+                        decoration: InputDecoration(
+                          hintText: 'รหัสผ่าน',
+                          hintStyle: GoogleFonts.sarabun(color: Colors.grey),
+                          border: InputBorder.none,
+                          contentPadding: const EdgeInsets.symmetric(
+                            vertical: 16,
+                            horizontal: 20,
+                          ),
+                        ),
+                        style: GoogleFonts.sarabun(),
+                      ),
+                    ),
                   ),
-                ),
-                child: state.isLoading
-                    ? const CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: Colors.black,
-                      )
-                    : Text(
-                        'เข้าสู่ระบบ',
-                        style: GoogleFonts.sarabun(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w500,
+                  const SizedBox(height: 20),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 40),
+                    child: ElevatedButton(
+                      onPressed: state.isLoading ? null : _handleLogin,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFFD0E7F9),
+                        foregroundColor: Colors.black,
+                        elevation: 0,
+                        padding: const EdgeInsets.symmetric(
+                          vertical: 14,
+                          horizontal: 24,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          side: BorderSide(
+                              color: Colors.grey.shade300, width: 1.5),
                         ),
                       ),
+                      child: state.isLoading
+                          ? const CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.black,
+                            )
+                          : Text(
+                              'เข้าสู่ระบบ',
+                              style: GoogleFonts.sarabun(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                    ),
+                  ),
+                  const Spacer(),
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 24),
+                    child: Image.asset('assets/logo.png', height: 40),
+                  ),
+                ],
               ),
             ),
-            const Spacer(),
-            Padding(
-              padding: const EdgeInsets.only(bottom: 24),
-              child: Image.asset('assets/logo.png', height: 40),
-            ),
-          ],
+          ),
         ),
       ),
     );

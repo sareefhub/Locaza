@@ -1,6 +1,15 @@
 from pydantic import BaseModel
 from typing import Optional
 from datetime import datetime
+from enum import Enum
+
+class ProductStatus(str, Enum):
+    draft = "draft"
+    available = "available"
+    reserved = "reserved"
+    purchased = "purchased"
+    reviewed = "reviewed"
+    sold = "sold"
 
 class ProductBase(BaseModel):
     seller_id: int
@@ -9,7 +18,7 @@ class ProductBase(BaseModel):
     price: float
     category_id: int
     location: Optional[str] = None
-    status: Optional[str] = "available"
+    status: ProductStatus = ProductStatus.available
     image_urls: list[str] = []
 
 class ProductCreate(ProductBase):
@@ -21,7 +30,7 @@ class ProductUpdate(BaseModel):
     price: Optional[float] = None
     category_id: Optional[int] = None
     location: Optional[str] = None
-    status: Optional[str] = None
+    status: Optional[ProductStatus] = None
     image_urls: Optional[list[str]] = None
 
 class ProductResponse(ProductBase):

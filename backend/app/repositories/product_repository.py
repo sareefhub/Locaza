@@ -1,11 +1,10 @@
 from sqlalchemy.orm import Session
 from app.models.models import Product
-from app.schemas.product_schema import ProductCreate, ProductUpdate
 import json
 
 class ProductRepository:
     @staticmethod
-    def create(db: Session, product: ProductCreate):
+    def create(db: Session, product):
         data = product.dict()
         db_product = Product(**data)
         db.add(db_product)
@@ -14,7 +13,7 @@ class ProductRepository:
         return ProductRepository._to_dict(db_product)
 
     @staticmethod
-    def create_bulk(db: Session, products: list[ProductCreate]):
+    def create_bulk(db: Session, products):
         db_products = [Product(**p.dict()) for p in products]
         db.add_all(db_products)
         db.commit()
@@ -38,7 +37,7 @@ class ProductRepository:
         return [ProductRepository._to_dict(p) for p in products]
 
     @staticmethod
-    def update(db: Session, product_id: int, product: ProductUpdate):
+    def update(db: Session, product_id: int, product):
         db_product = db.query(Product).filter(Product.id == product_id).first()
         if not db_product:
             return None

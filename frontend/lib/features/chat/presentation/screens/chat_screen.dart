@@ -118,7 +118,6 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             Expanded(
               child: chatroomsAsync.when(
                 data: (chatrooms) {
-                  // **กรองเฉพาะห้องแชตของผู้ใช้**
                   final userChats = chatrooms
                       .where((chat) {
                         return chat['buyer_id'].toString() ==
@@ -155,18 +154,16 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                       })
                       .toList();
 
-                  // จัดเรียงข้อความล่าสุดอยู่บนสุด
                   userChats.sort((a, b) {
                     final aTime =
                         DateTime.tryParse(a['last_message_time'] ?? '') ??
-                        DateTime.fromMillisecondsSinceEpoch(0);
+                            DateTime.fromMillisecondsSinceEpoch(0);
                     final bTime =
                         DateTime.tryParse(b['last_message_time'] ?? '') ??
-                        DateTime.fromMillisecondsSinceEpoch(0);
+                            DateTime.fromMillisecondsSinceEpoch(0);
                     return bTime.compareTo(aTime);
                   });
 
-                  // กรองด้วย searchText
                   final filteredChats = searchText.isEmpty
                       ? userChats
                       : userChats.where((chat) {
@@ -207,14 +204,16 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                               'otherUserName': chat['other_user_name'],
                               'otherUserAvatar': chat['other_user_avatar'],
                               'product': {
+                                "id": chat['product_id'],
                                 "seller_id": chat['seller_id'],
                                 "title": chat['product_title'],
                                 "image_urls":
                                     (chat['product_images'] as List<dynamic>?)
-                                        ?.map((img) => ApiConfig.fixUrl(img))
-                                        .toList() ??
-                                    [],
+                                            ?.map((img) => ApiConfig.fixUrl(img))
+                                            .toList() ??
+                                        [],
                                 "price": chat['product_price'],
+                                "status": chat['product_status'],
                               },
                               'fromProductDetail': false,
                             },
@@ -232,8 +231,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                             children: [
                               CircleAvatar(
                                 radius: 24,
-                                backgroundImage:
-                                    chat['other_user_avatar'] != null
+                                backgroundImage: chat['other_user_avatar'] !=
+                                        null
                                     ? NetworkImage(
                                         ApiConfig.fixUrl(
                                           chat['other_user_avatar'],
@@ -296,7 +295,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                     },
                   );
                 },
-                loading: () => const Center(child: CircularProgressIndicator()),
+                loading: () =>
+                    const Center(child: CircularProgressIndicator()),
                 error: (err, _) => Center(
                   child: Text(
                     'Error: $err',

@@ -30,14 +30,19 @@ class ChatDetailScreen extends StatefulWidget {
 }
 
 class _ChatDetailScreenState extends State<ChatDetailScreen> {
-  bool isSold = false;
-  bool isPurchased = false;
-
   final TextEditingController _messageController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   final ChatApi _chatApi = ChatApi();
 
   List<Map<String, dynamic>> messages = [];
+  late Map<String, dynamic> productState;
+
+  @override
+  void initState() {
+    super.initState();
+    productState = Map<String, dynamic>.from(widget.product);
+    _loadMessages();
+  }
 
   void _scrollToBottom() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -94,26 +99,21 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
   }
 
   @override
-  void initState() {
-    super.initState();
-    _loadMessages();
-  }
-
-  @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFE0F3F7),
       appBar: PreferredSize(
         preferredSize: const Size.fromHeight(120),
         child: ChatHeader(
-          product: widget.product,
+          product: productState,
           currentUserId: widget.currentUserId,
           otherUserName: widget.otherUserName,
           otherUserAvatar: widget.otherUserAvatar,
-          isSold: isSold,
-          isPurchased: isPurchased,
-          onSoldChanged: (val) => setState(() => isSold = val),
-          onPurchasedChanged: (val) => setState(() => isPurchased = val),
+          onStatusChanged: (newStatus) {
+            setState(() {
+              productState['status'] = newStatus;
+            });
+          },
         ),
       ),
       body: Column(

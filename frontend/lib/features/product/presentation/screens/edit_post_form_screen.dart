@@ -97,7 +97,7 @@ class _EditPostFormScreenState extends ConsumerState<EditPostFormScreen> {
       "price": double.tryParse(priceCtrl.text.trim()) ?? 0.0,
       "category_id": _categoryId ?? 1,
       "location": _province ?? "",
-      "status": state == 'post' ? 'available' : 'draft',
+      "status": state == 'post' ? (_status ?? 'available') : 'draft',
       "image_urls": uploaded
     };
     await ref.read(productApiProvider).updateProduct(widget.postId, product);
@@ -203,8 +203,6 @@ class _EditPostFormScreenState extends ConsumerState<EditPostFormScreen> {
                   setState(() => _province = sel);
                 }
               }),
-              _section('สถานะ'),
-              _select('สถานะ', _status, () => setState(() => _status = "reserved")),
               Padding(
                 padding: const EdgeInsets.all(24),
                 child: Text(
