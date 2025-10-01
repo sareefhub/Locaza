@@ -31,10 +31,29 @@ pipeline {
           docker --version
           java -version || true
 
-          # Install SonarScanner
+          # Install SonarScanner (try multiple candidates)
           SCAN_VER=7.2.0.5079
           BASE_URL="https://binaries.sonarsource.com/Distribution/sonar-scanner-cli"
-          wget -qO /tmp/sonar.zip "$BASE_URL/sonar-scanner-${SCAN_VER}-linux-x64.zip"
+
+          CANDIDATES="
+            sonar-scanner-${SCAN_VER}-linux-x64.zip
+            sonar-scanner-${SCAN_VER}-linux.zip
+            sonar-scanner-cli-${SCAN_VER}-linux-x64.zip
+            sonar-scanner-cli-${SCAN_VER}-linux.zip
+          "
+
+          rm -f /tmp/sonar.zip || true
+          for f in $CANDIDATES; do
+            URL="${BASE_URL}/${f}"
+            echo "Trying: $URL"
+            if wget -q --spider "$URL"; then
+              wget -qO /tmp/sonar.zip "$URL"
+              break
+            fi
+          done
+
+          test -s /tmp/sonar.zip || { echo "Failed to download SonarScanner ${SCAN_VER}"; exit 1; }
+
           unzip -q /tmp/sonar.zip -d /opt
           SCAN_HOME="$(find /opt -maxdepth 1 -type d -name 'sonar-scanner*' | head -n1)"
           ln -sf "$SCAN_HOME/bin/sonar-scanner" /usr/local/bin/sonar-scanner
