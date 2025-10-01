@@ -17,12 +17,11 @@ pipeline {
           set -eux
           apt-get update
           DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
-            git wget unzip ca-certificates docker-cli docker-compose-plugin default-jre-headless
+            git wget unzip ca-certificates docker-cli default-jre-headless
 
           command -v git
           command -v docker
           docker --version
-          docker compose version || true
           java -version || true
 
           SCAN_VER=7.2.0.5079
@@ -172,14 +171,24 @@ EOF
     // ---------- Stage 8: Deploy Container ----------
     stage('Deploy Container') {
       steps {
-        sh '''
-          set -eux
-          docker compose -f backend/docker-compose.yml down || true
-          docker compose -f backend/docker-compose.yml up -d --build
-        '''
+        withCredentials([file(credentialsId: 'locaza-backend-env', variable: 'BACKEND_ENV_FILE')]) {
+          sh '''
+            set -eux
+            docker network inspect locaza_network >/dev/null 2>&1 || docker network create locaza_network
+            docker rm -f locaza-backend || true
+            docker run -d --name locaza-backend \
+              --env-file $BACKEND_ENV_FILE \
+              --network locaza_network \
+              -p 8000:8000 locaza-backend:latest
+          '''
+        }
       }
     }
   }
 
-  post { always { echo "Pipeline finished" } }
+  post {
+    always {
+      echo "Pipeline finished"
+    }
+  }
 }
