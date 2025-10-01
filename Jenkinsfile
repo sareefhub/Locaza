@@ -171,13 +171,15 @@ EOF
     // ---------- Stage 8: Deploy Container ----------
     stage('Deploy Container') {
       steps {
-        sh '''
-          set -eux
-          docker rm -f locaza-backend || true
-          docker run -d --name locaza-backend \
-            --env-file locaza-backend-env \
-            -p 8000:8000 locaza-backend:latest
-        '''
+        withCredentials([file(credentialsId: 'locaza-backend-env', variable: 'BACKEND_ENV_FILE')]) {
+          sh '''
+            set -eux
+            docker rm -f locaza-backend || true
+            docker run -d --name locaza-backend \
+              --env-file $BACKEND_ENV_FILE \
+              -p 8000:8000 locaza-backend:latest
+          '''
+        }
       }
     }
   }
