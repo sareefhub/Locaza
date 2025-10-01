@@ -17,11 +17,12 @@ pipeline {
           set -eux
           apt-get update
           DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
-            git wget unzip ca-certificates docker-cli default-jre-headless
+            git wget unzip ca-certificates docker-cli docker-compose-plugin default-jre-headless
 
           command -v git
           command -v docker
           docker --version
+          docker compose version || true
           java -version || true
 
           SCAN_VER=7.2.0.5079
@@ -174,8 +175,8 @@ EOF
         withCredentials([file(credentialsId: 'locaza-backend-env', variable: 'BACKEND_ENV_FILE')]) {
           sh '''
             set -eux
-            docker-compose -f backend/docker-compose.yml down || true
-            docker-compose -f backend/docker-compose.yml up -d --build backend
+            docker compose -f backend/docker-compose.yml down || true
+            docker compose -f backend/docker-compose.yml up -d --build backend
           '''
         }
       }
