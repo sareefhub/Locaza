@@ -174,7 +174,7 @@ EOF
         sh '''
           set -eux
           docker rm -f locaza-backend || true
-          docker run -d --name locaza-backend -p 8080:8000 locaza-backend:latest
+          docker run -d --name locaza-backend -p 8000:8000 locaza-backend:latest
         '''
       }
     }
