@@ -6,9 +6,7 @@ pipeline {
     }
   }
 
-  options { 
-    timestamps() 
-  }
+  options { timestamps() }
 
   stages {
 
@@ -19,7 +17,7 @@ pipeline {
           set -eux
           apt-get update
           apt-get install -y --no-install-recommends \
-            git wget unzip ca-certificates docker-cli default-jre-headless curl
+            git wget unzip ca-certificates docker-cli curl
 
           # Install docker-compose
           curl -L "https://github.com/docker/compose/releases/download/v2.20.2/docker-compose-linux-x86_64" \
@@ -27,11 +25,9 @@ pipeline {
           chmod +x /usr/local/bin/docker-compose
           docker-compose --version
 
-          # Check tools
           docker --version
-          java -version || true
 
-          # Install SonarScanner (try multiple candidates)
+          # Install SonarScanner (check multiple candidates)
           SCAN_VER=7.2.0.5079
           BASE_URL="https://binaries.sonarsource.com/Distribution/sonar-scanner-cli"
 
@@ -45,7 +41,7 @@ pipeline {
           rm -f /tmp/sonar.zip || true
           for f in $CANDIDATES; do
             URL="${BASE_URL}/${f}"
-            echo "Trying: $URL"
+            echo "Trying $URL ..."
             if wget -q --spider "$URL"; then
               wget -qO /tmp/sonar.zip "$URL"
               break
@@ -59,7 +55,6 @@ pipeline {
           ln -sf "$SCAN_HOME/bin/sonar-scanner" /usr/local/bin/sonar-scanner
           sonar-scanner --version
 
-          # Validate docker.sock mount
           test -S /var/run/docker.sock
         '''
       }
@@ -114,7 +109,7 @@ def test_root():
 EOF
             fi
 
-            pytest -q --cov=app --cov-report=xml tests/ || true
+            pytest -q --cov=app --cov-report=xml tests/
             ls -la
           '''
         }
@@ -183,8 +178,6 @@ EOF
   }
 
   post {
-    always { 
-      echo "Pipeline finished" 
-    }
+    always { echo "Pipeline finished" }
   }
 }
