@@ -81,17 +81,20 @@ pipeline {
       }
     }
 
-    // ---------- Stage 4: Run Tests & Coverage ----------
-    stage('Run Tests & Coverage') {
+    // ---------- Stage 4: Smoke Tests ----------
+    stage('Run Smoke Tests') {
       steps {
         dir('backend') {
           sh '''
             set -eux
             export PYTHONPATH="$PWD"
 
+            # inject ค่า ENV ที่จำเป็นสำหรับ Pydantic settings
+            export DATABASE_URL="sqlite:///./test.db"
+            export SECRET_KEY="testsecret"
+
             mkdir -p tests
-            if [ ! -f "tests/test_main.py" ]; then
-              cat > tests/test_main.py << 'EOF'
+            cat > tests/test_smoke.py << 'EOF'
 from fastapi.testclient import TestClient
 import sys, os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -99,14 +102,21 @@ from app.main import app
 
 client = TestClient(app)
 
-def test_root():
+def test_backend_alive():
     response = client.get("/")
     assert response.status_code in [200, 404]
-EOF
-            fi
 
-            pytest -q --cov=app --cov-report=xml tests/
-            ls -la
+def test_docs_available():
+    response = client.get("/docs")
+    assert response.status_code == 200
+
+def test_openapi_available():
+    response = client.get("/openapi.json")
+    assert response.status_code == 200
+EOF
+
+            pytest -q tests/
+            ls -la tests/
           '''
         }
       }
