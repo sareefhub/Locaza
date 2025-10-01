@@ -88,8 +88,6 @@ pipeline {
           sh '''
             set -eux
             export PYTHONPATH="$PWD"
-
-            # inject ค่า ENV ที่จำเป็นสำหรับ Pydantic settings
             export DATABASE_URL="sqlite:///./test.db"
             export SECRET_KEY="testsecret"
 
@@ -103,20 +101,18 @@ from app.main import app
 client = TestClient(app)
 
 def test_backend_alive():
-    response = client.get("/")
-    assert response.status_code in [200, 404]
+    r = client.get("/")
+    assert r.status_code in [200, 404]
 
 def test_docs_available():
-    response = client.get("/docs")
-    assert response.status_code == 200
+    assert client.get("/docs").status_code == 200
 
 def test_openapi_available():
-    response = client.get("/openapi.json")
-    assert response.status_code == 200
+    assert client.get("/openapi.json").status_code == 200
 EOF
 
-            pytest -q tests/
-            ls -la tests/
+            pytest -q --cov=app --cov-report=xml:coverage.xml tests/
+            ls -la coverage.xml
           '''
         }
       }
@@ -126,20 +122,28 @@ EOF
     stage('SonarQube Analysis') {
       steps {
         dir('backend') {
-          withSonarQubeEnv('SonarQube servers') {
+          withSonarQubeEnv('SonarQube') { // ชื่อต้องตรงกับที่ตั้งใน Jenkins
             sh '''
               set -eux
+
+              cat > sonar-project.properties << 'EOF'
+sonar.projectKey=locaza-backend
+sonar.projectName=Locaza Backend
+sonar.projectVersion=1.0
+sonar.sourceEncoding=UTF-8
+
+sonar.sources=app
+sonar.tests=tests
+sonar.exclusions=**/__pycache__/**,**/*.pyc
+sonar.test.inclusions=tests/**/*.py
+
+sonar.python.version=3.13
+sonar.python.coverage.reportPaths=coverage.xml
+EOF
+
               sonar-scanner \
                 -Dsonar.host.url="$SONAR_HOST_URL" \
-                -Dsonar.login="$SONAR_AUTH_TOKEN" \
-                -Dsonar.projectBaseDir="$PWD" \
-                -Dsonar.projectKey=locaza-backend \
-                -Dsonar.projectName="Locaza Backend" \
-                -Dsonar.sources=app \
-                -Dsonar.tests=tests \
-                -Dsonar.python.version=3.13 \
-                -Dsonar.python.coverage.reportPaths=coverage.xml \
-                -Dsonar.sourceEncoding=UTF-8
+                -Dsonar.login="$SONAR_AUTH_TOKEN"
             '''
           }
         }
