@@ -1,0 +1,28 @@
+version: "3.9"
+services:
+  db:
+    image: postgres:15
+    container_name: locaza_postgres
+    restart: always
+    environment:
+      POSTGRES_USER: locaza
+      POSTGRES_PASSWORD: locaza123
+      POSTGRES_DB: locazadb
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  backend:
+    build: .
+    container_name: locaza_backend
+    restart: always
+    env_file:
+      - .env.docker
+    depends_on:
+      - db
+    ports:
+      - "8000:8000"
+
+volumes:
+  postgres_data:

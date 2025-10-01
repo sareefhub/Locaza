@@ -1,0 +1,65 @@
+# ---------------------
+# Python
+# ---------------------
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.pkl
+*.db
+*.sqlite3
+
+# ---------------------
+# Virtual Environment
+# ---------------------
+ENV/
+env/
+.env
+.env.dev
+.env.docker
+.venv/
+.pyenv/
+
+# ---------------------
+# Poetry
+# ---------------------
+poetry.lock
+*.egg-info/
+.eggs/
+
+# ---------------------
+# VSCode / IDE
+# ---------------------
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# ---------------------
+# Byte-compiled / cache
+# ---------------------
+*.log
+*.pot
+*.pyc
+*.pyo
+*.pyd
+*.class
+*.DS_Store
+
+# ---------------------
+# Coverage / Testing
+# ---------------------
+.coverage
+.coverage.*
+.cache
+pytest_cache/
+htmlcov/
+
+# ---------------------
+# Docker
+# ---------------------
+*.pid
+*.seed
+*.pid.lock
+docker-compose.override.yml
+postgres_data/
