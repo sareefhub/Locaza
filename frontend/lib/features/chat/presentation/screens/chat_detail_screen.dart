@@ -30,19 +30,14 @@ class ChatDetailScreen extends StatefulWidget {
 }
 
 class _ChatDetailScreenState extends State<ChatDetailScreen> {
+  bool isSold = false;
+  bool isPurchased = false;
+
   final TextEditingController _messageController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   final ChatApi _chatApi = ChatApi();
 
   List<Map<String, dynamic>> messages = [];
-  late Map<String, dynamic> productState;
-
-  @override
-  void initState() {
-    super.initState();
-    productState = Map<String, dynamic>.from(widget.product);
-    _loadMessages();
-  }
 
   void _scrollToBottom() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -99,19 +94,43 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
   }
 
   @override
+  void initState() {
+    super.initState();
+    final status = widget.product['status'] ?? "available";
+    if (status == "sold") {
+      isSold = true;
+    } else if (status == "purchased" || status == "reviewed") {
+      isSold = true;
+      isPurchased = true;
+    }
+    _loadMessages();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFE0F3F7),
       appBar: PreferredSize(
         preferredSize: const Size.fromHeight(120),
         child: ChatHeader(
-          product: productState,
+          product: widget.product,
           currentUserId: widget.currentUserId,
           otherUserName: widget.otherUserName,
           otherUserAvatar: widget.otherUserAvatar,
           onStatusChanged: (newStatus) {
             setState(() {
-              productState['status'] = newStatus;
+              if (newStatus == "reserved") {
+                isSold = false;
+                isPurchased = false;
+              } else if (newStatus == "purchased") {
+                isSold = true;
+                isPurchased = false;
+              } else if (newStatus == "reviewed") {
+                isSold = true;
+                isPurchased = true;
+              } else if (newStatus == "sold") {
+                isSold = true;
+              }
             });
           },
         ),

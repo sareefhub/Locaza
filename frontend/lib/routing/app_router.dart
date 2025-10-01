@@ -152,6 +152,7 @@ final GoRouter appRouter = GoRouter(
           product: extra['product'] ?? {},
           reviewerId: extra['reviewerId'] ?? '',
           revieweeId: extra['revieweeId'] ?? '',
+          saleTransactionId: extra['saleTransactionId'] ?? 0,
         );
       },
     ),

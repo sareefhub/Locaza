@@ -54,7 +54,7 @@ class _MyPurchasePageState extends ConsumerState<MyPurchasePage> {
             height: 24,
           ),
           onPressed: () {
-            context.go('/profile');
+            context.pop();
           },
         ),
         centerTitle: true,
@@ -67,66 +67,71 @@ class _MyPurchasePageState extends ConsumerState<MyPurchasePage> {
           ),
         ),
       ),
-      body: Column(
-        children: [
-          const SizedBox(height: 8),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12),
-            child: CustomSearchBar(
-              hintText: "ค้นหาสินค้า",
-              controller: _searchController,
-              onChanged: (value) {
-                setState(() {
-                  searchQuery = value;
-                });
-              },
+      body: RefreshIndicator(
+        onRefresh: () async {
+          ref.invalidate(purchaseListProvider(userId));
+        },
+        child: Column(
+          children: [
+            const SizedBox(height: 8),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              child: CustomSearchBar(
+                hintText: "ค้นหาสินค้า",
+                controller: _searchController,
+                onChanged: (value) {
+                  setState(() {
+                    searchQuery = value;
+                  });
+                },
+              ),
             ),
-          ),
-          const SizedBox(height: 16),
-          Expanded(
-            child: purchasesAsync.when(
-              data: (purchases) {
-                final filtered = purchases.where((p) {
-                  final title = (p['product_title'] ?? "").toString().toLowerCase();
-                  return title.contains(searchQuery.toLowerCase());
-                }).toList();
+            const SizedBox(height: 16),
+            Expanded(
+              child: purchasesAsync.when(
+                data: (purchases) {
+                  final filtered = purchases.where((p) {
+                    final title = (p['product_title'] ?? "").toString().toLowerCase();
+                    return title.contains(searchQuery.toLowerCase());
+                  }).toList();
 
-                if (filtered.isEmpty) {
-                  return const Center(child: Text("ยังไม่มีประวัติการซื้อ"));
-                }
+                  if (filtered.isEmpty) {
+                    return const Center(child: Text("ยังไม่มีประวัติการซื้อ"));
+                  }
 
-                return ListView.builder(
-                  padding: const EdgeInsets.symmetric(horizontal: 12),
-                  itemCount: filtered.length,
-                  itemBuilder: (context, index) {
-                    final item = filtered[index];
-                    final imageUrl = _buildImageUrl(item['image_url']);
-                    final time = item['created_at'] != null
-                        ? _formatThaiTime(item['created_at'].toString())
-                        : '';
+                  return ListView.builder(
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    itemCount: filtered.length,
+                    itemBuilder: (context, index) {
+                      final item = filtered[index];
+                      final imageUrl = _buildImageUrl(item['image_url']);
+                      final time = item['created_at'] != null
+                          ? _formatThaiTime(item['created_at'].toString())
+                          : '';
 
-                    return Column(
-                      children: [
-                        PurchaseCard(
-                          seller: item['seller_name'] ?? 'ไม่ทราบผู้ขาย',
-                          productName: item['product_title'] ?? '',
-                          time: time,
-                          price: "฿${item['price'] ?? ''}",
-                          status: item['status'] ?? '',
-                          imageUrl: imageUrl,
-                          product: item,
-                        ),
-                        const SizedBox(height: 2),
-                      ],
-                    );
-                  },
-                );
-              },
-              loading: () => const Center(child: CircularProgressIndicator()),
-              error: (err, _) => Center(child: Text("Error: $err")),
+                      return Column(
+                        children: [
+                          PurchaseCard(
+                            seller: item['seller_name'] ?? 'ไม่ทราบผู้ขาย',
+                            productName: item['product_title'] ?? '',
+                            time: time,
+                            price: "฿${item['price'] ?? ''}",
+                            status: item['status'] ?? '',
+                            imageUrl: imageUrl,
+                            product: item,
+                          ),
+                          const SizedBox(height: 2),
+                        ],
+                      );
+                    },
+                  );
+                },
+                loading: () => const Center(child: CircularProgressIndicator()),
+                error: (err, _) => Center(child: Text("Error: $err")),
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

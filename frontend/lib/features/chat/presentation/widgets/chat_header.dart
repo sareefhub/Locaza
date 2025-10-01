@@ -3,13 +3,17 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../config/api_config.dart';
 import '../../../product/infrastructure/product_api.dart';
+import '../../../product/infrastructure/purchase_api.dart';
 
-class ChatHeader extends StatelessWidget {
+class ChatHeader extends StatelessWidget implements PreferredSizeWidget {
   final Map<String, dynamic> product;
   final String currentUserId;
   final String otherUserName;
   final String? otherUserAvatar;
   final ValueChanged<String> onStatusChanged;
+
+  @override
+  final Size preferredSize;
 
   const ChatHeader({
     super.key,
@@ -18,7 +22,7 @@ class ChatHeader extends StatelessWidget {
     required this.otherUserName,
     required this.otherUserAvatar,
     required this.onStatusChanged,
-  });
+  }) : preferredSize = const Size.fromHeight(120);
 
   Future<void> _updateProductStatus(
       BuildContext context, int productId, String newStatus) async {
@@ -36,6 +40,30 @@ class ChatHeader extends StatelessWidget {
     }
   }
 
+  Future<Map<String, dynamic>?> _createPurchaseHistory(
+      BuildContext context, int productId, int sellerId, int chatroomId) async {
+    try {
+      final api = PurchaseApi();
+      final data = {
+        "product_id": productId,
+        "buyer_id": int.parse(currentUserId),
+        "seller_id": sellerId,
+        "chatroom_id": chatroomId,
+        "status": "completed"
+      };
+      final created = await api.createPurchase(data);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("สร้างประวัติการซื้อสำเร็จ")),
+      );
+      return created;
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("สร้างประวัติการซื้อล้มเหลว: $e")),
+      );
+      return null;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final productTitle = product['title'] ?? 'ชื่อสินค้า';
@@ -45,6 +73,7 @@ class ChatHeader extends StatelessWidget {
             : null;
 
     final sellerId = product['seller_id']?.toString();
+    final chatroomId = int.tryParse(product['chatroom_id']?.toString() ?? '0') ?? 0;
     final isOwner = sellerId == currentUserId;
     final productId = int.tryParse(product['id']?.toString() ?? '');
     final status = product['status']?.toString() ?? 'available';
@@ -107,12 +136,44 @@ class ChatHeader extends StatelessWidget {
           );
           if (confirm == true) {
             await _updateProductStatus(context, productId, "sold");
+            final transaction = await _createPurchaseHistory(
+                context, productId, int.parse(sellerId ?? '0'), chatroomId);
+            if (transaction != null) {
+              context.push(
+                '/review',
+                extra: {
+                  "storeName": otherUserName,
+                  "product": product,
+                  "reviewerId": currentUserId,
+                  "revieweeId": sellerId,
+                  "saleTransactionId": transaction['id'],
+                },
+              );
+            }
           }
         } else if (status == "sold") {
-          context.push(
-            '/review',
-            extra: {"productId": productId, "buyerId": currentUserId},
-          );
+          var transactionId = product['transaction_id'];
+          if (transactionId == null) {
+            final purchase = await PurchaseApi()
+                .getPurchaseByProduct(productId, int.parse(currentUserId));
+            transactionId = purchase?['id'];
+          }
+          if (transactionId != null) {
+            context.push(
+              '/review',
+              extra: {
+                "storeName": otherUserName,
+                "product": product,
+                "reviewerId": currentUserId,
+                "revieweeId": sellerId,
+                "saleTransactionId": transactionId,
+              },
+            );
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text("ไม่พบข้อมูลการซื้อ-ขาย")),
+            );
+          }
         }
       }
     }
@@ -127,10 +188,7 @@ class ChatHeader extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 8.0,
-                vertical: 2,
-              ),
+              padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 2),
               child: Row(
                 children: [
                   IconButton(
@@ -144,15 +202,11 @@ class ChatHeader extends StatelessWidget {
                   CircleAvatar(
                     radius: 14,
                     backgroundColor: Colors.grey[300],
-                    backgroundImage: (otherUserAvatar != null && otherUserAvatar!.isNotEmpty)
+                    backgroundImage: (otherUserAvatar?.isNotEmpty ?? false)
                         ? NetworkImage(ApiConfig.fixUrl(otherUserAvatar!))
                         : null,
-                    child: (otherUserAvatar == null || otherUserAvatar!.isEmpty)
-                        ? const Icon(
-                            Icons.person,
-                            size: 16,
-                            color: Colors.white,
-                          )
+                    child: (otherUserAvatar?.isEmpty ?? true)
+                        ? const Icon(Icons.person, size: 16, color: Colors.white)
                         : null,
                   ),
                   const SizedBox(width: 12),
@@ -168,14 +222,8 @@ class ChatHeader extends StatelessWidget {
               ),
             ),
             Container(
-              margin: const EdgeInsets.symmetric(
-                horizontal: 12,
-                vertical: 2,
-              ),
-              padding: const EdgeInsets.symmetric(
-                horizontal: 8,
-                vertical: 4,
-              ),
+              margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(12),
@@ -216,23 +264,15 @@ class ChatHeader extends StatelessWidget {
                     style: ElevatedButton.styleFrom(
                       backgroundColor: (actionButtonText() == "-" ? Colors.grey : const Color(0xFF62B9E8)),
                       foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 6,
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                     ),
-                    onPressed: actionButtonText() == "-" || actionButtonText() == "ขายแล้ว"
+                    onPressed: actionButtonText() == "-"
                         ? null
                         : () => onActionPressed(context),
                     child: Text(
                       actionButtonText(),
-                      style: GoogleFonts.sarabun(
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                      ),
+                      style: GoogleFonts.sarabun(fontSize: 14, fontWeight: FontWeight.bold),
                     ),
                   ),
                 ],

@@ -228,7 +228,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               "ประวัติการซื้อ",
                               style: Theme.of(context).textTheme.bodyMedium,
                             ),
-                            onTap: () => context.go('/purchase_history'),
+                            onTap: () => context.push('/purchase_history'),
                           ),
                           ListTile(
                             leading: const ImageIcon(

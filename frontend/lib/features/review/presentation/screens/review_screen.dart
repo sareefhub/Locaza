@@ -8,6 +8,7 @@ class ReviewScreen extends StatefulWidget {
   final Map<String, dynamic> product;
   final String reviewerId;
   final String revieweeId;
+  final int saleTransactionId;
 
   const ReviewScreen({
     super.key,
@@ -15,6 +16,7 @@ class ReviewScreen extends StatefulWidget {
     required this.product,
     required this.reviewerId,
     required this.revieweeId,
+    required this.saleTransactionId,
   });
 
   @override
@@ -78,31 +80,27 @@ class _ReviewScreenState extends State<ReviewScreen> {
         url,
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
-          'product_id': widget.product['id'] ?? 0,
-          'reviewer_id': widget.reviewerId,
-          'reviewee_id': widget.revieweeId,
+          'sale_transaction_id': widget.saleTransactionId,
+          'product_id': widget.product['id'],
+          'reviewer_id': int.tryParse(widget.reviewerId),
+          'reviewee_id': int.tryParse(widget.revieweeId),
           'rating': _rating,
           'comment': _reviewController.text,
         }),
       );
 
       if (response.statusCode == 200 || response.statusCode == 201) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('ส่งรีวิวเรียบร้อยแล้ว')));
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('ส่งรีวิวเรียบร้อยแล้ว')));
         setState(() {
           _rating = 0;
           _reviewController.clear();
         });
+        Navigator.pop(context, true);
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('เกิดข้อผิดพลาดในการส่งรีวิว')),
-        );
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('เกิดข้อผิดพลาดในการส่งรีวิว')));
       }
     } catch (e) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('เกิดข้อผิดพลาด: $e')));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('เกิดข้อผิดพลาด: $e')));
     } finally {
       setState(() {
         _isLoading = false;
@@ -114,12 +112,12 @@ class _ReviewScreenState extends State<ReviewScreen> {
   Widget build(BuildContext context) {
     final productTitle = widget.product['title'] ?? 'ชื่อสินค้า';
     final productImageUrl =
-        (widget.product['image_urls'] != null &&
-                (widget.product['image_urls'] as List).isNotEmpty)
+        (widget.product['image_urls'] != null && (widget.product['image_urls'] as List).isNotEmpty)
             ? widget.product['image_urls'][0]
             : null;
 
     return Scaffold(
+      resizeToAvoidBottomInset: true,
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
@@ -130,18 +128,15 @@ class _ReviewScreenState extends State<ReviewScreen> {
         title: const Text('รีวิว', style: TextStyle(color: Colors.black)),
         centerTitle: true,
       ),
-      body: Padding(
+      body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
             const SizedBox(height: 20),
             CircleAvatar(
               radius: 40,
-              backgroundImage:
-                  productImageUrl != null ? NetworkImage(productImageUrl) : null,
-              child: productImageUrl == null
-                  ? const Icon(Icons.store, size: 50)
-                  : null,
+              backgroundImage: productImageUrl != null ? NetworkImage(productImageUrl) : null,
+              child: productImageUrl == null ? const Icon(Icons.store, size: 50) : null,
             ),
             const SizedBox(height: 12),
             Text(
