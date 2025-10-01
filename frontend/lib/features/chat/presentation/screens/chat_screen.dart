@@ -214,6 +214,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                                         [],
                                 "price": chat['product_price'],
                                 "status": chat['product_status'],
+                                "chatroom_id": chat['id'],
                               },
                               'fromProductDetail': false,
                             },

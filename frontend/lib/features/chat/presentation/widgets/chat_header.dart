@@ -5,7 +5,7 @@ import '../../../../config/api_config.dart';
 import '../../../product/infrastructure/product_api.dart';
 import '../../../product/infrastructure/purchase_api.dart';
 
-class ChatHeader extends StatelessWidget implements PreferredSizeWidget {
+class ChatHeader extends StatefulWidget implements PreferredSizeWidget {
   final Map<String, dynamic> product;
   final String currentUserId;
   final String otherUserName;
@@ -13,7 +13,7 @@ class ChatHeader extends StatelessWidget implements PreferredSizeWidget {
   final ValueChanged<String> onStatusChanged;
 
   @override
-  final Size preferredSize;
+  final Size preferredSize = const Size.fromHeight(120);
 
   const ChatHeader({
     super.key,
@@ -22,14 +22,30 @@ class ChatHeader extends StatelessWidget implements PreferredSizeWidget {
     required this.otherUserName,
     required this.otherUserAvatar,
     required this.onStatusChanged,
-  }) : preferredSize = const Size.fromHeight(120);
+  });
+
+  @override
+  State<ChatHeader> createState() => _ChatHeaderState();
+}
+
+class _ChatHeaderState extends State<ChatHeader> {
+  late String status;
+
+  @override
+  void initState() {
+    super.initState();
+    status = widget.product['status']?.toString() ?? 'available';
+  }
 
   Future<void> _updateProductStatus(
       BuildContext context, int productId, String newStatus) async {
     try {
       final api = ProductApi();
       await api.updateProductStatus(productId, newStatus);
-      onStatusChanged(newStatus);
+      setState(() {
+        status = newStatus;
+      });
+      widget.onStatusChanged(newStatus);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("อัพเดตสถานะสินค้าเป็น $newStatus สำเร็จ")),
       );
@@ -41,12 +57,12 @@ class ChatHeader extends StatelessWidget implements PreferredSizeWidget {
   }
 
   Future<Map<String, dynamic>?> _createPurchaseHistory(
-      BuildContext context, int productId, int sellerId, int chatroomId) async {
+      BuildContext context, int productId, int sellerId, int? chatroomId) async {
     try {
       final api = PurchaseApi();
       final data = {
         "product_id": productId,
-        "buyer_id": int.parse(currentUserId),
+        "buyer_id": int.parse(widget.currentUserId),
         "seller_id": sellerId,
         "chatroom_id": chatroomId,
         "status": "completed"
@@ -66,17 +82,16 @@ class ChatHeader extends StatelessWidget implements PreferredSizeWidget {
 
   @override
   Widget build(BuildContext context) {
-    final productTitle = product['title'] ?? 'ชื่อสินค้า';
+    final productTitle = widget.product['title'] ?? 'ชื่อสินค้า';
     final productImageUrl =
-        (product['image_urls'] != null && (product['image_urls'] as List).isNotEmpty)
-            ? ApiConfig.fixUrl(product['image_urls'][0])
+        (widget.product['image_urls'] != null && (widget.product['image_urls'] as List).isNotEmpty)
+            ? ApiConfig.fixUrl(widget.product['image_urls'][0])
             : null;
 
-    final sellerId = product['seller_id']?.toString();
-    final chatroomId = int.tryParse(product['chatroom_id']?.toString() ?? '0') ?? 0;
-    final isOwner = sellerId == currentUserId;
-    final productId = int.tryParse(product['id']?.toString() ?? '');
-    final status = product['status']?.toString() ?? 'available';
+    final sellerId = widget.product['seller_id']?.toString();
+    final chatroomId = int.tryParse(widget.product['chatroom_id']?.toString() ?? '');
+    final isOwner = sellerId == widget.currentUserId;
+    final productId = int.tryParse(widget.product['id']?.toString() ?? '');
 
     String actionButtonText() {
       if (isOwner) {
@@ -150,9 +165,9 @@ class ChatHeader extends StatelessWidget implements PreferredSizeWidget {
               context.push(
                 '/review',
                 extra: {
-                  "storeName": otherUserName,
-                  "product": product,
-                  "reviewerId": currentUserId,
+                  "storeName": widget.otherUserName,
+                  "product": widget.product,
+                  "reviewerId": widget.currentUserId,
                   "revieweeId": sellerId,
                   "saleTransactionId": transaction['id'],
                 },
@@ -160,19 +175,19 @@ class ChatHeader extends StatelessWidget implements PreferredSizeWidget {
             }
           }
         } else if (status == "sold") {
-          var transactionId = product['transaction_id'];
+          var transactionId = widget.product['transaction_id'];
           if (transactionId == null) {
             final purchase = await PurchaseApi()
-                .getPurchaseByProduct(productId, int.parse(currentUserId));
+                .getPurchaseByProduct(productId, int.parse(widget.currentUserId));
             transactionId = purchase?['id'];
           }
           if (transactionId != null) {
             context.push(
               '/review',
               extra: {
-                "storeName": otherUserName,
-                "product": product,
-                "reviewerId": currentUserId,
+                "storeName": widget.otherUserName,
+                "product": widget.product,
+                "reviewerId": widget.currentUserId,
                 "revieweeId": sellerId,
                 "saleTransactionId": transactionId,
               },
@@ -210,16 +225,16 @@ class ChatHeader extends StatelessWidget implements PreferredSizeWidget {
                   CircleAvatar(
                     radius: 14,
                     backgroundColor: Colors.grey[300],
-                    backgroundImage: (otherUserAvatar?.isNotEmpty ?? false)
-                        ? NetworkImage(ApiConfig.fixUrl(otherUserAvatar!))
+                    backgroundImage: (widget.otherUserAvatar?.isNotEmpty ?? false)
+                        ? NetworkImage(ApiConfig.fixUrl(widget.otherUserAvatar!))
                         : null,
-                    child: (otherUserAvatar?.isEmpty ?? true)
+                    child: (widget.otherUserAvatar?.isEmpty ?? true)
                         ? const Icon(Icons.person, size: 16, color: Colors.white)
                         : null,
                   ),
                   const SizedBox(width: 12),
                   Text(
-                    otherUserName.isNotEmpty ? otherUserName : 'ผู้ใช้ไม่ทราบชื่อ',
+                    widget.otherUserName.isNotEmpty ? widget.otherUserName : 'ผู้ใช้ไม่ทราบชื่อ',
                     style: GoogleFonts.sarabun(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
