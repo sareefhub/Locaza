@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import '../../../../config/api_config.dart';
+import 'package:frontend/features/product/presentation/screens/widgets/fullscreen_image_viewer.dart';
 
 class ChatMessages extends StatelessWidget {
   final ScrollController scrollController;
@@ -59,9 +60,9 @@ class ChatMessages extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             if (index == 0 ||
-                DateTime.parse(messages[index - 1]['created_at'])
-                        .toLocal()
-                        .day !=
+                DateTime.parse(
+                      messages[index - 1]['created_at'],
+                    ).toLocal().day !=
                     dateTime.day)
               Center(
                 child: Container(
@@ -85,8 +86,9 @@ class ChatMessages extends StatelessWidget {
               ),
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment:
-                  isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
+              mainAxisAlignment: isMe
+                  ? MainAxisAlignment.end
+                  : MainAxisAlignment.start,
               children: [
                 if (!isMe && showAvatar)
                   Padding(
@@ -103,8 +105,9 @@ class ChatMessages extends StatelessWidget {
                   const SizedBox(width: 36),
                 Flexible(
                   child: Column(
-                    crossAxisAlignment:
-                        isMe ? CrossAxisAlignment.start : CrossAxisAlignment.end,
+                    crossAxisAlignment: isMe
+                        ? CrossAxisAlignment.start
+                        : CrossAxisAlignment.end,
                     children: [
                       if (text != null && text.isNotEmpty)
                         Row(
@@ -194,11 +197,12 @@ class ChatMessages extends StatelessWidget {
                                     double gridWidth =
                                         constraints.maxWidth * 2 / 3;
                                     double itemWidth =
-                                        (gridWidth - spacing * (crossAxisCount - 1)) /
-                                            crossAxisCount;
+                                        (gridWidth -
+                                            spacing * (crossAxisCount - 1)) /
+                                        crossAxisCount;
                                     double gridHeight =
                                         itemWidth * rowCount +
-                                            spacing * (rowCount - 1);
+                                        spacing * (rowCount - 1);
 
                                     return SizedBox(
                                       width: gridWidth,
@@ -210,19 +214,45 @@ class ChatMessages extends StatelessWidget {
                                         itemCount: images.length,
                                         gridDelegate:
                                             SliverGridDelegateWithFixedCrossAxisCount(
-                                          crossAxisCount: crossAxisCount,
-                                          mainAxisSpacing: spacing,
-                                          crossAxisSpacing: spacing,
-                                          childAspectRatio: 1,
-                                        ),
+                                              crossAxisCount: crossAxisCount,
+                                              mainAxisSpacing: spacing,
+                                              crossAxisSpacing: spacing,
+                                              childAspectRatio: 1,
+                                            ),
                                         itemBuilder: (context, imgIndex) {
-                                          final resolvedUrl = _resolveImageUrl(images[imgIndex] as String);
-                                          return ClipRRect(
-                                            borderRadius:
-                                                BorderRadius.circular(12),
-                                            child: Image.network(
-                                              resolvedUrl,
-                                              fit: BoxFit.cover,
+                                          final resolvedUrl = _resolveImageUrl(
+                                            images[imgIndex] as String,
+                                          );
+                                          return GestureDetector(
+                                            onTap: () {
+                                              Navigator.push(
+                                                context,
+                                                MaterialPageRoute(
+                                                  builder: (_) =>
+                                                      FullscreenImageViewer(
+                                                        images: images
+                                                            .map(
+                                                              (e) =>
+                                                                  _resolveImageUrl(
+                                                                    e as String,
+                                                                  ),
+                                                            )
+                                                            .toList(),
+                                                        initialIndex: imgIndex,
+                                                      ),
+                                                ),
+                                              );
+                                            },
+                                            child: Hero(
+                                              tag: resolvedUrl,
+                                              child: ClipRRect(
+                                                borderRadius:
+                                                    BorderRadius.circular(12),
+                                                child: Image.network(
+                                                  resolvedUrl,
+                                                  fit: BoxFit.cover,
+                                                ),
+                                              ),
                                             ),
                                           );
                                         },
