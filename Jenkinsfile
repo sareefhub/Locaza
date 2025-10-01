@@ -154,24 +154,7 @@ EOF
       }
     }
 
-    // ---------- Stage 8: Push to Registry ----------
-    stage('Push to Registry') {
-      steps {
-        withCredentials([usernamePassword(
-          credentialsId: 'dockerhub-cred',
-          usernameVariable: 'DOCKER_USER',
-          passwordVariable: 'DOCKER_PASS'
-        )]) {
-          sh '''
-          echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
-          docker tag locaza-backend:latest $DOCKER_USER/6510110115-locaza-backend:latest
-          docker push $DOCKER_USER/6510110115-locaza-backend:latest
-          '''
-        }
-      }
-    }
-
-    // ---------- Stage 9: Deploy Container ----------
+    // ---------- Stage 8: Deploy Container ----------
     stage('Deploy Container') {
       steps {
         sh '''
