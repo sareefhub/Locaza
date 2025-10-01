@@ -3,6 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:frontend/config/api_config.dart';
 import 'package:frontend/features/product/application/product_provider.dart';
+import 'package:smooth_page_indicator/smooth_page_indicator.dart';
+
+import 'package:frontend/features/product/presentation/screens/widgets/fullscreen_image_viewer.dart';
 
 class MyProductDetailsPage extends ConsumerStatefulWidget {
   final int productId;
@@ -16,6 +19,20 @@ class MyProductDetailsPage extends ConsumerStatefulWidget {
 
 class _MyProductDetailsPageState extends ConsumerState<MyProductDetailsPage> {
   bool showFullDescription = false;
+  int _currentIndex = 0;
+  late PageController _pageController;
+
+  @override
+  void initState() {
+    super.initState();
+    _pageController = PageController();
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -30,13 +47,15 @@ class _MyProductDetailsPageState extends ConsumerState<MyProductDetailsPage> {
               return const Center(child: Text("ไม่พบสินค้า"));
             }
 
-            // จัดการรูป
+            // ✅ แปลง image_urls เป็น List<String>
+            List<String> images = [];
             final rawImage = product['image_urls'];
-            String image = '';
-            if (rawImage is List && rawImage.isNotEmpty) {
-              image = rawImage.first.toString();
+            if (rawImage is List) {
+              images = rawImage
+                  .map((e) => ApiConfig.fixUrl(e.toString()))
+                  .toList();
             } else if (rawImage is String && rawImage.isNotEmpty) {
-              image = rawImage;
+              images = [ApiConfig.fixUrl(rawImage)];
             }
 
             final productDescription =
@@ -52,23 +71,53 @@ class _MyProductDetailsPageState extends ConsumerState<MyProductDetailsPage> {
             return SingleChildScrollView(
               child: Column(
                 children: [
+                  // ✅ ส่วนแสดงรูปภาพ
                   Stack(
                     children: [
-                      ClipRRect(
-                        child: image.isNotEmpty
-                            ? Image.network(
-                                ApiConfig.fixUrl(image),
-                                height: 310,
-                                width: double.infinity,
-                                fit: BoxFit.cover,
+                      SizedBox(
+                        height: 310,
+                        width: double.infinity,
+                        child: images.isNotEmpty
+                            ? PageView.builder(
+                                controller: _pageController,
+                                itemCount: images.length,
+                                onPageChanged: (index) {
+                                  setState(() {
+                                    _currentIndex = index;
+                                  });
+                                },
+                                itemBuilder: (context, index) {
+                                  final img = images[index];
+                                  return GestureDetector(
+                                    onTap: () {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (_) => FullscreenImageViewer(
+                                            images: images,
+                                            initialIndex: index,
+                                          ),
+                                        ),
+                                      );
+                                    },
+                                    child: Hero(
+                                      tag: img,
+                                      child: Image.network(
+                                        img,
+                                        fit: BoxFit.cover,
+                                        width: double.infinity,
+                                      ),
+                                    ),
+                                  );
+                                },
                               )
                             : Image.asset(
                                 'assets/products-image/placeholder_product.png',
-                                height: 310,
-                                width: double.infinity,
                                 fit: BoxFit.cover,
                               ),
                       ),
+
+                      // ปุ่ม Back
                       Positioned(
                         top: 16,
                         left: 8,
@@ -81,8 +130,47 @@ class _MyProductDetailsPageState extends ConsumerState<MyProductDetailsPage> {
                           onPressed: () => Navigator.pop(context),
                         ),
                       ),
+
+                      // ✅ Indicator
+                      if (images.length > 1)
+                        Positioned(
+                          bottom: 12,
+                          left: 0,
+                          right: 0,
+                          child: Column(
+                            children: [
+                              SmoothPageIndicator(
+                                controller: _pageController,
+                                count: images.length,
+                                effect: const ExpandingDotsEffect(
+                                  activeDotColor: Colors.white,
+                                  dotColor: Colors.white54,
+                                  dotHeight: 8,
+                                  dotWidth: 8,
+                                ),
+                                onDotClicked: (index) {
+                                  _pageController.animateToPage(
+                                    index,
+                                    duration: const Duration(milliseconds: 300),
+                                    curve: Curves.easeInOut,
+                                  );
+                                },
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                '${_currentIndex + 1}/${images.length}',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
                     ],
                   ),
+
+                  // ✅ ส่วนรายละเอียดสินค้า
                   Padding(
                     padding: const EdgeInsets.all(16),
                     child: Column(
