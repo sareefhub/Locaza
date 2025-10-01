@@ -12,6 +12,9 @@ import 'package:frontend/features/favorite/application/favorite_provider.dart';
 import 'package:go_router/go_router.dart';
 import 'package:frontend/features/chat/infrastructure/chat_api.dart';
 import 'package:frontend/routing/routes.dart';
+import 'package:smooth_page_indicator/smooth_page_indicator.dart';
+
+import 'package:frontend/features/product/presentation/screens/widgets/fullscreen_image_viewer.dart';
 
 class ProductDetailsPage extends ConsumerStatefulWidget {
   final int productId;
@@ -24,6 +27,7 @@ class ProductDetailsPage extends ConsumerStatefulWidget {
 
 class _ProductDetailsPageState extends ConsumerState<ProductDetailsPage> {
   bool showFullDescription = false;
+  int currentImageIndex = 0;
 
   @override
   Widget build(BuildContext context) {
@@ -39,12 +43,16 @@ class _ProductDetailsPageState extends ConsumerState<ProductDetailsPage> {
               return const Center(child: Text("ไม่พบสินค้า"));
             }
 
-            final rawImage = product['image_urls'];
-            String image = '';
-            if (rawImage is List && rawImage.isNotEmpty) {
-              image = rawImage.first.toString();
-            } else if (rawImage is String && rawImage.isNotEmpty) {
-              image = rawImage;
+            // เตรียม images เป็น List<String>
+            final rawImages = product['image_urls'];
+            final images = <String>[];
+            if (rawImages is List && rawImages.isNotEmpty) {
+              for (var img in rawImages)
+                images.add(ApiConfig.fixUrl(img.toString()));
+            } else if (rawImages is String && rawImages.isNotEmpty) {
+              images.add(ApiConfig.fixUrl(rawImages));
+            } else {
+              images.add('assets/products-image/placeholder_product.png');
             }
 
             final productDescription =
@@ -78,7 +86,7 @@ class _ProductDetailsPageState extends ConsumerState<ProductDetailsPage> {
               data: (seller) => SingleChildScrollView(
                 child: Column(
                   children: [
-                    _buildProductImageSection(image, seller, product),
+                    _buildProductImageSection(images, seller, product),
                     Padding(
                       padding: const EdgeInsets.all(16),
                       child: Column(
@@ -114,88 +122,153 @@ class _ProductDetailsPageState extends ConsumerState<ProductDetailsPage> {
     );
   }
 
+  // ================= Product Image Section =================
   Widget _buildProductImageSection(
-    String image,
+    List<String> images,
     Map<String, dynamic>? seller,
     Map<String, dynamic> product,
   ) {
-    return Stack(
-      children: [
-        ClipRRect(
-          child: image.isNotEmpty
-              ? Image.network(
-                  ApiConfig.fixUrl(image),
-                  height: 310,
-                  width: double.infinity,
-                  fit: BoxFit.cover,
-                )
-              : Image.asset(
-                  'assets/products-image/placeholder_product.png',
-                  height: 310,
-                  width: double.infinity,
-                  fit: BoxFit.cover,
-                ),
-        ),
-        Positioned(
-          top: 16,
-          left: 8,
-          child: IconButton(
-            icon: Image.asset(
-              'assets/icons/angle-small-left.png',
-              width: 24,
-              height: 24,
-            ),
-            onPressed: () => Navigator.pop(context),
-          ),
-        ),
-        Positioned(
-          top: 16,
-          right: 16,
-          child: Consumer(
-            builder: (context, ref, _) {
-              final notifier = ref.read(favoriteProvider.notifier);
-              final favoriteState = ref.watch(favoriteProvider);
-              final userId = int.tryParse(UserSession.id ?? '');
-              final isFavorite = userId != null
-                  ? favoriteState.any(
-                      (item) =>
-                          item['product_id'] == product['id'] &&
-                          item['user_id'] == userId,
-                    )
-                  : false;
+    final pageController = PageController();
 
-              return Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: Colors.grey.withOpacity(0.3),
-                  shape: BoxShape.circle,
-                ),
-                child: IconButton(
-                  icon: Icon(
-                    isFavorite ? Icons.favorite : Icons.favorite_border,
-                    color: isFavorite ? Colors.red : Colors.white,
+    return SizedBox(
+      height: 310,
+      width: double.infinity,
+      child: Stack(
+        children: [
+          PageView.builder(
+            controller: pageController,
+            itemCount: images.length,
+            onPageChanged: (index) {
+              setState(() {
+                currentImageIndex = index;
+              });
+            },
+            itemBuilder: (context, index) {
+              final img = images[index];
+              return GestureDetector(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => FullscreenImageViewer(
+                        images: images,
+                        initialIndex: index,
+                      ),
+                    ),
+                  );
+                },
+                child: Hero(
+                  tag: img,
+                  child: ClipRRect(
+                    child: img.startsWith('http')
+                        ? Image.network(
+                            img,
+                            height: 310,
+                            width: double.infinity,
+                            fit: BoxFit.cover,
+                          )
+                        : Image.asset(
+                            img,
+                            height: 310,
+                            width: double.infinity,
+                            fit: BoxFit.cover,
+                          ),
                   ),
-                  onPressed: () {
-                    final userId = int.tryParse(UserSession.id ?? '');
-                    if (userId == null) {
-                      // ยังไม่ได้ล็อกอิน → ไปหน้า login
-                      GoRouter.of(context).go('/login');
-                      return;
-                    }
-
-                    if (isFavorite) {
-                      notifier.removeFavorite(product['id'], userId);
-                    } else {
-                      notifier.addFavorite(product, userId);
-                    }
-                  },
                 ),
               );
             },
           ),
-        ),
-      ],
+          //ปุ่ม back
+          Positioned(
+            top: 16,
+            left: 8,
+            child: IconButton(
+              icon: Image.asset(
+                'assets/icons/angle-small-left.png',
+                width: 24,
+                height: 24,
+              ),
+              onPressed: () => Navigator.pop(context),
+            ),
+          ),
+          //ปุ่ม Favorite
+          Positioned(
+            top: 16,
+            right: 16,
+            child: Consumer(
+              builder: (context, ref, _) {
+                final notifier = ref.read(favoriteProvider.notifier);
+                final favoriteState = ref.watch(favoriteProvider);
+                final userId = int.tryParse(UserSession.id ?? '');
+                final isFavorite = userId != null
+                    ? favoriteState.any(
+                        (item) =>
+                            item['product_id'] == product['id'] &&
+                            item['user_id'] == userId,
+                      )
+                    : false;
+
+                return Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: Colors.grey.withOpacity(0.3),
+                    shape: BoxShape.circle,
+                  ),
+                  child: IconButton(
+                    icon: Icon(
+                      isFavorite ? Icons.favorite : Icons.favorite_border,
+                      color: isFavorite ? Colors.red : Colors.white,
+                    ),
+                    onPressed: () {
+                      final userId = int.tryParse(UserSession.id ?? '');
+                      if (userId == null) {
+                        // ยังไม่ได้ล็อกอิน → ไปหน้า login
+                        GoRouter.of(context).go('/login');
+                        return;
+                      }
+
+                      if (isFavorite) {
+                        notifier.removeFavorite(product['id'], userId);
+                      } else {
+                        notifier.addFavorite(product, userId);
+                      }
+                    },
+                  ),
+                );
+              },
+            ),
+          ),
+          // ตัวเลข & indicator
+          if (images.length > 1)
+            Positioned(
+              bottom: 12,
+              left: 0,
+              right: 0,
+              child: Column(
+                children: [
+                  Text(
+                    '${currentImageIndex + 1} / ${images.length}',
+                    style: const TextStyle(color: Colors.white, fontSize: 14),
+                  ),
+                  const SizedBox(height: 4),
+                  Center(
+                    child: SmoothPageIndicator(
+                      controller: pageController,
+                      count: images.length,
+                      effect: const ExpandingDotsEffect(
+                        activeDotColor: Colors.white,
+                        dotColor: Colors.white54,
+                        dotHeight: 8,
+                        dotWidth: 8,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+        ],
+      ),
     );
   }
 
