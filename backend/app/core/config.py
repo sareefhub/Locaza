@@ -12,7 +12,7 @@ class Settings(BaseSettings):
     BASE_URL: str = "http://localhost:8000"
 
     class Config:
-        env_file = ".env"
+        env_file = ".env.docker"
 
 
 settings = Settings()
