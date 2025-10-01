@@ -146,10 +146,6 @@ class _StoreScreenState extends ConsumerState<StoreScreen>
                                     Text("${store["rating"] ?? 0}"),
                                   ],
                                 ),
-                                Text(
-                                  "${store["followers"] ?? 0} ผู้ติดตาม",
-                                  style: const TextStyle(fontSize: 12),
-                                ),
                               ],
                             ),
                           ),
