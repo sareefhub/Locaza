@@ -16,7 +16,6 @@ ENV/
 env/
 .env
 .env.dev
-.env.docker
 .venv/
 .pyenv/
 

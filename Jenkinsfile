@@ -6,9 +6,7 @@ pipeline {
     }
   }
 
-  options { 
-    timestamps() 
-  }
+  options { timestamps() }
 
   stages {
 
@@ -18,30 +16,42 @@ pipeline {
         sh '''
           set -eux
           apt-get update
-          apt-get install -y --no-install-recommends \
-            git wget unzip ca-certificates docker-cli default-jre-headless curl
+          DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+            git wget unzip ca-certificates docker-cli default-jre-headless
 
-          # Install docker-compose
-          curl -L "https://github.com/docker/compose/releases/download/v2.20.2/docker-compose-linux-x86_64" \
-            -o /usr/local/bin/docker-compose
-          chmod +x /usr/local/bin/docker-compose
-          docker-compose --version
-
-          # Check tools
+          command -v git
+          command -v docker
           docker --version
           java -version || true
 
-          # Install SonarScanner
           SCAN_VER=7.2.0.5079
           BASE_URL="https://binaries.sonarsource.com/Distribution/sonar-scanner-cli"
-          wget -qO /tmp/sonar.zip "$BASE_URL/sonar-scanner-${SCAN_VER}-linux-x64.zip"
+
+          CANDIDATES="
+            sonar-scanner-${SCAN_VER}-linux-x64.zip
+            sonar-scanner-${SCAN_VER}-linux.zip
+            sonar-scanner-cli-${SCAN_VER}-linux-x64.zip
+            sonar-scanner-cli-${SCAN_VER}-linux.zip
+          "
+
+          rm -f /tmp/sonar.zip || true
+          for f in $CANDIDATES; do
+            URL="${BASE_URL}/${f}"
+            echo "Trying: $URL"
+            if wget -q --spider "$URL"; then
+              wget -qO /tmp/sonar.zip "$URL"
+              break
+            fi
+          done
+
+          test -s /tmp/sonar.zip || { echo "Failed to download SonarScanner ${SCAN_VER}"; exit 1; }
+
           unzip -q /tmp/sonar.zip -d /opt
           SCAN_HOME="$(find /opt -maxdepth 1 -type d -name 'sonar-scanner*' | head -n1)"
           ln -sf "$SCAN_HOME/bin/sonar-scanner" /usr/local/bin/sonar-scanner
           sonar-scanner --version
 
-          # Validate docker.sock mount
-          test -S /var/run/docker.sock
+          test -S /var/run/docker.sock || { echo "ERROR: /var/run/docker.sock not mounted"; exit 1; }
         '''
       }
     }
@@ -71,17 +81,18 @@ pipeline {
       }
     }
 
-    // ---------- Stage 4: Run Tests & Coverage ----------
-    stage('Run Tests & Coverage') {
+    // ---------- Stage 4: Smoke Tests ----------
+    stage('Run Smoke Tests') {
       steps {
         dir('backend') {
           sh '''
             set -eux
             export PYTHONPATH="$PWD"
+            export DATABASE_URL="sqlite:///./test.db"
+            export SECRET_KEY="testsecret"
 
             mkdir -p tests
-            if [ ! -f "tests/test_main.py" ]; then
-              cat > tests/test_main.py << 'EOF'
+            cat > tests/test_smoke.py << 'EOF'
 from fastapi.testclient import TestClient
 import sys, os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -89,14 +100,19 @@ from app.main import app
 
 client = TestClient(app)
 
-def test_root():
-    response = client.get("/")
-    assert response.status_code in [200, 404]
-EOF
-            fi
+def test_backend_alive():
+    r = client.get("/")
+    assert r.status_code in [200, 404]
 
-            pytest -q --cov=app --cov-report=xml tests/ || true
-            ls -la
+def test_docs_available():
+    assert client.get("/docs").status_code == 200
+
+def test_openapi_available():
+    assert client.get("/openapi.json").status_code == 200
+EOF
+
+            pytest -q --cov=app --cov-report=xml:coverage.xml tests/
+            ls -la coverage.xml
           '''
         }
       }
@@ -106,19 +122,28 @@ EOF
     stage('SonarQube Analysis') {
       steps {
         dir('backend') {
-          withSonarQubeEnv('SonarQube servers') {
+          withSonarQubeEnv('SonarQube') { // ชื่อต้องตรงกับที่ตั้งใน Jenkins
             sh '''
               set -eux
+
+              cat > sonar-project.properties << 'EOF'
+sonar.projectKey=locaza-backend
+sonar.projectName=Locaza Backend
+sonar.projectVersion=1.0
+sonar.sourceEncoding=UTF-8
+
+sonar.sources=app
+sonar.tests=tests
+sonar.exclusions=**/__pycache__/**,**/*.pyc
+sonar.test.inclusions=tests/**/*.py
+
+sonar.python.version=3.13
+sonar.python.coverage.reportPaths=coverage.xml
+EOF
+
               sonar-scanner \
                 -Dsonar.host.url="$SONAR_HOST_URL" \
-                -Dsonar.login="$SONAR_AUTH_TOKEN" \
-                -Dsonar.projectKey=locaza-backend \
-                -Dsonar.projectName="Locaza Backend" \
-                -Dsonar.sources=app \
-                -Dsonar.tests=tests \
-                -Dsonar.python.version=3.13 \
-                -Dsonar.python.coverage.reportPaths=coverage.xml \
-                -Dsonar.sourceEncoding=UTF-8
+                -Dsonar.login="$SONAR_AUTH_TOKEN"
             '''
           }
         }
@@ -134,38 +159,26 @@ EOF
       }
     }
 
-    // ---------- Stage 7: Deploy with Docker Compose ----------
-    stage('Deploy with Docker Compose') {
+    // ---------- Stage 7: Build Docker Image ----------
+    stage('Build Docker Image') {
+      steps {
+        dir('backend') {
+          sh 'docker build -t locaza-backend:latest .'
+        }
+      }
+    }
+
+    // ---------- Stage 8: Deploy Container ----------
+    stage('Deploy Container') {
       steps {
         sh '''
           set -eux
-          echo "Building Docker image..."
-          docker-compose build backend
-
-          echo "Stopping old containers..."
-          docker-compose down || true
-
-          echo "Starting services..."
-          docker-compose up -d
-
-          echo "Checking service status..."
-          docker-compose ps
-
-          echo "Backend logs:"
-          docker-compose logs backend --tail=10
-
-          echo "Testing backend connection..."
-          curl -f http://localhost:8000/ || \
-          curl -f http://localhost:8000/docs || \
-          echo "Backend may still be starting..."
+          docker rm -f locaza-backend || true
+          docker run -d --name locaza-backend -p 8000:8000 locaza-backend:latest
         '''
       }
     }
   }
 
-  post {
-    always { 
-      echo "Pipeline finished" 
-    }
-  }
+  post { always { echo "Pipeline finished" } }
 }
