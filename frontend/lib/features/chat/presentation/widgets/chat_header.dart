@@ -86,7 +86,7 @@ class ChatHeader extends StatelessWidget implements PreferredSizeWidget {
       } else {
         if (status == "reserved") return "ซื้อ";
         if (status == "sold") return "รีวิว";
-        return "รีวิวแล้ว";
+        return "ซื้อ";
       }
     }
 
