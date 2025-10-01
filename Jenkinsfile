@@ -12,39 +12,48 @@ pipeline {
 
     // ---------- Stage 1: Install Base Tooling ----------
     stage('Install Base Tooling') {
-    steps {
+      steps {
         sh '''
-        set -eux
-        apt-get update
-        DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
-            git wget unzip ca-certificates docker-cli default-jre-headless curl
+          set -eux
+          apt-get update
+          DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+            git wget unzip ca-certificates docker-cli default-jre-headless
 
-        # Install docker-compose
-        curl -L "https://github.com/docker/compose/releases/download/v2.20.2/docker-compose-linux-x86_64" \
-            -o /usr/local/bin/docker-compose
-        chmod +x /usr/local/bin/docker-compose
-        docker-compose --version
+          command -v git
+          command -v docker
+          docker --version
+          java -version || true
 
-        docker --version
-        java -version || true
+          SCAN_VER=7.2.0.5079
+          BASE_URL="https://binaries.sonarsource.com/Distribution/sonar-scanner-cli"
 
-        # ---- Install SonarScanner CLI ----
-        SCAN_VER=5.0.1.3006
-        BASE_URL="https://binaries.sonarsource.com/Distribution/sonar-scanner-cli"
-        FILE="sonar-scanner-cli-${SCAN_VER}-linux.zip"
+          CANDIDATES="
+            sonar-scanner-${SCAN_VER}-linux-x64.zip
+            sonar-scanner-${SCAN_VER}-linux.zip
+            sonar-scanner-cli-${SCAN_VER}-linux-x64.zip
+            sonar-scanner-cli-${SCAN_VER}-linux.zip
+          "
 
-        wget -qO /tmp/sonar.zip "$BASE_URL/$FILE"
-        test -s /tmp/sonar.zip || { echo "Failed to download SonarScanner ${SCAN_VER}"; exit 1; }
+          rm -f /tmp/sonar.zip || true
+          for f in $CANDIDATES; do
+            URL="${BASE_URL}/${f}"
+            echo "Trying: $URL"
+            if wget -q --spider "$URL"; then
+              wget -qO /tmp/sonar.zip "$URL"
+              break
+            fi
+          done
 
-        unzip -q /tmp/sonar.zip -d /opt
-        SCAN_HOME="$(find /opt -maxdepth 1 -type d -name 'sonar-scanner*' | head -n1)"
-        ln -sf "$SCAN_HOME/bin/sonar-scanner" /usr/local/bin/sonar-scanner
-        sonar-scanner --version
+          test -s /tmp/sonar.zip || { echo "Failed to download SonarScanner ${SCAN_VER}"; exit 1; }
 
-        # validate docker.sock
-        test -S /var/run/docker.sock || { echo "ERROR: /var/run/docker.sock not mounted"; exit 1; }
+          unzip -q /tmp/sonar.zip -d /opt
+          SCAN_HOME="$(find /opt -maxdepth 1 -type d -name 'sonar-scanner*' | head -n1)"
+          ln -sf "$SCAN_HOME/bin/sonar-scanner" /usr/local/bin/sonar-scanner
+          sonar-scanner --version
+
+          test -S /var/run/docker.sock || { echo "ERROR: /var/run/docker.sock not mounted"; exit 1; }
         '''
-    }
+      }
     }
 
     // ---------- Stage 2: Checkout ----------
@@ -113,6 +122,7 @@ EOF
               sonar-scanner \
                 -Dsonar.host.url="$SONAR_HOST_URL" \
                 -Dsonar.login="$SONAR_AUTH_TOKEN" \
+                -Dsonar.projectBaseDir="$PWD" \
                 -Dsonar.projectKey=locaza-backend \
                 -Dsonar.projectName="Locaza Backend" \
                 -Dsonar.sources=app \
@@ -135,36 +145,43 @@ EOF
       }
     }
 
-    // ---------- Stage 7: Deploy with Docker Compose ----------
-    stage('Deploy with Docker Compose') {
+    // ---------- Stage 7: Build Docker Image ----------
+    stage('Build Docker Image') {
+      steps {
+        dir('backend') {
+          sh 'docker build -t locaza-backend:latest .'
+        }
+      }
+    }
+
+    // ---------- Stage 8: Push to Registry ----------
+    stage('Push to Registry') {
+      steps {
+        withCredentials([usernamePassword(
+          credentialsId: 'dockerhub-cred',
+          usernameVariable: 'DOCKER_USER',
+          passwordVariable: 'DOCKER_PASS'
+        )]) {
+          sh '''
+          echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
+          docker tag locaza-backend:latest $DOCKER_USER/6510110115-locaza-backend:latest
+          docker push $DOCKER_USER/6510110115-locaza-backend:latest
+          '''
+        }
+      }
+    }
+
+    // ---------- Stage 9: Deploy Container ----------
+    stage('Deploy Container') {
       steps {
         sh '''
           set -eux
-          echo "Building Docker image..."
-          docker-compose build backend
-
-          echo "Stopping old containers..."
-          docker-compose down || true
-
-          echo "Starting services..."
-          docker-compose up -d
-
-          echo "Checking service status..."
-          docker-compose ps
-
-          echo "Backend logs:"
-          docker-compose logs backend --tail=10
-
-          echo "Testing backend connection..."
-          curl -f http://localhost:8000/ || \
-          curl -f http://localhost:8000/docs || \
-          echo "Backend may still be starting..."
+          docker rm -f locaza-backend || true
+          docker run -d --name locaza-backend -p 8000:8000 locaza-backend:latest
         '''
       }
     }
   }
 
-  post {
-    always { echo "Pipeline finished" }
-  }
+  post { always { echo "Pipeline finished" } }
 }
