@@ -14,8 +14,6 @@ __pycache__/
 # ---------------------
 ENV/
 env/
-.env
-.env.dev
 .venv/
 .pyenv/
 
