@@ -177,6 +177,7 @@ EOF
             docker rm -f locaza-backend || true
             docker run -d --name locaza-backend \
               --env-file $BACKEND_ENV_FILE \
+              --network locaza_default \
               -p 8000:8000 locaza-backend:latest
           '''
         }
