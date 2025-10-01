@@ -90,6 +90,14 @@ class ChatHeader extends StatelessWidget implements PreferredSizeWidget {
       }
     }
 
+    bool isButtonEnabled() {
+      if (isOwner) {
+        return status == "available";
+      } else {
+        return status == "reserved" || status == "sold";
+      }
+    }
+
     void onActionPressed(BuildContext context) async {
       if (productId == null) return;
       if (isOwner) {
@@ -262,14 +270,12 @@ class ChatHeader extends StatelessWidget implements PreferredSizeWidget {
                   const SizedBox(width: 8),
                   ElevatedButton(
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: (actionButtonText() == "-" ? Colors.grey : const Color(0xFF62B9E8)),
+                      backgroundColor: isButtonEnabled() ? const Color(0xFF62B9E8) : Colors.grey,
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                     ),
-                    onPressed: actionButtonText() == "-"
-                        ? null
-                        : () => onActionPressed(context),
+                    onPressed: isButtonEnabled() ? () => onActionPressed(context) : null,
                     child: Text(
                       actionButtonText(),
                       style: GoogleFonts.sarabun(fontSize: 14, fontWeight: FontWeight.bold),
