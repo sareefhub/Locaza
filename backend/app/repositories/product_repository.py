@@ -1,11 +1,14 @@
 from sqlalchemy.orm import Session
-from app.models.models import Product
+from app.models.models import Product, Notification
 import json
+from enum import Enum
 
 class ProductRepository:
     @staticmethod
     def create(db: Session, product):
         data = product.dict()
+        if isinstance(data.get("status"), Enum):
+            data["status"] = data["status"].value
         db_product = Product(**data)
         db.add(db_product)
         db.commit()
@@ -14,7 +17,12 @@ class ProductRepository:
 
     @staticmethod
     def create_bulk(db: Session, products):
-        db_products = [Product(**p.dict()) for p in products]
+        db_products = []
+        for p in products:
+            data = p.dict()
+            if isinstance(data.get("status"), Enum):
+                data["status"] = data["status"].value
+            db_products.append(Product(**data))
         db.add_all(db_products)
         db.commit()
         for p in db_products:
@@ -41,7 +49,10 @@ class ProductRepository:
         db_product = db.query(Product).filter(Product.id == product_id).first()
         if not db_product:
             return None
-        for field, value in product.dict(exclude_unset=True).items():
+        data = product.dict(exclude_unset=True)
+        if isinstance(data.get("status"), Enum):
+            data["status"] = data["status"].value
+        for field, value in data.items():
             setattr(db_product, field, value)
         db.commit()
         db.refresh(db_product)
@@ -49,6 +60,7 @@ class ProductRepository:
 
     @staticmethod
     def delete(db: Session, product_id: int):
+        db.query(Notification).filter(Notification.product_id == product_id).delete()
         db_product = db.query(Product).filter(Product.id == product_id).first()
         if not db_product:
             return None

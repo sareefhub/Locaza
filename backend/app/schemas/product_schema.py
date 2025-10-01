@@ -7,8 +7,6 @@ class ProductStatus(str, Enum):
     draft = "draft"
     available = "available"
     reserved = "reserved"
-    purchased = "purchased"
-    reviewed = "reviewed"
     sold = "sold"
 
 class ProductBase(BaseModel):

@@ -24,7 +24,7 @@ class _EditPostFormScreenState extends ConsumerState<EditPostFormScreen> {
   final nameCtrl = TextEditingController();
   final priceCtrl = TextEditingController();
   final detailCtrl = TextEditingController();
-  String? _category, _province, _status;
+  String? _category, _province;
   int? _categoryId;
   List<String> _images = [];
 
@@ -51,7 +51,6 @@ class _EditPostFormScreenState extends ConsumerState<EditPostFormScreen> {
         _categoryId = product['category_id'];
         _category = cat?['name'] ?? '';
         _province = product['location'] ?? '';
-        _status = product['status'] ?? '';
         if (product['image_urls'] is List) {
           _images = (product['image_urls'] as List).map<String>((e) {
             final s = e.toString();
@@ -97,7 +96,7 @@ class _EditPostFormScreenState extends ConsumerState<EditPostFormScreen> {
       "price": double.tryParse(priceCtrl.text.trim()) ?? 0.0,
       "category_id": _categoryId ?? 1,
       "location": _province ?? "",
-      "status": state == 'post' ? (_status ?? 'available') : 'draft',
+      "status": state == 'post' ? 'available' : 'draft',
       "image_urls": uploaded
     };
     await ref.read(productApiProvider).updateProduct(widget.postId, product);

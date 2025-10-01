@@ -113,3 +113,12 @@ class NotificationRepository:
             db.commit()
             db.refresh(notif)
         return notif
+
+    @staticmethod
+    def delete(db: Session, notification_id: int):
+        notif = db.query(Notification).filter(Notification.id == notification_id).first()
+        if notif:
+            db.delete(notif)
+            db.commit()
+            return notif
+        return None

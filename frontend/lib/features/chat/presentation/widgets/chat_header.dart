@@ -56,9 +56,8 @@ class ChatHeader extends StatelessWidget {
         return "ขายแล้ว";
       } else {
         if (status == "reserved") return "ซื้อ";
-        if (status == "purchased") return "รีวิว";
-        if (status == "reviewed") return "รีวิวแล้ว";
-        return "-";
+        if (status == "sold") return "รีวิว";
+        return "รีวิวแล้ว";
       }
     }
 
@@ -107,10 +106,9 @@ class ChatHeader extends StatelessWidget {
             ),
           );
           if (confirm == true) {
-            await _updateProductStatus(context, productId, "purchased");
+            await _updateProductStatus(context, productId, "sold");
           }
-        } else if (status == "purchased") {
-          await _updateProductStatus(context, productId, "reviewed");
+        } else if (status == "sold") {
           context.push(
             '/review',
             extra: {"productId": productId, "buyerId": currentUserId},
